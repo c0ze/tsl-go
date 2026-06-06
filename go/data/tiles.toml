@@ -1,0 +1,13 @@
+# Tile definitions. Each [tile.<id>] table becomes a TileDef keyed by <id>.
+# glyph: exactly one character. color: one of normal/brown/blue/red/green/cyan/magenta/black.
+[tile.floor]
+glyph = "."
+color = "normal"
+passable = true
+transparent = true
+
+[tile.wall]
+glyph = "#"
+color = "normal"
+passable = false
+transparent = false
