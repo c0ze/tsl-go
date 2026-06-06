@@ -76,3 +76,11 @@ transparent = true
 		t.Fatal("expected error for multi-rune glyph, got nil")
 	}
 }
+
+// A file that parses but defines no tiles must be rejected (a level needs tiles).
+func TestLoadRejectsEmpty(t *testing.T) {
+	dir := writeTiles(t, "# valid TOML, but no [tile.*] tables\n")
+	if _, err := Load(dir); err == nil {
+		t.Fatal("expected error when no tiles are defined, got nil")
+	}
+}
