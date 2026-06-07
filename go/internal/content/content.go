@@ -57,6 +57,7 @@ type MonsterDef struct {
 	Attack int    `toml:"attack"`
 	Dodge  int    `toml:"dodge"`
 	Damage string `toml:"damage"` // dice spec, e.g. "1d4"
+	Speed  int    `toml:"speed"`  // energy gained per turn; <= 0 defaults to 100
 }
 
 // Rune returns the monster's glyph as a rune.
