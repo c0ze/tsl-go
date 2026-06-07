@@ -17,10 +17,11 @@ func Registry() map[string]game.Behavior {
 }
 
 func heal(g *game.Game, it *game.Item) []string {
-	amt := it.Def.Power
-	g.PlayerHP += amt
+	before := g.PlayerHP
+	g.PlayerHP += it.Def.Power
 	if g.PlayerHP > g.PlayerMax {
 		g.PlayerHP = g.PlayerMax
 	}
-	return []string{fmt.Sprintf("You quaff the %s and recover %d HP.", it.Def.Name, amt)}
+	recovered := g.PlayerHP - before
+	return []string{fmt.Sprintf("You quaff the %s and recover %d HP.", it.Def.Name, recovered)}
 }

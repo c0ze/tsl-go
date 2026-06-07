@@ -22,6 +22,10 @@ func (g *Game) PlayerUse(it *Item) {
 	if g.Dead {
 		return
 	}
+	if it == nil || it.Def == nil || !g.hasInventoryItem(it) {
+		g.log("You aren't carrying that.")
+		return
+	}
 	switch it.Def.Kind {
 	case "weapon":
 		g.Weapon = it
@@ -38,6 +42,15 @@ func (g *Game) PlayerUse(it *Item) {
 		g.removeInventory(it)
 	}
 	g.monstersAct()
+}
+
+func (g *Game) hasInventoryItem(it *Item) bool {
+	for _, x := range g.Inventory {
+		if x == it {
+			return true
+		}
+	}
+	return false
 }
 
 func (g *Game) removeInventory(it *Item) {

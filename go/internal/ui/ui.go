@@ -132,7 +132,7 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 				for i, it := range g.Inventory {
 					names[i] = it.Def.Name
 				}
-				if idx, ok := p.Menu(MenuSpec{Title: "Inventory", Items: names}); ok {
+				if idx, ok := p.Menu(MenuSpec{Title: "Inventory", Items: names}); ok && idx >= 0 && idx < len(g.Inventory) {
 					g.PlayerUse(g.Inventory[idx])
 				}
 			}

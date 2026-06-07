@@ -204,5 +204,15 @@ func validateItem(i *ItemDef) error {
 	if !validItemKinds[i.Kind] {
 		return fmt.Errorf("invalid kind %q", i.Kind)
 	}
+	switch i.Kind {
+	case "potion":
+		if strings.TrimSpace(i.Use) == "" {
+			return fmt.Errorf("potion must have a non-empty use")
+		}
+	case "weapon":
+		if strings.TrimSpace(i.Damage) == "" {
+			return fmt.Errorf("weapon must have a non-empty damage")
+		}
+	}
 	return nil
 }
