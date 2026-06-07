@@ -195,3 +195,35 @@ func TestLoadRejectsBadMonsterDamage(t *testing.T) {
 		t.Fatal("expected error for malformed monster damage spec")
 	}
 }
+
+func TestLoadFoodItem(t *testing.T) {
+	dir := t.TempDir()
+	must := func(name, body string) {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	must("tiles.toml", "[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n")
+	must("items.toml", "[item.ration]\nname=\"ration\"\nglyph=\"%\"\ncolor=\"brown\"\nkind=\"food\"\nuse=\"eat\"\npower=5\n")
+	c, err := Load(os.DirFS(dir))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	r, ok := c.Items["ration"]
+	if !ok || r.Kind != "food" || r.Use != "eat" || r.Power != 5 {
+		t.Errorf("unexpected food def: %+v", r)
+	}
+}
+
+func TestLoadRejectsFoodWithoutUse(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "tiles.toml"), []byte("[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "items.toml"), []byte("[item.bad]\nname=\"bad\"\nglyph=\"%\"\ncolor=\"brown\"\nkind=\"food\"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error for food with empty use")
+	}
+}
