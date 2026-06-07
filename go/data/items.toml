@@ -31,8 +31,27 @@ kind = "food"
 use = "eat"
 power = 5
 
-[item.rat_corpse]
-name = "rat corpse"
+# Generic corpses dropped by monsters (see monsters.toml `corpse = ...`).
+[item.corpse]
+name = "corpse"
+glyph = "%"
+color = "normal"
+kind = "food"
+use = "eat"
+power = 2
+nospawn = true
+
+[item.carcass]
+name = "carcass"
+glyph = "%"
+color = "brown"
+kind = "food"
+use = "eat"
+power = 2
+nospawn = true
+
+[item.ratman_corpse]
+name = "ratman corpse"
 glyph = "%"
 color = "brown"
 kind = "food"
