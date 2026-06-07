@@ -52,7 +52,7 @@ type Renderer interface {
 const PlayerGlyph = '@'
 
 // PlayerColor is the player's glyph color.
-var PlayerColor = content.ColorNormal
+const PlayerColor = content.ColorNormal
 
 // BuildView produces the View for the current game state.
 func BuildView(g *game.Game) View {
