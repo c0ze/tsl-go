@@ -80,9 +80,21 @@ func (g *Game) playerAttacks(m *Creature) {
 	m.HP -= dmg
 	g.log("You hit the %s for %d.", m.Def.Name, dmg)
 	if m.HP <= 0 {
-		g.log("The %s dies.", m.Def.Name)
-		g.Level.RemoveCreature(m)
+		g.killCreature(m)
 	}
+}
+
+// killCreature resolves a monster's death: announce it, drop its corpse (when
+// the def names one), and remove it from the level. Centralising death here
+// keeps every kill site (player now, hazards later) dropping corpses consistently.
+func (g *Game) killCreature(m *Creature) {
+	g.log("The %s dies.", m.Def.Name)
+	if m.Def.Corpse != "" && g.Content != nil {
+		if def, ok := g.Content.Items[m.Def.Corpse]; ok {
+			g.Level.Items = append(g.Level.Items, &Item{Def: def, Pos: m.Pos})
+		}
+	}
+	g.Level.RemoveCreature(m)
 }
 
 func (g *Game) monsterAttacks(m *Creature) {

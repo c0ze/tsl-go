@@ -82,3 +82,33 @@ func TestDefaultSpeedActsOnce(t *testing.T) {
 		t.Errorf("default-speed monster stepped %d tiles, want 1", before-rat.Pos.X)
 	}
 }
+
+func TestKillCreatureDropsCorpse(t *testing.T) {
+	g := combatGame()
+	food := &content.ItemDef{ID: "rat_corpse", Name: "rat corpse", Glyph: "%", Color: content.ColorBrown, Kind: "food", Use: "eat", Power: 3}
+	g.Content.Items = map[string]*content.ItemDef{"rat_corpse": food}
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Corpse: "rat_corpse"}, Pos: Pos{2, 1}, HP: 1}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+
+	g.killCreature(rat)
+
+	if g.Level.CreatureAt(Pos{2, 1}) != nil {
+		t.Error("creature should be removed")
+	}
+	it := g.Level.ItemAt(Pos{2, 1})
+	if it == nil || it.Def.ID != "rat_corpse" {
+		t.Errorf("expected rat_corpse dropped at kill site, got %v", it)
+	}
+}
+
+func TestKillCreatureNoCorpse(t *testing.T) {
+	g := combatGame()
+	ghost := &Creature{Def: &content.MonsterDef{ID: "ghost", Name: "ghost"}, Pos: Pos{2, 1}, HP: 1}
+	g.Level.Creatures = append(g.Level.Creatures, ghost)
+
+	g.killCreature(ghost)
+
+	if g.Level.ItemAt(Pos{2, 1}) != nil {
+		t.Error("monster with no corpse should drop nothing")
+	}
+}
