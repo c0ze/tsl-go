@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/c0ze/tsl/internal/content"
@@ -40,6 +41,18 @@ func (s *scriptPrompter) Menu(MenuSpec) (int, bool) { return 0, false }
 type nullRenderer struct{ frames int }
 
 func (n *nullRenderer) Render(View) { n.frames++ }
+
+func TestBuildViewStatusLine(t *testing.T) {
+	g := testGame(t, []string{".@."})
+	g.PlayerHP, g.PlayerMax, g.Depth = 14, 20, 2
+	g.Weapon = &game.Item{Def: &content.ItemDef{Name: "dagger"}}
+	v := BuildView(g)
+	for _, want := range []string{"HP 14/20", "Depth 2", "Wield: dagger", "Wear: none"} {
+		if !strings.Contains(v.Status, want) {
+			t.Errorf("status %q missing %q", v.Status, want)
+		}
+	}
+}
 
 func TestBuildViewPlacesPlayer(t *testing.T) {
 	g := testGame(t, []string{"...", ".@.", "..."})
