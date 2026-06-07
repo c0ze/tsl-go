@@ -17,6 +17,7 @@ type Creature struct {
 	Pos     Pos
 	HP      int
 	Faction Faction
+	Energy  int
 }
 
 // CreatureAt returns the creature standing on p, or nil.

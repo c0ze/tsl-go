@@ -11,6 +11,20 @@ const (
 
 const senseRange = 8 // how close a monster must be to notice the player
 
+const (
+	turnCost     = 100 // energy needed for one action
+	defaultSpeed = 100 // energy per turn for a monster with no speed set
+)
+
+// speedOf is a monster's energy gain per turn (a non-positive def speed means
+// "average", matching the player's one action per turn).
+func speedOf(m *Creature) int {
+	if m.Def.Speed > 0 {
+		return m.Def.Speed
+	}
+	return defaultSpeed
+}
+
 // log appends a message to the game log.
 func (g *Game) log(format string, args ...any) {
 	g.Messages = append(g.Messages, fmt.Sprintf(format, args...))
@@ -87,8 +101,10 @@ func (g *Game) monsterAttacks(m *Creature) {
 	}
 }
 
-// monstersAct gives each living monster a turn: attack the player if adjacent,
-// else step toward the player if within sense range, else idle.
+// monstersAct advances the world after the player's turn. Each living monster
+// gains energy equal to its speed and acts for every full turn's worth it
+// holds, so faster monsters act more often (the C's move_counter / TURN_TIME
+// model). Leftover energy carries to the next turn.
 func (g *Game) monstersAct() {
 	// snapshot to avoid mutation surprises when creatures are removed
 	snapshot := make([]*Creature, len(g.Level.Creatures))
@@ -100,13 +116,29 @@ func (g *Game) monstersAct() {
 		if g.Level.CreatureAt(m.Pos) != m {
 			continue // already removed this turn
 		}
-		if chebyshev(m.Pos, g.Player) == 1 {
-			g.monsterAttacks(m)
-			continue
+		m.Energy += speedOf(m)
+		for m.Energy >= turnCost {
+			m.Energy -= turnCost
+			g.monsterAct(m)
+			if g.Dead {
+				return
+			}
+			if g.Level.CreatureAt(m.Pos) != m {
+				break // removed mid-turn
+			}
 		}
-		if chebyshev(m.Pos, g.Player) <= senseRange {
-			g.stepToward(m, g.Player)
-		}
+	}
+}
+
+// monsterAct is a single monster action: attack the player if adjacent, else
+// step toward the player if within sense range.
+func (g *Game) monsterAct(m *Creature) {
+	if chebyshev(m.Pos, g.Player) == 1 {
+		g.monsterAttacks(m)
+		return
+	}
+	if chebyshev(m.Pos, g.Player) <= senseRange {
+		g.stepToward(m, g.Player)
 	}
 }
 

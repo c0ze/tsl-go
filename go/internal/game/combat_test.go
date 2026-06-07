@@ -60,3 +60,25 @@ func TestMonsterMovesTowardPlayer(t *testing.T) {
 		t.Errorf("rat at x=%d should have stepped toward the player (x decreasing), was %d", rat.Pos.X, before)
 	}
 }
+
+func TestFasterMonsterActsMultipleTimes(t *testing.T) {
+	g := combatGame() // 10x3 floor, player at (1,1)
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Glyph: "r", HP: 9, Attack: 1, Dodge: 1, Damage: "1d1", Speed: 250}, Pos: Pos{8, 1}, HP: 9}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	before := rat.Pos.X
+	g.monstersAct() // speed 250 → 250 energy → acts twice (250-100-100=50)
+	if before-rat.Pos.X != 2 {
+		t.Errorf("speed-250 monster stepped %d tiles in one turn, want 2", before-rat.Pos.X)
+	}
+}
+
+func TestDefaultSpeedActsOnce(t *testing.T) {
+	g := combatGame()
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Glyph: "r", HP: 9, Attack: 1, Dodge: 1, Damage: "1d1"}, Pos: Pos{8, 1}, HP: 9} // Speed 0 → default 100
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	before := rat.Pos.X
+	g.monstersAct()
+	if before-rat.Pos.X != 1 {
+		t.Errorf("default-speed monster stepped %d tiles, want 1", before-rat.Pos.X)
+	}
+}
