@@ -120,6 +120,8 @@ func keyToAction(ev *tc.EventKey) (ui.Action, bool) {
 		return ui.Action{Kind: ui.ActPickup}, true
 	case 'i':
 		return ui.Action{Kind: ui.ActInventory}, true
+	case 'e':
+		return ui.Action{Kind: ui.ActEat}, true
 	case '>':
 		return ui.Action{Kind: ui.ActDescend}, true
 	}
