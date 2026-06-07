@@ -11,3 +11,9 @@ glyph = "#"
 color = "normal"
 passable = false
 transparent = false
+
+[tile.stairs_down]
+glyph = ">"
+color = "normal"
+passable = true
+transparent = true
