@@ -1,6 +1,10 @@
 # Monster definitions. [monster.<id>] → MonsterDef keyed by <id>.
-[monster.rat]
-name = "rat"
+# Stats are inspired by the C bestiary (common/monster.c attr_health/attr_speed,
+# common/glyph.c glyphs); attack/dodge/damage are assigned by role. Early-tier
+# melee only until depth-scaled spawn tables (#16); heavy/special monsters TBD.
+
+[monster.ratman]
+name = "ratman"
 glyph = "r"
 color = "brown"
 hp = 3
@@ -8,11 +12,11 @@ attack = 2
 dodge = 1
 damage = "1d2"
 speed = 130
-corpse = "rat_corpse"
+corpse = "ratman_corpse"
 
 [monster.ghoul]
 name = "ghoul"
-glyph = "g"
+glyph = "Z"
 color = "green"
 hp = 8
 attack = 4
@@ -20,3 +24,47 @@ dodge = 2
 damage = "1d4"
 speed = 80
 corpse = "ghoul_corpse"
+
+[monster.graveling]
+name = "graveling"
+glyph = "g"
+color = "brown"
+hp = 5
+attack = 3
+dodge = 1
+damage = "1d4"
+speed = 60
+corpse = "carcass"
+
+[monster.gnoblin]
+name = "gnoblin"
+glyph = "o"
+color = "green"
+hp = 4
+attack = 3
+dodge = 2
+damage = "1d3"
+speed = 85
+corpse = "corpse"
+
+[monster.crypt_vermin]
+name = "crypt vermin"
+glyph = "v"
+color = "normal"
+hp = 6
+attack = 2
+dodge = 2
+damage = "1d2"
+speed = 130
+corpse = "carcass"
+
+[monster.merman]
+name = "merman"
+glyph = "M"
+color = "cyan"
+hp = 8
+attack = 4
+dodge = 2
+damage = "1d4"
+speed = 65
+corpse = "corpse"
