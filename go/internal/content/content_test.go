@@ -137,3 +137,48 @@ transparent = true
 		t.Errorf("expected no monsters, got %d", len(c.Monsters))
 	}
 }
+
+func TestLoadItems(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "tiles.toml"), []byte("[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "items.toml"), []byte("[item.healing_potion]\nname=\"healing potion\"\nglyph=\"!\"\ncolor=\"red\"\nkind=\"potion\"\nuse=\"heal\"\npower=8\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	c, err := Load(dir)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	p, ok := c.Items["healing_potion"]
+	if !ok {
+		t.Fatal("healing_potion missing")
+	}
+	if p.Kind != "potion" || p.Use != "heal" || p.Power != 8 || p.Rune() != '!' {
+		t.Errorf("unexpected potion def: %+v", p)
+	}
+}
+
+func TestLoadWithoutItemsFileIsOK(t *testing.T) {
+	dir := writeTiles(t, "[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n")
+	c, err := Load(dir)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if len(c.Items) != 0 {
+		t.Errorf("expected no items, got %d", len(c.Items))
+	}
+}
+
+func TestLoadRejectsBadItemKind(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "tiles.toml"), []byte("[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "items.toml"), []byte("[item.x]\nname=\"x\"\nglyph=\"x\"\ncolor=\"normal\"\nkind=\"banana\"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(dir); err == nil {
+		t.Fatal("expected error for invalid item kind")
+	}
+}

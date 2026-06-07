@@ -1,0 +1,23 @@
+# Item definitions. [item.<id>] → ItemDef keyed by <id>.
+[item.healing_potion]
+name = "healing potion"
+glyph = "!"
+color = "red"
+kind = "potion"
+use = "heal"
+power = 8
+
+[item.dagger]
+name = "dagger"
+glyph = ")"
+color = "normal"
+kind = "weapon"
+attack = 2
+damage = "1d4"
+
+[item.leather_armor]
+name = "leather armor"
+glyph = "["
+color = "brown"
+kind = "armor"
+dodge = 2
