@@ -46,9 +46,12 @@ func (d Direction) Delta() (int, int) {
 	}
 }
 
-// Tile is a single map cell.
+// Tile is a single map cell. Visible is true when currently in the player's
+// FOV; Seen is true once it has ever been visible (remembered/dimmed).
 type Tile struct {
-	Def *content.TileDef
+	Def     *content.TileDef
+	Visible bool
+	Seen    bool
 }
 
 // Level is a rectangular grid of tiles stored row-major.

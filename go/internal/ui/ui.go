@@ -12,6 +12,7 @@ import (
 type Cell struct {
 	Glyph rune
 	Color content.Color
+	Dim   bool // render dimmed (remembered-but-not-currently-visible)
 }
 
 // View is a read-only snapshot the front-end draws.
@@ -55,23 +56,32 @@ const PlayerGlyph = '@'
 // PlayerColor is the player's glyph color.
 const PlayerColor = content.ColorNormal
 
-// BuildView produces the View for the current game state.
+// BuildView produces the View for the current game state: tiles in the player's
+// FOV are drawn bright, remembered (Seen) tiles dim, and unseen tiles blank.
 func BuildView(g *game.Game) View {
 	l := g.Level
 	v := View{W: l.W, H: l.H, Cells: make([]Cell, l.W*l.H)}
 	for y := 0; y < l.H; y++ {
 		for x := 0; x < l.W; x++ {
-			def := l.At(game.Pos{X: x, Y: y}).Def
-			*v.At(x, y) = Cell{Glyph: def.Rune(), Color: def.Color}
+			t := l.At(game.Pos{X: x, Y: y})
+			switch {
+			case t.Visible:
+				*v.At(x, y) = Cell{Glyph: t.Def.Rune(), Color: t.Def.Color}
+			case t.Seen:
+				*v.At(x, y) = Cell{Glyph: t.Def.Rune(), Color: t.Def.Color, Dim: true}
+			default:
+				*v.At(x, y) = Cell{Glyph: ' ', Color: content.ColorNormal}
+			}
 		}
 	}
 	*v.At(g.Player.X, g.Player.Y) = Cell{Glyph: PlayerGlyph, Color: PlayerColor}
 	return v
 }
 
-// Run is the core game loop: render, get an action, apply it, until quit.
+// Run is the core game loop: recompute FOV, render, get an action, apply it.
 func Run(g *game.Game, p Prompter, r Renderer) error {
 	for {
+		g.UpdateFOV()
 		r.Render(BuildView(g))
 		a, err := p.NextAction()
 		if err != nil {

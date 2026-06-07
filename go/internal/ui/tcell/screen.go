@@ -51,6 +51,9 @@ func (sc *Screen) Render(v ui.View) {
 		for x := 0; x < v.W; x++ {
 			c := v.At(x, y)
 			st := tc.StyleDefault.Foreground(colorMap[c.Color])
+			if c.Dim {
+				st = st.Dim(true)
+			}
 			sc.s.SetContent(x, y, c.Glyph, nil, st)
 		}
 	}

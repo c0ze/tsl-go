@@ -41,6 +41,7 @@ func (n *nullRenderer) Render(View) { n.frames++ }
 
 func TestBuildViewPlacesPlayer(t *testing.T) {
 	g := testGame(t, []string{"...", ".@.", "..."})
+	g.UpdateFOV()
 	v := BuildView(g)
 	if v.W != 3 || v.H != 3 {
 		t.Fatalf("view size = %dx%d, want 3x3", v.W, v.H)
@@ -50,6 +51,35 @@ func TestBuildViewPlacesPlayer(t *testing.T) {
 	}
 	if got := v.At(0, 0).Glyph; got != '.' {
 		t.Errorf("corner glyph = %q, want '.'", got)
+	}
+}
+
+func TestBuildViewVisibilityStates(t *testing.T) {
+	g := testGame(t, []string{"...", ".@.", "..."})
+	for y := 0; y < g.Level.H; y++ {
+		for x := 0; x < g.Level.W; x++ {
+			tl := g.Level.At(game.Pos{X: x, Y: y})
+			tl.Visible, tl.Seen = false, false
+		}
+	}
+	g.Level.At(game.Pos{X: 1, Y: 1}).Visible = true // player tile
+	vis := g.Level.At(game.Pos{X: 0, Y: 1})
+	vis.Visible, vis.Seen = true, true
+	g.Level.At(game.Pos{X: 0, Y: 0}).Seen = true // remembered only
+	// (2,2) stays fully unseen
+
+	v := BuildView(g)
+	if c := v.At(1, 1); c.Glyph != '@' {
+		t.Errorf("player cell = %q, want '@'", c.Glyph)
+	}
+	if c := v.At(0, 1); c.Glyph != '.' || c.Dim {
+		t.Errorf("visible floor = %q dim=%v, want '.' bright", c.Glyph, c.Dim)
+	}
+	if c := v.At(0, 0); c.Glyph != '.' || !c.Dim {
+		t.Errorf("remembered floor = %q dim=%v, want '.' dim", c.Glyph, c.Dim)
+	}
+	if c := v.At(2, 2); c.Glyph != ' ' {
+		t.Errorf("unseen cell = %q, want blank space", c.Glyph)
 	}
 }
 
