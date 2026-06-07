@@ -13,15 +13,30 @@ import (
 func Registry() map[string]game.Behavior {
 	return map[string]game.Behavior{
 		"heal": heal,
+		"eat":  eat,
 	}
 }
 
-func heal(g *game.Game, it *game.Item) []string {
+// restoreHP adds amount to the player's HP, clamped to PlayerMax, and reports
+// how much was actually recovered.
+func restoreHP(g *game.Game, amount int) int {
 	before := g.PlayerHP
-	g.PlayerHP += it.Def.Power
+	g.PlayerHP += amount
 	if g.PlayerHP > g.PlayerMax {
 		g.PlayerHP = g.PlayerMax
 	}
-	recovered := g.PlayerHP - before
+	return g.PlayerHP - before
+}
+
+func heal(g *game.Game, it *game.Item) []string {
+	recovered := restoreHP(g, it.Def.Power)
 	return []string{fmt.Sprintf("You quaff the %s and recover %d HP.", it.Def.Name, recovered)}
+}
+
+func eat(g *game.Game, it *game.Item) []string {
+	recovered := restoreHP(g, it.Def.Power)
+	if recovered > 0 {
+		return []string{fmt.Sprintf("You eat the %s and recover %d HP.", it.Def.Name, recovered)}
+	}
+	return []string{fmt.Sprintf("You eat the %s.", it.Def.Name)}
 }
