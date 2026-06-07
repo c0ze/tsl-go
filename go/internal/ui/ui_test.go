@@ -165,3 +165,16 @@ func TestBuildViewShowsVisibleMonsterAndMessages(t *testing.T) {
 		t.Errorf("view should carry recent messages, got %v", v.Messages)
 	}
 }
+
+func TestRunDescendToWin(t *testing.T) {
+	g := testGame(t, []string{"...", ".@.", "..."})
+	g.Depth = game.MaxDepth
+	g.Level.Set(g.Player, &content.TileDef{ID: "stairs_down", Glyph: ">", Passable: true, Transparent: true})
+	p := &scriptPrompter{actions: []Action{{Kind: ActDescend}}}
+	if err := Run(g, p, &nullRenderer{}); err != nil {
+		t.Fatal(err)
+	}
+	if !g.Won {
+		t.Error("descending at max depth should win and end the loop")
+	}
+}

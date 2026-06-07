@@ -75,3 +75,16 @@ func TestNewGameHasPlayerHPAndRNG(t *testing.T) {
 		t.Error("game RNG not set")
 	}
 }
+
+func TestNewGameStartsAtDepthOne(t *testing.T) {
+	g, err := newGame(testTiles(), 1)
+	if err != nil {
+		t.Fatalf("newGame: %v", err)
+	}
+	if g.Depth != 1 {
+		t.Errorf("depth = %d, want 1", g.Depth)
+	}
+	if g.NewLevelFn == nil {
+		t.Error("NewLevelFn should be wired so the player can descend")
+	}
+}
