@@ -136,7 +136,7 @@ func (g *Game) monsterAct(m *Creature) {
 
 - [ ] **Step 4** — from `go/`: `export GOTOOLCHAIN=local && gofmt -l . && go build ./... && go test ./... -count=1 && go vet ./...` → all clean (existing combat tests still pass; the two new tests pass). **Commit:**
 ```bash
-git add go/internal/game/game.go go/internal/game/combat.go go/internal/game/combat_test.go
+git add go/internal/game/creature.go go/internal/game/combat.go go/internal/game/combat_test.go
 git commit -m "feat(game): energy/speed scheduler — faster monsters act more often"
 ```
 
