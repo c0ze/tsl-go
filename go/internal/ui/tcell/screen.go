@@ -59,8 +59,9 @@ func (sc *Screen) Render(v ui.View) {
 			sc.s.SetContent(x, y, c.Glyph, nil, st)
 		}
 	}
+	drawString(sc.s, 0, v.H, v.Status)
 	for i, msg := range v.Messages {
-		drawString(sc.s, 0, v.H+i, msg)
+		drawString(sc.s, 0, v.H+1+i, msg)
 	}
 	sc.s.Show()
 }

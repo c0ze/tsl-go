@@ -4,6 +4,8 @@
 package ui
 
 import (
+	"fmt"
+
 	"github.com/c0ze/tsl/internal/content"
 	"github.com/c0ze/tsl/internal/game"
 )
@@ -19,6 +21,7 @@ type Cell struct {
 type View struct {
 	W, H     int
 	Cells    []Cell // len W*H, row-major
+	Status   string // HUD line (HP, depth, gear)
 	Messages []string
 }
 
@@ -98,8 +101,22 @@ func BuildView(g *game.Game) View {
 	if l.InBounds(g.Player) {
 		*v.At(g.Player.X, g.Player.Y) = Cell{Glyph: PlayerGlyph, Color: PlayerColor}
 	}
+	v.Status = statusLine(g)
 	v.Messages = lastN(g.Messages, 4)
 	return v
+}
+
+// statusLine summarises the player's vitals and gear for the HUD.
+func statusLine(g *game.Game) string {
+	wield, wear := "none", "none"
+	if g.Weapon != nil && g.Weapon.Def != nil {
+		wield = g.Weapon.Def.Name
+	}
+	if g.Armor != nil && g.Armor.Def != nil {
+		wear = g.Armor.Def.Name
+	}
+	return fmt.Sprintf("HP %d/%d   Depth %d   Wield: %s   Wear: %s",
+		g.PlayerHP, g.PlayerMax, g.Depth, wield, wear)
 }
 
 // lastN returns up to the last n elements of s.
