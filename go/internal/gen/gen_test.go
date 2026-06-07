@@ -90,6 +90,25 @@ func TestRoomsConnectivityAndPlacement(t *testing.T) {
 	}
 }
 
+func TestRoomsPlacesItems(t *testing.T) {
+	c := testContent()
+	c.Items = map[string]*content.ItemDef{
+		"potion": {ID: "potion", Name: "potion", Glyph: "!", Color: content.ColorRed, Kind: "potion", Use: "heal", Power: 8},
+	}
+	l, _, _, err := Rooms(rng.NewWithSeed(3), c, 60, 24)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(l.Items) == 0 {
+		t.Error("expected at least one item placed")
+	}
+	for _, it := range l.Items {
+		if !l.Passable(it.Pos) {
+			t.Errorf("item on impassable tile at %v", it.Pos)
+		}
+	}
+}
+
 func TestRoomsPlacesMonsters(t *testing.T) {
 	c := testContent()
 	c.Monsters = map[string]*content.MonsterDef{
