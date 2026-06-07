@@ -25,8 +25,11 @@ func NewWithSeed(s uint32) *MT {
 	return g
 }
 
-// NewWithKey seeds with a key array (init_by_array).
+// NewWithKey seeds with a key array (init_by_array). It panics on an empty key.
 func NewWithKey(key []uint32) *MT {
+	if len(key) == 0 {
+		panic("rng: NewWithKey requires a non-empty key")
+	}
 	g := &MT{}
 	g.initByArray(key)
 	return g
@@ -105,6 +108,9 @@ func (g *MT) Uint32() uint32 {
 func (g *MT) Intn(nn int) int {
 	if nn <= 0 {
 		panic("rng: Intn requires n > 0")
+	}
+	if uint64(nn) > uint64(^uint32(0)) {
+		panic("rng: Intn requires n <= 2^32-1")
 	}
 	u := uint32(nn)
 	thresh := (-u) % u // == 2^32 mod u: reject the low biased range

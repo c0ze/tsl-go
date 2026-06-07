@@ -39,8 +39,14 @@ func TestNewGamePlayable(t *testing.T) {
 
 func TestNewGameDeterministic(t *testing.T) {
 	c := testTiles()
-	a, _ := newGame(c, 999)
-	b, _ := newGame(c, 999)
+	a, err := newGame(c, 999)
+	if err != nil {
+		t.Fatalf("newGame(a): %v", err)
+	}
+	b, err := newGame(c, 999)
+	if err != nil {
+		t.Fatalf("newGame(b): %v", err)
+	}
 	if a.Player != b.Player {
 		t.Errorf("same seed gave different starts: %v vs %v", a.Player, b.Player)
 	}

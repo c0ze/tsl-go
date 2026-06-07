@@ -46,3 +46,12 @@ func TestIntnPanicsOnNonPositive(t *testing.T) {
 	}()
 	NewWithSeed(1).Intn(0)
 }
+
+func TestNewWithKeyPanicsOnEmptyKey(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("expected panic for NewWithKey([])")
+		}
+	}()
+	NewWithKey([]uint32{})
+}

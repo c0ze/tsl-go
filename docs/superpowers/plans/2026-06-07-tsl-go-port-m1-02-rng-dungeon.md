@@ -96,6 +96,15 @@ func TestIntnPanicsOnNonPositive(t *testing.T) {
 	}()
 	NewWithSeed(1).Intn(0)
 }
+
+func TestNewWithKeyPanicsOnEmptyKey(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("expected panic for NewWithKey([])")
+		}
+	}()
+	NewWithKey([]uint32{})
+}
 ```
 
 - [ ] **Step 2: Run to verify they fail** — from `go/`: `export GOTOOLCHAIN=local && go test ./internal/rng/` → FAIL (`undefined: NewWithKey`).
@@ -129,8 +138,11 @@ func NewWithSeed(s uint32) *MT {
 	return g
 }
 
-// NewWithKey seeds with a key array (init_by_array).
+// NewWithKey seeds with a key array (init_by_array). It panics on an empty key.
 func NewWithKey(key []uint32) *MT {
+	if len(key) == 0 {
+		panic("rng: NewWithKey requires a non-empty key")
+	}
 	g := &MT{}
 	g.initByArray(key)
 	return g
@@ -209,6 +221,9 @@ func (g *MT) Uint32() uint32 {
 func (g *MT) Intn(nn int) int {
 	if nn <= 0 {
 		panic("rng: Intn requires n > 0")
+	}
+	if uint64(nn) > uint64(^uint32(0)) {
+		panic("rng: Intn requires n <= 2^32-1")
 	}
 	u := uint32(nn)
 	thresh := (-u) % u // == 2^32 mod u: reject the low biased range
@@ -599,8 +614,14 @@ func TestNewGamePlayable(t *testing.T) {
 
 func TestNewGameDeterministic(t *testing.T) {
 	c := testTiles()
-	a, _ := newGame(c, 999)
-	b, _ := newGame(c, 999)
+	a, err := newGame(c, 999)
+	if err != nil {
+		t.Fatalf("newGame(a): %v", err)
+	}
+	b, err := newGame(c, 999)
+	if err != nil {
+		t.Fatalf("newGame(b): %v", err)
+	}
 	if a.Player != b.Player {
 		t.Errorf("same seed gave different starts: %v vs %v", a.Player, b.Player)
 	}
