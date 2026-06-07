@@ -52,6 +52,16 @@ func TestNewGameDeterministic(t *testing.T) {
 	}
 }
 
+func TestNewGameHasBehaviors(t *testing.T) {
+	g, err := newGame(testTiles(), 1)
+	if err != nil {
+		t.Fatalf("newGame: %v", err)
+	}
+	if g.Behaviors["heal"] == nil {
+		t.Error("expected heal behavior wired into the game")
+	}
+}
+
 func TestNewGameHasPlayerHPAndRNG(t *testing.T) {
 	c := testTiles()
 	g, err := newGame(c, 1)
