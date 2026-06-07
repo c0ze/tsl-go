@@ -94,6 +94,10 @@ type Game struct {
 	Weapon    *Item
 	Armor     *Item
 	Behaviors map[string]Behavior
+	Depth      int
+	Won        bool
+	DeathCause string
+	NewLevelFn LevelGen
 }
 
 // Move attempts to move the player one step in d. It returns true if the player

@@ -82,6 +82,7 @@ func (g *Game) monsterAttacks(m *Creature) {
 	if g.PlayerHP <= 0 {
 		g.PlayerHP = 0
 		g.Dead = true
+		g.DeathCause = m.Def.Name
 		g.log("You die.")
 	}
 }
