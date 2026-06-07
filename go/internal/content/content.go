@@ -65,10 +65,33 @@ func (m *MonsterDef) Rune() rune {
 	return r
 }
 
+// ItemDef defines a kind of item.
+type ItemDef struct {
+	ID     string `toml:"-"`
+	Name   string `toml:"name"`
+	Glyph  string `toml:"glyph"`
+	Color  Color  `toml:"color"`
+	Kind   string `toml:"kind"`   // "potion", "weapon", or "armor"
+	Use    string `toml:"use"`    // behavior name (potions)
+	Power  int    `toml:"power"`  // potion magnitude (heal amount)
+	Attack int    `toml:"attack"` // weapon attack bonus
+	Dodge  int    `toml:"dodge"`  // armor dodge bonus
+	Damage string `toml:"damage"` // weapon damage spec
+}
+
+// Rune returns the item's glyph as a rune.
+func (i *ItemDef) Rune() rune {
+	r, _ := utf8.DecodeRuneInString(i.Glyph)
+	return r
+}
+
+var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true}
+
 // Content is the fully-loaded, validated game content.
 type Content struct {
 	Tiles    map[string]*TileDef
 	Monsters map[string]*MonsterDef
+	Items    map[string]*ItemDef
 }
 
 type tilesFile struct {
@@ -77,6 +100,10 @@ type tilesFile struct {
 
 type monstersFile struct {
 	Monster map[string]*MonsterDef `toml:"monster"`
+}
+
+type itemsFile struct {
+	Item map[string]*ItemDef `toml:"item"`
 }
 
 // Load reads and validates all content files in dir.
@@ -115,6 +142,23 @@ func Load(dir string) (*Content, error) {
 	} else if !errors.Is(err, os.ErrNotExist) {
 		return nil, fmt.Errorf("stat %s: %w", mpath, err)
 	}
+	c.Items = map[string]*ItemDef{}
+	ipath := filepath.Join(dir, "items.toml")
+	if _, err := os.Stat(ipath); err == nil {
+		var inf itemsFile
+		if _, err := toml.DecodeFile(ipath, &inf); err != nil {
+			return nil, fmt.Errorf("loading %s: %w", ipath, err)
+		}
+		for id, def := range inf.Item {
+			def.ID = id
+			if err := validateItem(def); err != nil {
+				return nil, fmt.Errorf("item %q in %s: %w", id, ipath, err)
+			}
+			c.Items[id] = def
+		}
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return nil, fmt.Errorf("stat %s: %w", ipath, err)
+	}
 	return c, nil
 }
 
@@ -146,6 +190,29 @@ func validateMonster(m *MonsterDef) error {
 	}
 	if strings.TrimSpace(m.Damage) == "" {
 		return fmt.Errorf("damage must not be empty")
+	}
+	return nil
+}
+
+func validateItem(i *ItemDef) error {
+	if utf8.RuneCountInString(i.Glyph) != 1 {
+		return fmt.Errorf("glyph must be exactly one character, got %q", i.Glyph)
+	}
+	if !validColors[i.Color] {
+		return fmt.Errorf("invalid color %q", i.Color)
+	}
+	if !validItemKinds[i.Kind] {
+		return fmt.Errorf("invalid kind %q", i.Kind)
+	}
+	switch i.Kind {
+	case "potion":
+		if strings.TrimSpace(i.Use) == "" {
+			return fmt.Errorf("potion must have a non-empty use")
+		}
+	case "weapon":
+		if strings.TrimSpace(i.Damage) == "" {
+			return fmt.Errorf("weapon must have a non-empty damage")
+		}
 	}
 	return nil
 }

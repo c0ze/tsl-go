@@ -3,6 +3,8 @@
 package tcell
 
 import (
+	"fmt"
+
 	tc "github.com/gdamore/tcell/v2"
 
 	"github.com/c0ze/tsl/internal/content"
@@ -113,6 +115,46 @@ func keyToAction(ev *tc.EventKey) (ui.Action, bool) {
 		return ui.Action{Kind: ui.ActMove, Dir: game.DirSE}, true
 	case 'q':
 		return ui.Action{Kind: ui.ActQuit}, true
+	case 'g':
+		return ui.Action{Kind: ui.ActPickup}, true
+	case 'i':
+		return ui.Action{Kind: ui.ActInventory}, true
 	}
 	return ui.Action{}, false
+}
+
+// Menu presents a blocking list; arrows/jk move, Enter/letter selects, Esc/q cancels.
+func (sc *Screen) Menu(m ui.MenuSpec) (int, bool) {
+	if len(m.Items) == 0 {
+		return 0, false
+	}
+	sel := 0
+	for {
+		sc.s.Clear()
+		drawString(sc.s, 0, 0, m.Title)
+		for i, it := range m.Items {
+			prefix := "  "
+			if i == sel {
+				prefix = "> "
+			}
+			drawString(sc.s, 0, i+1, fmt.Sprintf("%s%c) %s", prefix, 'a'+i, it))
+		}
+		sc.s.Show()
+		ev, ok := sc.s.PollEvent().(*tc.EventKey)
+		if !ok {
+			continue
+		}
+		switch {
+		case ev.Key() == tc.KeyUp || ev.Rune() == 'k':
+			sel = (sel - 1 + len(m.Items)) % len(m.Items)
+		case ev.Key() == tc.KeyDown || ev.Rune() == 'j':
+			sel = (sel + 1) % len(m.Items)
+		case ev.Key() == tc.KeyEnter:
+			return sel, true
+		case ev.Key() == tc.KeyEscape || ev.Rune() == 'q':
+			return 0, false
+		case ev.Rune() >= 'a' && int(ev.Rune()-'a') < len(m.Items):
+			return int(ev.Rune() - 'a'), true
+		}
+	}
 }

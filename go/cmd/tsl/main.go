@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/c0ze/tsl/internal/behaviors"
 	"github.com/c0ze/tsl/internal/content"
 	"github.com/c0ze/tsl/internal/game"
 	"github.com/c0ze/tsl/internal/gen"
@@ -61,5 +62,6 @@ func newGame(c *content.Content, seed uint32) (*game.Game, error) {
 		RNG:       r,
 		PlayerHP:  startHP,
 		PlayerMax: startHP,
+		Behaviors: behaviors.Registry(),
 	}, nil
 }

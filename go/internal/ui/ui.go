@@ -33,6 +33,8 @@ const (
 	ActNone ActionKind = iota
 	ActMove
 	ActQuit
+	ActPickup
+	ActInventory
 )
 
 // Action is a decoded player intent. Dir is meaningful only when Kind==ActMove.
@@ -41,9 +43,16 @@ type Action struct {
 	Dir  game.Direction
 }
 
-// Prompter supplies player actions to the game loop.
+// MenuSpec describes a selectable list for the front-end to present.
+type MenuSpec struct {
+	Title string
+	Items []string
+}
+
+// Prompter supplies player actions and menu selections.
 type Prompter interface {
 	NextAction() (Action, error)
+	Menu(MenuSpec) (index int, ok bool)
 }
 
 // Renderer draws a View.
@@ -73,6 +82,11 @@ func BuildView(g *game.Game) View {
 			default:
 				*v.At(x, y) = Cell{Glyph: ' ', Color: content.ColorNormal}
 			}
+		}
+	}
+	for _, it := range l.Items {
+		if l.At(it.Pos).Visible {
+			*v.At(it.Pos.X, it.Pos.Y) = Cell{Glyph: it.Def.Rune(), Color: it.Def.Color}
 		}
 	}
 	for _, m := range l.Creatures {
@@ -110,6 +124,18 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			return nil
 		case ActMove:
 			g.PlayerStep(a.Dir)
+		case ActPickup:
+			g.PlayerPickup()
+		case ActInventory:
+			if len(g.Inventory) > 0 {
+				names := make([]string, len(g.Inventory))
+				for i, it := range g.Inventory {
+					names[i] = it.Def.Name
+				}
+				if idx, ok := p.Menu(MenuSpec{Title: "Inventory", Items: names}); ok && idx >= 0 && idx < len(g.Inventory) {
+					g.PlayerUse(g.Inventory[idx])
+				}
+			}
 		}
 	}
 }

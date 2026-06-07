@@ -62,6 +62,7 @@ type Level struct {
 	W, H      int
 	tiles     []Tile
 	Creatures []*Creature
+	Items     []*Item
 }
 
 // InBounds reports whether p lies inside the level.
@@ -89,6 +90,10 @@ type Game struct {
 	PlayerMax int
 	Messages  []string
 	Dead      bool
+	Inventory []*Item
+	Weapon    *Item
+	Armor     *Item
+	Behaviors map[string]Behavior
 }
 
 // Move attempts to move the player one step in d. It returns true if the player

@@ -72,6 +72,7 @@ func Rooms(r *rng.MT, c *content.Content, w, h int) (*game.Level, game.Pos, game
 	down := rooms[len(rooms)-1].center()
 	lvl.Set(down, stairs)
 	placeMonsters(r, c, lvl, rooms, start)
+	placeItems(r, c, lvl, rooms, start)
 	return lvl, start, down, nil
 }
 
@@ -108,6 +109,29 @@ func carveV(lvl *game.Level, y0, y1, x int, floor *content.TileDef) {
 	}
 	for y := y0; y <= y1; y++ {
 		lvl.Set(game.Pos{X: x, Y: y}, floor)
+	}
+}
+
+// placeItems drops up to one item into each room except the starting room.
+func placeItems(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, start game.Pos) {
+	ids := make([]string, 0, len(c.Items))
+	for id := range c.Items {
+		ids = append(ids, id)
+	}
+	if len(ids) == 0 {
+		return
+	}
+	sort.Strings(ids)
+	for i, room := range rooms {
+		if i == 0 || r.Intn(2) == 0 { // ~half the rooms, never the start
+			continue
+		}
+		pos := game.Pos{X: room.x + r.Intn(room.w), Y: room.y + r.Intn(room.h)}
+		if pos == start || !lvl.Passable(pos) || lvl.ItemAt(pos) != nil {
+			continue
+		}
+		def := c.Items[ids[r.Intn(len(ids))]]
+		lvl.Items = append(lvl.Items, &game.Item{Def: def, Pos: pos})
 	}
 }
 

@@ -36,12 +36,33 @@ func (g *Game) PlayerStep(d Direction) {
 	}
 }
 
+func (g *Game) playerAttackStat() int {
+	if g.Weapon != nil {
+		return playerAttack + g.Weapon.Def.Attack
+	}
+	return playerAttack
+}
+
+func (g *Game) playerDamageSpec() string {
+	if g.Weapon != nil && g.Weapon.Def.Damage != "" {
+		return g.Weapon.Def.Damage
+	}
+	return playerDamage
+}
+
+func (g *Game) playerDodgeStat() int {
+	if g.Armor != nil {
+		return playerDodge + g.Armor.Def.Dodge
+	}
+	return playerDodge
+}
+
 func (g *Game) playerAttacks(m *Creature) {
-	if !g.RNG.Chance(playerAttack, m.Def.Dodge) {
+	if !g.RNG.Chance(g.playerAttackStat(), m.Def.Dodge) {
 		g.log("You miss the %s.", m.Def.Name)
 		return
 	}
-	dmg := g.RNG.RollSpec(playerDamage)
+	dmg := g.RNG.RollSpec(g.playerDamageSpec())
 	m.HP -= dmg
 	g.log("You hit the %s for %d.", m.Def.Name, dmg)
 	if m.HP <= 0 {
@@ -51,7 +72,7 @@ func (g *Game) playerAttacks(m *Creature) {
 }
 
 func (g *Game) monsterAttacks(m *Creature) {
-	if !g.RNG.Chance(m.Def.Attack, playerDodge) {
+	if !g.RNG.Chance(m.Def.Attack, g.playerDodgeStat()) {
 		g.log("The %s misses you.", m.Def.Name)
 		return
 	}
