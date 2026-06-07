@@ -182,3 +182,16 @@ func TestLoadRejectsBadItemKind(t *testing.T) {
 		t.Fatal("expected error for invalid item kind")
 	}
 }
+
+func TestLoadRejectsBadMonsterDamage(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "tiles.toml"), []byte("[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "monsters.toml"), []byte("[monster.bad]\nname=\"bad\"\nglyph=\"b\"\ncolor=\"normal\"\nhp=3\nattack=1\ndodge=1\ndamage=\"1x4\"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error for malformed monster damage spec")
+	}
+}

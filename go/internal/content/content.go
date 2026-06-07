@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -209,8 +210,8 @@ func validateMonster(m *MonsterDef) error {
 	if m.Dodge < 0 {
 		return fmt.Errorf("dodge must be >= 0, got %d", m.Dodge)
 	}
-	if strings.TrimSpace(m.Damage) == "" {
-		return fmt.Errorf("damage must not be empty")
+	if !validDamageSpec(m.Damage) {
+		return fmt.Errorf("damage %q is not a valid dice spec", m.Damage)
 	}
 	return nil
 }
@@ -231,9 +232,36 @@ func validateItem(i *ItemDef) error {
 			return fmt.Errorf("potion must have a non-empty use")
 		}
 	case "weapon":
-		if strings.TrimSpace(i.Damage) == "" {
-			return fmt.Errorf("weapon must have a non-empty damage")
+		if !validDamageSpec(i.Damage) {
+			return fmt.Errorf("weapon damage %q is not a valid dice spec", i.Damage)
 		}
 	}
 	return nil
+}
+
+// validDamageSpec reports whether s is a well-formed dice spec "NdS" or
+// "NdS+M" / "NdS-M" (matching rng.RollSpec's grammar).
+func validDamageSpec(s string) bool {
+	d := strings.IndexByte(s, 'd')
+	if d <= 0 || d >= len(s)-1 {
+		return false
+	}
+	if n, err := strconv.Atoi(s[:d]); err != nil || n < 0 {
+		return false
+	}
+	rest := s[d+1:]
+	if rest[0] == '+' || rest[0] == '-' {
+		return false
+	}
+	if i := strings.IndexAny(rest[1:], "+-"); i >= 0 {
+		i++ // account for the rest[1:] offset
+		if _, err := strconv.Atoi(rest[i:]); err != nil {
+			return false
+		}
+		rest = rest[:i]
+	}
+	if sides, err := strconv.Atoi(rest); err != nil || sides < 1 {
+		return false
+	}
+	return true
 }
