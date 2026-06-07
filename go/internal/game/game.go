@@ -56,8 +56,9 @@ type Tile struct {
 
 // Level is a rectangular grid of tiles stored row-major.
 type Level struct {
-	W, H  int
-	tiles []Tile
+	W, H      int
+	tiles     []Tile
+	Creatures []*Creature
 }
 
 // InBounds reports whether p lies inside the level.
