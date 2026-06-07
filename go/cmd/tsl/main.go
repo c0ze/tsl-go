@@ -81,6 +81,9 @@ func newGame(c *content.Content, seed uint32) (*game.Game, error) {
 		Behaviors: behaviors.Registry(),
 		Depth:     1,
 	}
+	if err := game.ValidateItemUses(c, g.Behaviors); err != nil {
+		return nil, err
+	}
 	g.NewLevelFn = func(depth int) (*game.Level, game.Pos, error) {
 		l, s, _, err := gen.Rooms(r, c, mapW, mapH)
 		return l, s, err

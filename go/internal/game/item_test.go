@@ -21,3 +21,19 @@ func TestItemAtAndRemove(t *testing.T) {
 		t.Error("item should be gone after RemoveItem")
 	}
 }
+
+func TestValidateItemUsesRejectsUnknown(t *testing.T) {
+	reg := map[string]Behavior{"heal": func(*Game, *Item) []string { return nil }}
+	good := &content.Content{Items: map[string]*content.ItemDef{
+		"potion": {ID: "potion", Kind: "potion", Use: "heal"},
+	}}
+	if err := ValidateItemUses(good, reg); err != nil {
+		t.Errorf("valid use should pass: %v", err)
+	}
+	bad := &content.Content{Items: map[string]*content.ItemDef{
+		"potion": {ID: "potion", Kind: "potion", Use: "hael"},
+	}}
+	if err := ValidateItemUses(bad, reg); err == nil {
+		t.Error("unknown behavior reference should be rejected")
+	}
+}
