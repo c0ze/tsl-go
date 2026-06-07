@@ -86,16 +86,18 @@ func BuildView(g *game.Game) View {
 		}
 	}
 	for _, it := range l.Items {
-		if l.At(it.Pos).Visible {
+		if l.InBounds(it.Pos) && l.At(it.Pos).Visible {
 			*v.At(it.Pos.X, it.Pos.Y) = Cell{Glyph: it.Def.Rune(), Color: it.Def.Color}
 		}
 	}
 	for _, m := range l.Creatures {
-		if l.At(m.Pos).Visible {
+		if l.InBounds(m.Pos) && l.At(m.Pos).Visible {
 			*v.At(m.Pos.X, m.Pos.Y) = Cell{Glyph: m.Def.Rune(), Color: m.Def.Color}
 		}
 	}
-	*v.At(g.Player.X, g.Player.Y) = Cell{Glyph: PlayerGlyph, Color: PlayerColor}
+	if l.InBounds(g.Player) {
+		*v.At(g.Player.X, g.Player.Y) = Cell{Glyph: PlayerGlyph, Color: PlayerColor}
+	}
 	v.Messages = lastN(g.Messages, 4)
 	return v
 }

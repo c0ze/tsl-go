@@ -1,6 +1,10 @@
 package game
 
-import "github.com/c0ze/tsl/internal/content"
+import (
+	"fmt"
+
+	"github.com/c0ze/tsl/internal/content"
+)
 
 // Item is an item instance (on the ground while Pos is meaningful, or carried).
 type Item struct {
@@ -31,4 +35,18 @@ func (l *Level) RemoveItem(it *Item) {
 			return
 		}
 	}
+}
+
+// ValidateItemUses checks that every consumable item's `use` names a registered
+// behavior, so malformed content fails fast at startup instead of silently
+// doing nothing at runtime.
+func ValidateItemUses(c *content.Content, reg map[string]Behavior) error {
+	for id, it := range c.Items {
+		if it.Kind == "potion" {
+			if _, ok := reg[it.Use]; !ok {
+				return fmt.Errorf("item %q references unknown behavior %q", id, it.Use)
+			}
+		}
+	}
+	return nil
 }

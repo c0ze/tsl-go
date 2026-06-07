@@ -29,7 +29,7 @@ color = "normal"
 passable = false
 transparent = false
 `)
-	c, err := Load(dir)
+	c, err := Load(os.DirFS(dir))
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
@@ -59,7 +59,7 @@ color = "chartreuse"
 passable = true
 transparent = true
 `)
-	if _, err := Load(dir); err == nil {
+	if _, err := Load(os.DirFS(dir)); err == nil {
 		t.Fatal("expected error for invalid color, got nil")
 	}
 }
@@ -72,7 +72,7 @@ color = "normal"
 passable = true
 transparent = true
 `)
-	if _, err := Load(dir); err == nil {
+	if _, err := Load(os.DirFS(dir)); err == nil {
 		t.Fatal("expected error for multi-rune glyph, got nil")
 	}
 }
@@ -80,7 +80,7 @@ transparent = true
 // A file that parses but defines no tiles must be rejected (a level needs tiles).
 func TestLoadRejectsEmpty(t *testing.T) {
 	dir := writeTiles(t, "# valid TOML, but no [tile.*] tables\n")
-	if _, err := Load(dir); err == nil {
+	if _, err := Load(os.DirFS(dir)); err == nil {
 		t.Fatal("expected error when no tiles are defined, got nil")
 	}
 }
@@ -108,7 +108,7 @@ damage = "1d2"
 `), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	c, err := Load(dir)
+	c, err := Load(os.DirFS(dir))
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
@@ -129,7 +129,7 @@ color = "normal"
 passable = true
 transparent = true
 `)
-	c, err := Load(dir)
+	c, err := Load(os.DirFS(dir))
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
@@ -146,7 +146,7 @@ func TestLoadItems(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "items.toml"), []byte("[item.healing_potion]\nname=\"healing potion\"\nglyph=\"!\"\ncolor=\"red\"\nkind=\"potion\"\nuse=\"heal\"\npower=8\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	c, err := Load(dir)
+	c, err := Load(os.DirFS(dir))
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
@@ -161,7 +161,7 @@ func TestLoadItems(t *testing.T) {
 
 func TestLoadWithoutItemsFileIsOK(t *testing.T) {
 	dir := writeTiles(t, "[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n")
-	c, err := Load(dir)
+	c, err := Load(os.DirFS(dir))
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
@@ -178,7 +178,20 @@ func TestLoadRejectsBadItemKind(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "items.toml"), []byte("[item.x]\nname=\"x\"\nglyph=\"x\"\ncolor=\"normal\"\nkind=\"banana\"\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := Load(dir); err == nil {
+	if _, err := Load(os.DirFS(dir)); err == nil {
 		t.Fatal("expected error for invalid item kind")
+	}
+}
+
+func TestLoadRejectsBadMonsterDamage(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "tiles.toml"), []byte("[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "monsters.toml"), []byte("[monster.bad]\nname=\"bad\"\nglyph=\"b\"\ncolor=\"normal\"\nhp=3\nattack=1\ndodge=1\ndamage=\"1x4\"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error for malformed monster damage spec")
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/c0ze/tsl/data"
 	"github.com/c0ze/tsl/internal/behaviors"
 	"github.com/c0ze/tsl/internal/content"
 	"github.com/c0ze/tsl/internal/game"
@@ -32,9 +33,7 @@ func main() {
 }
 
 func run() (string, error) {
-	// content.Load reads ./data relative to the working directory, so tsl must
-	// be run from the go/ module root for now.
-	c, err := content.Load("data")
+	c, err := content.Load(data.Files)
 	if err != nil {
 		return "", err
 	}
@@ -81,6 +80,9 @@ func newGame(c *content.Content, seed uint32) (*game.Game, error) {
 		PlayerMax: startHP,
 		Behaviors: behaviors.Registry(),
 		Depth:     1,
+	}
+	if err := game.ValidateItemUses(c, g.Behaviors); err != nil {
+		return nil, err
 	}
 	g.NewLevelFn = func(depth int) (*game.Level, game.Pos, error) {
 		l, s, _, err := gen.Rooms(r, c, mapW, mapH)
