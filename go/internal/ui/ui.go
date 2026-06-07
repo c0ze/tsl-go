@@ -109,10 +109,10 @@ func BuildView(g *game.Game) View {
 // statusLine summarises the player's vitals and gear for the HUD.
 func statusLine(g *game.Game) string {
 	wield, wear := "none", "none"
-	if g.Weapon != nil {
+	if g.Weapon != nil && g.Weapon.Def != nil {
 		wield = g.Weapon.Def.Name
 	}
-	if g.Armor != nil {
+	if g.Armor != nil && g.Armor.Def != nil {
 		wear = g.Armor.Def.Name
 	}
 	return fmt.Sprintf("HP %d/%d   Depth %d   Wield: %s   Wear: %s",
