@@ -89,3 +89,25 @@ func TestRoomsConnectivityAndPlacement(t *testing.T) {
 		}
 	}
 }
+
+func TestRoomsPlacesMonsters(t *testing.T) {
+	c := testContent()
+	c.Monsters = map[string]*content.MonsterDef{
+		"rat": {ID: "rat", Name: "rat", Glyph: "r", Color: content.ColorBrown, HP: 3, Attack: 2, Dodge: 1, Damage: "1d2"},
+	}
+	l, _, _, err := Rooms(rng.NewWithSeed(7), c, 60, 24)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(l.Creatures) == 0 {
+		t.Error("expected at least one monster placed")
+	}
+	for _, m := range l.Creatures {
+		if !l.Passable(m.Pos) {
+			t.Errorf("monster placed on impassable tile at %v", m.Pos)
+		}
+		if m.HP != m.Def.HP {
+			t.Errorf("monster HP %d != def HP %d", m.HP, m.Def.HP)
+		}
+	}
+}
