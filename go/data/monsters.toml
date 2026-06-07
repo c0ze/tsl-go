@@ -68,3 +68,26 @@ dodge = 2
 damage = "1d4"
 speed = 65
 corpse = "corpse"
+
+# Depth-gated tanks (no corpse — straw/ooze isn't edible). See #16 depth scaling.
+[monster.scarecrow]
+name = "scarecrow"
+glyph = "C"
+color = "brown"
+hp = 15
+attack = 4
+dodge = 0
+damage = "1d6"
+speed = 80
+min_depth = 2
+
+[monster.slime]
+name = "slime"
+glyph = "x"
+color = "green"
+hp = 18
+attack = 3
+dodge = 0
+damage = "1d4"
+speed = 80
+min_depth = 3
