@@ -35,6 +35,7 @@ const (
 	ActQuit
 	ActPickup
 	ActInventory
+	ActDescend
 )
 
 // Action is a decoded player intent. Dir is meaningful only when Kind==ActMove.
@@ -112,7 +113,7 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 	for {
 		g.UpdateFOV()
 		r.Render(BuildView(g))
-		if g.Dead {
+		if g.Dead || g.Won {
 			return nil
 		}
 		a, err := p.NextAction()
@@ -136,6 +137,8 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 					g.PlayerUse(g.Inventory[idx])
 				}
 			}
+		case ActDescend:
+			g.Descend()
 		}
 	}
 }
