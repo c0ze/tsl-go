@@ -54,7 +54,9 @@ func run() (string, error) {
 	case g.Won:
 		return "You escaped the dungeon victorious!", nil
 	case g.Dead:
-		_ = os.WriteFile("morgue.txt", []byte(g.MorgueText()), 0o644)
+		if err := os.WriteFile("morgue.txt", []byte(g.MorgueText()), 0o644); err != nil {
+			return fmt.Sprintf("You have died. (Failed to write morgue: %v)", err), nil
+		}
 		return "You have died. A morgue was written to morgue.txt.", nil
 	default:
 		return "You leave the dungeon. Farewell.", nil
