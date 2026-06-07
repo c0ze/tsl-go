@@ -2,9 +2,11 @@
 package content
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"unicode/utf8"
 
 	"github.com/BurntSushi/toml"
@@ -110,6 +112,8 @@ func Load(dir string) (*Content, error) {
 			}
 			c.Monsters[id] = def
 		}
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return nil, fmt.Errorf("stat %s: %w", mpath, err)
 	}
 	return c, nil
 }
@@ -133,6 +137,15 @@ func validateMonster(m *MonsterDef) error {
 	}
 	if m.HP < 1 {
 		return fmt.Errorf("hp must be >= 1, got %d", m.HP)
+	}
+	if m.Attack < 0 {
+		return fmt.Errorf("attack must be >= 0, got %d", m.Attack)
+	}
+	if m.Dodge < 0 {
+		return fmt.Errorf("dodge must be >= 0, got %d", m.Dodge)
+	}
+	if strings.TrimSpace(m.Damage) == "" {
+		return fmt.Errorf("damage must not be empty")
 	}
 	return nil
 }

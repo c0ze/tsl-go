@@ -36,10 +36,13 @@ func (g *MT) RollSpec(spec string) int {
 		return 0
 	}
 	n, err := strconv.Atoi(spec[:d])
-	if err != nil {
+	if err != nil || n < 0 {
 		return 0
 	}
 	rest := spec[d+1:]
+	if len(rest) == 0 || rest[0] == '+' || rest[0] == '-' {
+		return 0
+	}
 	mod := 0
 	if i := indexAnySign(rest); i >= 0 {
 		m, err := strconv.Atoi(rest[i:])
@@ -50,7 +53,7 @@ func (g *MT) RollSpec(spec string) int {
 		rest = rest[:i]
 	}
 	sides, err := strconv.Atoi(rest)
-	if err != nil {
+	if err != nil || sides < 1 {
 		return 0
 	}
 	return g.Roll(n, sides) + mod

@@ -45,7 +45,9 @@ func TestRollSpec(t *testing.T) {
 			t.Fatalf("RollSpec(2d3+1) = %d out of [3,7]", v)
 		}
 	}
-	if g.RollSpec("garbage") != 0 {
-		t.Error("RollSpec on malformed spec should return 0")
+	for _, bad := range []string{"garbage", "1d0", "1d-4", "2d+1", "d6", "1d"} {
+		if v := g.RollSpec(bad); v != 0 {
+			t.Errorf("RollSpec(%q) = %d, want 0 (malformed)", bad, v)
+		}
 	}
 }
