@@ -35,6 +35,8 @@ func (s *scriptPrompter) NextAction() (Action, error) {
 	return a, nil
 }
 
+func (s *scriptPrompter) Menu(MenuSpec) (int, bool) { return 0, false }
+
 type nullRenderer struct{ frames int }
 
 func (n *nullRenderer) Render(View) { n.frames++ }
@@ -101,6 +103,52 @@ func TestRunAppliesActionsUntilQuit(t *testing.T) {
 		t.Error("expected at least one rendered frame")
 	}
 }
+
+func TestBuildViewShowsVisibleItem(t *testing.T) {
+	g := testGame(t, []string{".....", ".@...", "....."})
+	g.UpdateFOV()
+	g.Level.Items = append(g.Level.Items, &game.Item{
+		Def: &content.ItemDef{ID: "potion", Glyph: "!", Color: content.ColorRed}, Pos: game.Pos{X: 3, Y: 1},
+	})
+	v := BuildView(g)
+	if c := v.At(3, 1); c.Glyph != '!' {
+		t.Errorf("visible item glyph = %q, want '!'", c.Glyph)
+	}
+}
+
+func TestRunInventoryUsesSelectedItem(t *testing.T) {
+	g := testGame(t, []string{".....", ".@...", "....."})
+	g.PlayerHP, g.PlayerMax = 5, 20
+	g.Behaviors = map[string]game.Behavior{"heal": func(gg *game.Game, it *game.Item) []string {
+		gg.PlayerHP += it.Def.Power
+		return []string{"healed"}
+	}}
+	g.Inventory = append(g.Inventory, &game.Item{Def: &content.ItemDef{Name: "potion", Kind: "potion", Use: "heal", Power: 5}})
+	p := &menuPrompter{actions: []Action{{Kind: ActInventory}, {Kind: ActQuit}}, pick: 0}
+	if err := Run(g, p, &nullRenderer{}); err != nil {
+		t.Fatal(err)
+	}
+	if g.PlayerHP != 10 {
+		t.Errorf("HP = %d, want 10 after quaffing", g.PlayerHP)
+	}
+}
+
+// menuPrompter scripts actions and always picks index `pick` from any menu.
+type menuPrompter struct {
+	actions []Action
+	i       int
+	pick    int
+}
+
+func (m *menuPrompter) NextAction() (Action, error) {
+	if m.i >= len(m.actions) {
+		return Action{Kind: ActQuit}, nil
+	}
+	a := m.actions[m.i]
+	m.i++
+	return a, nil
+}
+func (m *menuPrompter) Menu(MenuSpec) (int, bool) { return m.pick, true }
 
 func TestBuildViewShowsVisibleMonsterAndMessages(t *testing.T) {
 	g := testGame(t, []string{".....", ".@...", "....."})
