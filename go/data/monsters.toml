@@ -8,6 +8,7 @@ attack = 2
 dodge = 1
 damage = "1d2"
 speed = 130
+corpse = "rat_corpse"
 
 [monster.ghoul]
 name = "ghoul"
@@ -18,3 +19,4 @@ attack = 4
 dodge = 2
 damage = "1d4"
 speed = 80
+corpse = "ghoul_corpse"

@@ -21,3 +21,30 @@ glyph = "["
 color = "brown"
 kind = "armor"
 dodge = 2
+
+# Food. Eaten with `e` to restore HP. Corpses are nospawn (drops only).
+[item.ration]
+name = "ration"
+glyph = "%"
+color = "brown"
+kind = "food"
+use = "eat"
+power = 5
+
+[item.rat_corpse]
+name = "rat corpse"
+glyph = "%"
+color = "brown"
+kind = "food"
+use = "eat"
+power = 3
+nospawn = true
+
+[item.ghoul_corpse]
+name = "ghoul corpse"
+glyph = "%"
+color = "green"
+kind = "food"
+use = "eat"
+power = 1
+nospawn = true
