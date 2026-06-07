@@ -4,11 +4,19 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/c0ze/tsl/internal/content"
 	"github.com/c0ze/tsl/internal/game"
+	"github.com/c0ze/tsl/internal/gen"
+	"github.com/c0ze/tsl/internal/rng"
 	"github.com/c0ze/tsl/internal/ui"
 	tcellui "github.com/c0ze/tsl/internal/ui/tcell"
+)
+
+const (
+	mapW = 60
+	mapH = 24
 )
 
 func main() {
@@ -26,7 +34,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	g, err := demoGame(c)
+	g, err := newGame(c, uint32(time.Now().UnixNano()))
 	if err != nil {
 		return err
 	}
@@ -38,20 +46,9 @@ func run() error {
 	return ui.Run(g, screen, screen)
 }
 
-// demoGame builds a small hand-made room to walk around in. This is a Plan 1
-// placeholder; dungeon generation replaces it in Plan 2.
-func demoGame(c *content.Content) (*game.Game, error) {
-	rows := []string{
-		"##########",
-		"#........#",
-		"#..####..#",
-		"#..#..@..#",
-		"#..####..#",
-		"#........#",
-		"##########",
-	}
-	legend := map[rune]string{'#': "wall", '.': "floor", '@': "floor"}
-	lvl, start, err := game.ParseLevel(c, rows, legend)
+// newGame builds a fresh, procedurally generated dungeon level seeded by seed.
+func newGame(c *content.Content, seed uint32) (*game.Game, error) {
+	lvl, start, _, err := gen.Rooms(rng.NewWithSeed(seed), c, mapW, mapH)
 	if err != nil {
 		return nil, err
 	}
