@@ -21,33 +21,48 @@ const (
 )
 
 func main() {
-	if err := run(); err != nil {
+	outcome, err := run()
+	if err != nil {
 		fmt.Fprintln(os.Stderr, "tsl:", err)
 		os.Exit(1)
 	}
+	if outcome != "" {
+		fmt.Println(outcome)
+	}
 }
 
-func run() error {
+func run() (string, error) {
 	// content.Load reads ./data relative to the working directory, so tsl must
-	// be run from the go/ module root for now. A configurable data path will
-	// come with the real game setup in a later plan.
+	// be run from the go/ module root for now.
 	c, err := content.Load("data")
 	if err != nil {
-		return err
+		return "", err
 	}
 	g, err := newGame(c, uint32(time.Now().UnixNano()))
 	if err != nil {
-		return err
+		return "", err
 	}
 	screen, err := tcellui.New()
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer screen.Close()
-	return ui.Run(g, screen, screen)
+	if err := ui.Run(g, screen, screen); err != nil {
+		return "", err
+	}
+	switch {
+	case g.Won:
+		return "You escaped the dungeon victorious!", nil
+	case g.Dead:
+		_ = os.WriteFile("morgue.txt", []byte(g.MorgueText()), 0o644)
+		return "You have died. A morgue was written to morgue.txt.", nil
+	default:
+		return "You leave the dungeon. Farewell.", nil
+	}
 }
 
-// newGame builds a fresh, procedurally generated dungeon level seeded by seed.
+// newGame builds a fresh, procedurally generated dungeon seeded by seed, and
+// wires a level generator so the player can descend.
 func newGame(c *content.Content, seed uint32) (*game.Game, error) {
 	r := rng.NewWithSeed(seed)
 	lvl, start, _, err := gen.Rooms(r, c, mapW, mapH)
@@ -55,7 +70,7 @@ func newGame(c *content.Content, seed uint32) (*game.Game, error) {
 		return nil, err
 	}
 	const startHP = 20
-	return &game.Game{
+	g := &game.Game{
 		Content:   c,
 		Level:     lvl,
 		Player:    start,
@@ -63,5 +78,11 @@ func newGame(c *content.Content, seed uint32) (*game.Game, error) {
 		PlayerHP:  startHP,
 		PlayerMax: startHP,
 		Behaviors: behaviors.Registry(),
-	}, nil
+		Depth:     1,
+	}
+	g.NewLevelFn = func(depth int) (*game.Level, game.Pos, error) {
+		l, s, _, err := gen.Rooms(r, c, mapW, mapH)
+		return l, s, err
+	}
+	return g, nil
 }

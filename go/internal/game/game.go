@@ -82,18 +82,18 @@ func (l *Level) Passable(p Pos) bool {
 
 // Game is the whole game state.
 type Game struct {
-	Content   *content.Content
-	Level     *Level
-	Player    Pos
-	RNG       *rng.MT
-	PlayerHP  int
-	PlayerMax int
-	Messages  []string
-	Dead      bool
-	Inventory []*Item
-	Weapon    *Item
-	Armor     *Item
-	Behaviors map[string]Behavior
+	Content    *content.Content
+	Level      *Level
+	Player     Pos
+	RNG        *rng.MT
+	PlayerHP   int
+	PlayerMax  int
+	Messages   []string
+	Dead       bool
+	Inventory  []*Item
+	Weapon     *Item
+	Armor      *Item
+	Behaviors  map[string]Behavior
 	Depth      int
 	Won        bool
 	DeathCause string
