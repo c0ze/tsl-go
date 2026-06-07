@@ -4,8 +4,7 @@ package content
 import (
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
+	"io/fs"
 	"strings"
 	"unicode/utf8"
 
@@ -106,60 +105,82 @@ type itemsFile struct {
 	Item map[string]*ItemDef `toml:"item"`
 }
 
-// Load reads and validates all content files in dir.
-func Load(dir string) (*Content, error) {
-	c := &Content{Tiles: map[string]*TileDef{}}
+// Load reads and validates all content from fsys (tiles.toml is required;
+// monsters.toml and items.toml are optional).
+func Load(fsys fs.FS) (*Content, error) {
+	c := &Content{
+		Tiles:    map[string]*TileDef{},
+		Monsters: map[string]*MonsterDef{},
+		Items:    map[string]*ItemDef{},
+	}
 
 	var tf tilesFile
-	path := filepath.Join(dir, "tiles.toml")
-	if _, err := toml.DecodeFile(path, &tf); err != nil {
-		return nil, fmt.Errorf("loading %s: %w", path, err)
+	if err := decodeTOML(fsys, "tiles.toml", &tf); err != nil {
+		return nil, err
 	}
 	for id, def := range tf.Tile {
 		def.ID = id
 		if err := validateTile(def); err != nil {
-			return nil, fmt.Errorf("tile %q in %s: %w", id, path, err)
+			return nil, fmt.Errorf("tile %q: %w", id, err)
 		}
 		c.Tiles[id] = def
 	}
 	if len(c.Tiles) == 0 {
-		return nil, fmt.Errorf("%s: no tiles defined", path)
+		return nil, fmt.Errorf("tiles.toml: no tiles defined")
 	}
-	c.Monsters = map[string]*MonsterDef{}
-	mpath := filepath.Join(dir, "monsters.toml")
-	if _, err := os.Stat(mpath); err == nil {
-		var mf monstersFile
-		if _, err := toml.DecodeFile(mpath, &mf); err != nil {
-			return nil, fmt.Errorf("loading %s: %w", mpath, err)
-		}
+
+	var mf monstersFile
+	if ok, err := decodeOptionalTOML(fsys, "monsters.toml", &mf); err != nil {
+		return nil, err
+	} else if ok {
 		for id, def := range mf.Monster {
 			def.ID = id
 			if err := validateMonster(def); err != nil {
-				return nil, fmt.Errorf("monster %q in %s: %w", id, mpath, err)
+				return nil, fmt.Errorf("monster %q: %w", id, err)
 			}
 			c.Monsters[id] = def
 		}
-	} else if !errors.Is(err, os.ErrNotExist) {
-		return nil, fmt.Errorf("stat %s: %w", mpath, err)
 	}
-	c.Items = map[string]*ItemDef{}
-	ipath := filepath.Join(dir, "items.toml")
-	if _, err := os.Stat(ipath); err == nil {
-		var inf itemsFile
-		if _, err := toml.DecodeFile(ipath, &inf); err != nil {
-			return nil, fmt.Errorf("loading %s: %w", ipath, err)
-		}
+
+	var inf itemsFile
+	if ok, err := decodeOptionalTOML(fsys, "items.toml", &inf); err != nil {
+		return nil, err
+	} else if ok {
 		for id, def := range inf.Item {
 			def.ID = id
 			if err := validateItem(def); err != nil {
-				return nil, fmt.Errorf("item %q in %s: %w", id, ipath, err)
+				return nil, fmt.Errorf("item %q: %w", id, err)
 			}
 			c.Items[id] = def
 		}
-	} else if !errors.Is(err, os.ErrNotExist) {
-		return nil, fmt.Errorf("stat %s: %w", ipath, err)
 	}
 	return c, nil
+}
+
+func decodeTOML(fsys fs.FS, name string, v any) error {
+	b, err := fs.ReadFile(fsys, name)
+	if err != nil {
+		return fmt.Errorf("reading %s: %w", name, err)
+	}
+	if _, err := toml.Decode(string(b), v); err != nil {
+		return fmt.Errorf("parsing %s: %w", name, err)
+	}
+	return nil
+}
+
+// decodeOptionalTOML decodes name if present; (false, nil) if it does not exist.
+func decodeOptionalTOML(fsys fs.FS, name string, v any) (bool, error) {
+	b, err := fs.ReadFile(fsys, name)
+	if errors.Is(err, fs.ErrNotExist) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("reading %s: %w", name, err)
+	}
+	if _, err := toml.Decode(string(b), v); err != nil {
+		return false, fmt.Errorf("parsing %s: %w", name, err)
+	}
+	return true, nil
 }
 
 func validateTile(t *TileDef) error {

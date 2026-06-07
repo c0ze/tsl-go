@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/c0ze/tsl/data"
 	"github.com/c0ze/tsl/internal/behaviors"
 	"github.com/c0ze/tsl/internal/content"
 	"github.com/c0ze/tsl/internal/game"
@@ -32,9 +33,7 @@ func main() {
 }
 
 func run() (string, error) {
-	// content.Load reads ./data relative to the working directory, so tsl must
-	// be run from the go/ module root for now.
-	c, err := content.Load("data")
+	c, err := content.Load(data.Files)
 	if err != nil {
 		return "", err
 	}
