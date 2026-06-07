@@ -84,3 +84,56 @@ func TestLoadRejectsEmpty(t *testing.T) {
 		t.Fatal("expected error when no tiles are defined, got nil")
 	}
 }
+
+func TestLoadMonsters(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "tiles.toml"), []byte(`
+[tile.floor]
+glyph = "."
+color = "normal"
+passable = true
+transparent = true
+`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "monsters.toml"), []byte(`
+[monster.rat]
+name = "rat"
+glyph = "r"
+color = "brown"
+hp = 3
+attack = 2
+dodge = 1
+damage = "1d2"
+`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	c, err := Load(dir)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	rat, ok := c.Monsters["rat"]
+	if !ok {
+		t.Fatal("rat monster missing")
+	}
+	if rat.ID != "rat" || rat.HP != 3 || rat.Rune() != 'r' {
+		t.Errorf("unexpected rat def: %+v", rat)
+	}
+}
+
+func TestLoadWithoutMonstersFileIsOK(t *testing.T) {
+	dir := writeTiles(t, `
+[tile.floor]
+glyph = "."
+color = "normal"
+passable = true
+transparent = true
+`)
+	c, err := Load(dir)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if len(c.Monsters) != 0 {
+		t.Errorf("expected no monsters, got %d", len(c.Monsters))
+	}
+}

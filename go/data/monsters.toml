@@ -1,0 +1,18 @@
+# Monster definitions. [monster.<id>] → MonsterDef keyed by <id>.
+[monster.rat]
+name = "rat"
+glyph = "r"
+color = "brown"
+hp = 3
+attack = 2
+dodge = 1
+damage = "1d2"
+
+[monster.ghoul]
+name = "ghoul"
+glyph = "g"
+color = "green"
+hp = 8
+attack = 4
+dodge = 2
+damage = "1d4"

@@ -48,9 +48,18 @@ func run() error {
 
 // newGame builds a fresh, procedurally generated dungeon level seeded by seed.
 func newGame(c *content.Content, seed uint32) (*game.Game, error) {
-	lvl, start, _, err := gen.Rooms(rng.NewWithSeed(seed), c, mapW, mapH)
+	r := rng.NewWithSeed(seed)
+	lvl, start, _, err := gen.Rooms(r, c, mapW, mapH)
 	if err != nil {
 		return nil, err
 	}
-	return &game.Game{Content: c, Level: lvl, Player: start}, nil
+	const startHP = 20
+	return &game.Game{
+		Content:   c,
+		Level:     lvl,
+		Player:    start,
+		RNG:       r,
+		PlayerHP:  startHP,
+		PlayerMax: startHP,
+	}, nil
 }

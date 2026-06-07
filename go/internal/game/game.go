@@ -2,7 +2,10 @@
 // and never imports a UI.
 package game
 
-import "github.com/c0ze/tsl/internal/content"
+import (
+	"github.com/c0ze/tsl/internal/content"
+	"github.com/c0ze/tsl/internal/rng"
+)
 
 // Pos is a grid coordinate.
 type Pos struct{ X, Y int }
@@ -56,8 +59,9 @@ type Tile struct {
 
 // Level is a rectangular grid of tiles stored row-major.
 type Level struct {
-	W, H  int
-	tiles []Tile
+	W, H      int
+	tiles     []Tile
+	Creatures []*Creature
 }
 
 // InBounds reports whether p lies inside the level.
@@ -77,9 +81,14 @@ func (l *Level) Passable(p Pos) bool {
 
 // Game is the whole game state.
 type Game struct {
-	Content *content.Content
-	Level   *Level
-	Player  Pos
+	Content   *content.Content
+	Level     *Level
+	Player    Pos
+	RNG       *rng.MT
+	PlayerHP  int
+	PlayerMax int
+	Messages  []string
+	Dead      bool
 }
 
 // Move attempts to move the player one step in d. It returns true if the player

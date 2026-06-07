@@ -44,7 +44,7 @@ var colorMap = map[content.Color]tc.Color{
 	content.ColorBlack:   tc.ColorBlack,
 }
 
-// Render draws the view and flushes it to the screen.
+// Render draws the view (map then message lines) and flushes it.
 func (sc *Screen) Render(v ui.View) {
 	sc.s.Clear()
 	for y := 0; y < v.H; y++ {
@@ -57,7 +57,16 @@ func (sc *Screen) Render(v ui.View) {
 			sc.s.SetContent(x, y, c.Glyph, nil, st)
 		}
 	}
+	for i, msg := range v.Messages {
+		drawString(sc.s, 0, v.H+i, msg)
+	}
 	sc.s.Show()
+}
+
+func drawString(s tc.Screen, x, y int, str string) {
+	for i, r := range str {
+		s.SetContent(x+i, y, r, nil, tc.StyleDefault)
+	}
 }
 
 // NextAction blocks for a key event and maps it to a ui.Action.

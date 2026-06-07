@@ -4,6 +4,7 @@ package gen
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/c0ze/tsl/internal/content"
 	"github.com/c0ze/tsl/internal/game"
@@ -70,6 +71,7 @@ func Rooms(r *rng.MT, c *content.Content, w, h int) (*game.Level, game.Pos, game
 	start := rooms[0].center()
 	down := rooms[len(rooms)-1].center()
 	lvl.Set(down, stairs)
+	placeMonsters(r, c, lvl, rooms, start)
 	return lvl, start, down, nil
 }
 
@@ -106,5 +108,31 @@ func carveV(lvl *game.Level, y0, y1, x int, floor *content.TileDef) {
 	}
 	for y := y0; y <= y1; y++ {
 		lvl.Set(game.Pos{X: x, Y: y}, floor)
+	}
+}
+
+// placeMonsters drops 0-2 monsters into each room except the starting room.
+func placeMonsters(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, start game.Pos) {
+	ids := make([]string, 0, len(c.Monsters))
+	for id := range c.Monsters {
+		ids = append(ids, id)
+	}
+	if len(ids) == 0 {
+		return
+	}
+	sort.Strings(ids) // deterministic ordering for a given seed
+	for i, room := range rooms {
+		if i == 0 {
+			continue // keep the starting room clear
+		}
+		n := r.Intn(3) // 0..2
+		for k := 0; k < n; k++ {
+			pos := game.Pos{X: room.x + r.Intn(room.w), Y: room.y + r.Intn(room.h)}
+			if pos == start || !lvl.Passable(pos) || lvl.CreatureAt(pos) != nil {
+				continue
+			}
+			def := c.Monsters[ids[r.Intn(len(ids))]]
+			lvl.Creatures = append(lvl.Creatures, &game.Creature{Def: def, Pos: pos, HP: def.HP})
+		}
 	}
 }

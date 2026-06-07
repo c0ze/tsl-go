@@ -51,3 +51,17 @@ func TestNewGameDeterministic(t *testing.T) {
 		t.Errorf("same seed gave different starts: %v vs %v", a.Player, b.Player)
 	}
 }
+
+func TestNewGameHasPlayerHPAndRNG(t *testing.T) {
+	c := testTiles()
+	g, err := newGame(c, 1)
+	if err != nil {
+		t.Fatalf("newGame: %v", err)
+	}
+	if g.PlayerHP <= 0 || g.PlayerMax <= 0 {
+		t.Errorf("player HP not initialised: hp=%d max=%d", g.PlayerHP, g.PlayerMax)
+	}
+	if g.RNG == nil {
+		t.Error("game RNG not set")
+	}
+}
