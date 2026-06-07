@@ -101,3 +101,19 @@ func TestRunAppliesActionsUntilQuit(t *testing.T) {
 		t.Error("expected at least one rendered frame")
 	}
 }
+
+func TestBuildViewShowsVisibleMonsterAndMessages(t *testing.T) {
+	g := testGame(t, []string{".....", ".@...", "....."})
+	g.UpdateFOV()
+	g.Level.Creatures = append(g.Level.Creatures, &game.Creature{
+		Def: &content.MonsterDef{ID: "rat", Glyph: "r", Color: content.ColorBrown, HP: 3}, Pos: game.Pos{X: 3, Y: 1}, HP: 3,
+	})
+	g.Messages = []string{"You hit the rat for 2.", "The rat dies."}
+	v := BuildView(g)
+	if c := v.At(3, 1); c.Glyph != 'r' {
+		t.Errorf("visible monster glyph = %q, want 'r'", c.Glyph)
+	}
+	if len(v.Messages) == 0 || v.Messages[len(v.Messages)-1] != "The rat dies." {
+		t.Errorf("view should carry recent messages, got %v", v.Messages)
+	}
+}

@@ -17,8 +17,9 @@ type Cell struct {
 
 // View is a read-only snapshot the front-end draws.
 type View struct {
-	W, H  int
-	Cells []Cell // len W*H, row-major
+	W, H     int
+	Cells    []Cell // len W*H, row-major
+	Messages []string
 }
 
 // At returns a pointer to the cell at (x, y), which must be in bounds
@@ -74,8 +75,22 @@ func BuildView(g *game.Game) View {
 			}
 		}
 	}
+	for _, m := range l.Creatures {
+		if l.At(m.Pos).Visible {
+			*v.At(m.Pos.X, m.Pos.Y) = Cell{Glyph: m.Def.Rune(), Color: m.Def.Color}
+		}
+	}
 	*v.At(g.Player.X, g.Player.Y) = Cell{Glyph: PlayerGlyph, Color: PlayerColor}
+	v.Messages = lastN(g.Messages, 4)
 	return v
+}
+
+// lastN returns up to the last n elements of s.
+func lastN(s []string, n int) []string {
+	if len(s) <= n {
+		return s
+	}
+	return s[len(s)-n:]
 }
 
 // Run is the core game loop: recompute FOV, render, get an action, apply it.
@@ -83,6 +98,9 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 	for {
 		g.UpdateFOV()
 		r.Render(BuildView(g))
+		if g.Dead {
+			return nil
+		}
 		a, err := p.NextAction()
 		if err != nil {
 			return err
@@ -91,7 +109,7 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 		case ActQuit:
 			return nil
 		case ActMove:
-			g.Move(a.Dir)
+			g.PlayerStep(a.Dir)
 		}
 	}
 }
