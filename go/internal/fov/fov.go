@@ -49,17 +49,20 @@ func castLight(g Grid, cx, cy, radius, row int, start, end float64, xx, xy, yx, 
 			}
 			mx := cx + dx*xx + dy*xy
 			my := cy + dx*yx + dy*yy
-			if dx*dx+dy*dy <= radiusSq && g.InBounds(mx, my) {
+			inBounds := g.InBounds(mx, my)
+			if dx*dx+dy*dy <= radiusSq && inBounds {
 				visit(mx, my)
 			}
+			// Out-of-bounds counts as opaque so light can't leak past map edges.
+			opaque := !inBounds || g.Opaque(mx, my)
 			if blocked {
-				if g.InBounds(mx, my) && g.Opaque(mx, my) {
+				if opaque {
 					newStart = rSlope
 					continue
 				}
 				blocked = false
 				start = newStart
-			} else if g.InBounds(mx, my) && g.Opaque(mx, my) && j < radius {
+			} else if opaque && j < radius {
 				blocked = true
 				castLight(g, cx, cy, radius, j+1, start, lSlope, xx, xy, yx, yy, visit)
 				newStart = rSlope
