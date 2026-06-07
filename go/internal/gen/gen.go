@@ -115,7 +115,10 @@ func carveV(lvl *game.Level, y0, y1, x int, floor *content.TileDef) {
 // placeItems drops up to one item into each room except the starting room.
 func placeItems(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, start game.Pos) {
 	ids := make([]string, 0, len(c.Items))
-	for id := range c.Items {
+	for id, it := range c.Items {
+		if it.NoSpawn { // corpses & other drop-only items never spawn as floor loot
+			continue
+		}
 		ids = append(ids, id)
 	}
 	if len(ids) == 0 {
