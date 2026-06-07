@@ -49,16 +49,17 @@ func (t *TileDef) Rune() rune {
 
 // MonsterDef defines a kind of monster.
 type MonsterDef struct {
-	ID     string `toml:"-"`
-	Name   string `toml:"name"`
-	Glyph  string `toml:"glyph"`
-	Color  Color  `toml:"color"`
-	HP     int    `toml:"hp"`
-	Attack int    `toml:"attack"`
-	Dodge  int    `toml:"dodge"`
-	Damage string `toml:"damage"` // dice spec, e.g. "1d4"
-	Speed  int    `toml:"speed"`  // energy gained per turn; <= 0 defaults to 100
-	Corpse string `toml:"corpse"` // item id dropped on death ("" = none); must be a food item
+	ID       string `toml:"-"`
+	Name     string `toml:"name"`
+	Glyph    string `toml:"glyph"`
+	Color    Color  `toml:"color"`
+	HP       int    `toml:"hp"`
+	Attack   int    `toml:"attack"`
+	Dodge    int    `toml:"dodge"`
+	Damage   string `toml:"damage"`    // dice spec, e.g. "1d4"
+	Speed    int    `toml:"speed"`     // energy gained per turn; <= 0 defaults to 100
+	Corpse   string `toml:"corpse"`    // item id dropped on death ("" = none); must be a food item
+	MinDepth int    `toml:"min_depth"` // earliest depth this monster spawns (0/1 = from depth 1)
 }
 
 // Rune returns the monster's glyph as a rune.
@@ -237,6 +238,9 @@ func validateMonster(m *MonsterDef) error {
 	}
 	if !validDamageSpec(m.Damage) {
 		return fmt.Errorf("damage %q is not a valid dice spec", m.Damage)
+	}
+	if m.MinDepth < 0 {
+		return fmt.Errorf("min_depth must be >= 0, got %d", m.MinDepth)
 	}
 	return nil
 }

@@ -33,7 +33,7 @@ func (r rect) intersects(o rect) bool {
 // the player start (center of the first room), and the down-stairs position
 // (center of the last room). Each room is joined to the previous by a corridor,
 // so the level is fully connected.
-func Rooms(r *rng.MT, c *content.Content, w, h int) (*game.Level, game.Pos, game.Pos, error) {
+func Rooms(r *rng.MT, c *content.Content, w, h, depth int) (*game.Level, game.Pos, game.Pos, error) {
 	floor, wall, stairs := c.Tiles["floor"], c.Tiles["wall"], c.Tiles["stairs_down"]
 	if floor == nil || wall == nil || stairs == nil {
 		return nil, game.Pos{}, game.Pos{}, fmt.Errorf("gen: tiles floor/wall/stairs_down must all be defined")
@@ -71,7 +71,7 @@ func Rooms(r *rng.MT, c *content.Content, w, h int) (*game.Level, game.Pos, game
 	start := rooms[0].center()
 	down := rooms[len(rooms)-1].center()
 	lvl.Set(down, stairs)
-	placeMonsters(r, c, lvl, rooms, start)
+	placeMonsters(r, c, lvl, rooms, start, depth)
 	placeItems(r, c, lvl, rooms, start)
 	return lvl, start, down, nil
 }
@@ -139,9 +139,12 @@ func placeItems(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, st
 }
 
 // placeMonsters drops 0-2 monsters into each room except the starting room.
-func placeMonsters(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, start game.Pos) {
+func placeMonsters(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, start game.Pos, depth int) {
 	ids := make([]string, 0, len(c.Monsters))
-	for id := range c.Monsters {
+	for id, m := range c.Monsters {
+		if m.MinDepth > depth {
+			continue // not deep enough for this monster yet
+		}
 		ids = append(ids, id)
 	}
 	if len(ids) == 0 {

@@ -28,3 +28,17 @@ func TestEmbeddedRoster(t *testing.T) {
 		t.Error("ratman glyph should be 'r'")
 	}
 }
+
+// TestDepthGatedTanks checks the tougher monsters only appear on deeper floors.
+func TestDepthGatedTanks(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if s := c.Monsters["scarecrow"]; s == nil || s.MinDepth != 2 {
+		t.Errorf("scarecrow should be gated to depth 2, got %+v", s)
+	}
+	if s := c.Monsters["slime"]; s == nil || s.MinDepth != 3 {
+		t.Errorf("slime should be gated to depth 3, got %+v", s)
+	}
+}

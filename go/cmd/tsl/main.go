@@ -66,7 +66,7 @@ func run() (string, error) {
 // wires a level generator so the player can descend.
 func newGame(c *content.Content, seed uint32) (*game.Game, error) {
 	r := rng.NewWithSeed(seed)
-	lvl, start, _, err := gen.Rooms(r, c, mapW, mapH)
+	lvl, start, _, err := gen.Rooms(r, c, mapW, mapH, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func newGame(c *content.Content, seed uint32) (*game.Game, error) {
 		return nil, err
 	}
 	g.NewLevelFn = func(depth int) (*game.Level, game.Pos, error) {
-		l, s, _, err := gen.Rooms(r, c, mapW, mapH)
+		l, s, _, err := gen.Rooms(r, c, mapW, mapH, depth)
 		return l, s, err
 	}
 	return g, nil
