@@ -6,7 +6,7 @@
 
 **Architecture:** `MonsterDef.MinDepth` gates eligibility; `gen.Rooms` takes the current depth and `placeMonsters` filters the pool to `MinDepth <= depth`. The depth is already threaded by `Game.NewLevelFn(depth)` (cmd) and starts at 1. The big branching-named-level graph (the rest of #16) is a **later increment with its own design doc**; this slice keeps the linear depth model and `MaxDepth = 3`.
 
-**Tech Stack:** Go 1.21 (`GOTOOLCHAIN=local`). Commands from `/Users/arda/projects/tsl/go`, prefixed `GOTOOLCHAIN=local`; prepend `env -u GOROOT` if a GOROOT error appears.
+**Tech Stack:** Go 1.21 (`GOTOOLCHAIN=local`). Commands run from the `go/` directory at the repo root, prefixed `GOTOOLCHAIN=local`; prepend `env -u GOROOT` if a GOROOT error appears.
 
 ---
 
