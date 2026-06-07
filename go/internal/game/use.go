@@ -33,7 +33,7 @@ func (g *Game) PlayerUse(it *Item) {
 	case "armor":
 		g.Armor = it
 		g.log("You wear the %s.", it.Def.Name)
-	case "potion":
+	case "potion", "food":
 		if b, ok := g.Behaviors[it.Def.Use]; ok {
 			g.Messages = append(g.Messages, b(g, it)...)
 		} else {
@@ -60,4 +60,16 @@ func (g *Game) removeInventory(it *Item) {
 			return
 		}
 	}
+}
+
+// EdibleInventory returns the food items the player is carrying, in inventory
+// order. The UI uses it to build the "eat what?" menu.
+func (g *Game) EdibleInventory() []*Item {
+	var food []*Item
+	for _, it := range g.Inventory {
+		if it.Def != nil && it.Def.Kind == "food" {
+			food = append(food, it)
+		}
+	}
+	return food
 }

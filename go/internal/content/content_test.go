@@ -195,3 +195,74 @@ func TestLoadRejectsBadMonsterDamage(t *testing.T) {
 		t.Fatal("expected error for malformed monster damage spec")
 	}
 }
+
+func TestLoadFoodItem(t *testing.T) {
+	dir := t.TempDir()
+	must := func(name, body string) {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	must("tiles.toml", "[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n")
+	must("items.toml", "[item.ration]\nname=\"ration\"\nglyph=\"%\"\ncolor=\"brown\"\nkind=\"food\"\nuse=\"eat\"\npower=5\n")
+	c, err := Load(os.DirFS(dir))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	r, ok := c.Items["ration"]
+	if !ok || r.Kind != "food" || r.Use != "eat" || r.Power != 5 {
+		t.Errorf("unexpected food def: %+v", r)
+	}
+}
+
+func TestLoadRejectsFoodWithoutUse(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "tiles.toml"), []byte("[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "items.toml"), []byte("[item.bad]\nname=\"bad\"\nglyph=\"%\"\ncolor=\"brown\"\nkind=\"food\"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error for food with empty use")
+	}
+}
+
+func writeCorpseFixture(t *testing.T, monsterBody string) string {
+	t.Helper()
+	dir := t.TempDir()
+	w := func(name, body string) {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	w("tiles.toml", "[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n")
+	w("items.toml", "[item.rat_corpse]\nname=\"rat corpse\"\nglyph=\"%\"\ncolor=\"brown\"\nkind=\"food\"\nuse=\"eat\"\npower=3\nnospawn=true\n\n[item.dagger]\nname=\"dagger\"\nglyph=\")\"\ncolor=\"normal\"\nkind=\"weapon\"\nattack=2\ndamage=\"1d4\"\n")
+	w("monsters.toml", monsterBody)
+	return dir
+}
+
+func TestLoadMonsterCorpseRef(t *testing.T) {
+	dir := writeCorpseFixture(t, "[monster.rat]\nname=\"rat\"\nglyph=\"r\"\ncolor=\"brown\"\nhp=3\nattack=2\ndodge=1\ndamage=\"1d2\"\ncorpse=\"rat_corpse\"\n")
+	c, err := Load(os.DirFS(dir))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if c.Monsters["rat"].Corpse != "rat_corpse" {
+		t.Errorf("corpse = %q, want rat_corpse", c.Monsters["rat"].Corpse)
+	}
+}
+
+func TestLoadRejectsUnknownCorpse(t *testing.T) {
+	dir := writeCorpseFixture(t, "[monster.rat]\nname=\"rat\"\nglyph=\"r\"\ncolor=\"brown\"\nhp=3\nattack=2\ndodge=1\ndamage=\"1d2\"\ncorpse=\"nope\"\n")
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error for unknown corpse item")
+	}
+}
+
+func TestLoadRejectsNonFoodCorpse(t *testing.T) {
+	dir := writeCorpseFixture(t, "[monster.rat]\nname=\"rat\"\nglyph=\"r\"\ncolor=\"brown\"\nhp=3\nattack=2\ndodge=1\ndamage=\"1d2\"\ncorpse=\"dagger\"\n")
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error: corpse must reference a food item")
+	}
+}

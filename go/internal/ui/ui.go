@@ -39,6 +39,7 @@ const (
 	ActPickup
 	ActInventory
 	ActDescend
+	ActEat
 )
 
 // Action is a decoded player intent. Dir is meaningful only when Kind==ActMove.
@@ -158,6 +159,19 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			}
 		case ActDescend:
 			g.Descend()
+		case ActEat:
+			food := g.EdibleInventory()
+			if len(food) == 0 {
+				g.Messages = append(g.Messages, "You have nothing to eat.")
+				break
+			}
+			names := make([]string, len(food))
+			for i, it := range food {
+				names[i] = it.Def.Name
+			}
+			if idx, ok := p.Menu(MenuSpec{Title: "Eat what?", Items: names}); ok && idx >= 0 && idx < len(food) {
+				g.PlayerUse(food[idx])
+			}
 		}
 	}
 }

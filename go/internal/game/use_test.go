@@ -62,3 +62,41 @@ func TestUsePotionHealsAndIsConsumed(t *testing.T) {
 		t.Error("potion should be consumed")
 	}
 }
+
+func TestPlayerUseFoodEatsAndRemoves(t *testing.T) {
+	g := useGame()
+	g.Behaviors["eat"] = func(gg *Game, it *Item) []string {
+		gg.PlayerHP += it.Def.Power
+		return []string{"munch"}
+	}
+	food := &Item{Def: &content.ItemDef{Name: "rat corpse", Kind: "food", Use: "eat", Power: 3}}
+	g.Inventory = append(g.Inventory, food)
+	g.PlayerUse(food)
+	if g.PlayerHP != 13 {
+		t.Errorf("HP = %d, want 13 (10+3)", g.PlayerHP)
+	}
+	if len(g.Inventory) != 0 {
+		t.Errorf("food should be consumed, inventory = %v", g.Inventory)
+	}
+}
+
+func TestValidateItemUsesCoversFood(t *testing.T) {
+	c := &content.Content{Items: map[string]*content.ItemDef{
+		"corpse": {ID: "corpse", Kind: "food", Use: "no_such_behavior"},
+	}}
+	if err := ValidateItemUses(c, map[string]Behavior{}); err == nil {
+		t.Fatal("expected error: food references unknown behavior")
+	}
+}
+
+func TestEdibleInventoryFiltersFood(t *testing.T) {
+	g := useGame()
+	g.Inventory = append(g.Inventory,
+		&Item{Def: &content.ItemDef{Name: "dagger", Kind: "weapon"}},
+		&Item{Def: &content.ItemDef{Name: "ration", Kind: "food", Use: "eat"}},
+	)
+	food := g.EdibleInventory()
+	if len(food) != 1 || food[0].Def.Name != "ration" {
+		t.Errorf("EdibleInventory = %v, want [ration]", food)
+	}
+}

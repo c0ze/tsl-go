@@ -58,6 +58,7 @@ type MonsterDef struct {
 	Dodge  int    `toml:"dodge"`
 	Damage string `toml:"damage"` // dice spec, e.g. "1d4"
 	Speed  int    `toml:"speed"`  // energy gained per turn; <= 0 defaults to 100
+	Corpse string `toml:"corpse"` // item id dropped on death ("" = none); must be a food item
 }
 
 // Rune returns the monster's glyph as a rune.
@@ -68,16 +69,17 @@ func (m *MonsterDef) Rune() rune {
 
 // ItemDef defines a kind of item.
 type ItemDef struct {
-	ID     string `toml:"-"`
-	Name   string `toml:"name"`
-	Glyph  string `toml:"glyph"`
-	Color  Color  `toml:"color"`
-	Kind   string `toml:"kind"`   // "potion", "weapon", or "armor"
-	Use    string `toml:"use"`    // behavior name (potions)
-	Power  int    `toml:"power"`  // potion magnitude (heal amount)
-	Attack int    `toml:"attack"` // weapon attack bonus
-	Dodge  int    `toml:"dodge"`  // armor dodge bonus
-	Damage string `toml:"damage"` // weapon damage spec
+	ID      string `toml:"-"`
+	Name    string `toml:"name"`
+	Glyph   string `toml:"glyph"`
+	Color   Color  `toml:"color"`
+	Kind    string `toml:"kind"`    // "potion", "weapon", "armor", or "food"
+	Use     string `toml:"use"`     // behavior name (potions/food)
+	Power   int    `toml:"power"`   // potion/food magnitude (heal amount)
+	Attack  int    `toml:"attack"`  // weapon attack bonus
+	Dodge   int    `toml:"dodge"`   // armor dodge bonus
+	Damage  string `toml:"damage"`  // weapon damage spec
+	NoSpawn bool   `toml:"nospawn"` // exclude from random floor loot (e.g. corpses)
 }
 
 // Rune returns the item's glyph as a rune.
@@ -86,7 +88,7 @@ func (i *ItemDef) Rune() rune {
 	return r
 }
 
-var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true}
+var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true, "food": true}
 
 // Content is the fully-loaded, validated game content.
 type Content struct {
@@ -156,7 +158,29 @@ func Load(fsys fs.FS) (*Content, error) {
 			c.Items[id] = def
 		}
 	}
+
+	if err := validateCorpseRefs(c); err != nil {
+		return nil, err
+	}
 	return c, nil
+}
+
+// validateCorpseRefs checks that every monster's corpse (when set) names a
+// defined food item, so bad content fails at load instead of at the kill.
+func validateCorpseRefs(c *Content) error {
+	for id, m := range c.Monsters {
+		if m.Corpse == "" {
+			continue
+		}
+		it, ok := c.Items[m.Corpse]
+		if !ok {
+			return fmt.Errorf("monster %q: corpse %q is not a defined item", id, m.Corpse)
+		}
+		if it.Kind != "food" {
+			return fmt.Errorf("monster %q: corpse %q must be a food item, got kind %q", id, m.Corpse, it.Kind)
+		}
+	}
+	return nil
 }
 
 func decodeTOML(fsys fs.FS, name string, v any) error {
@@ -235,6 +259,13 @@ func validateItem(i *ItemDef) error {
 	case "weapon":
 		if !validDamageSpec(i.Damage) {
 			return fmt.Errorf("weapon damage %q is not a valid dice spec", i.Damage)
+		}
+	case "food":
+		if strings.TrimSpace(i.Use) == "" {
+			return fmt.Errorf("food must have a non-empty use")
+		}
+		if i.Power < 0 {
+			return fmt.Errorf("food power must be >= 0, got %d", i.Power)
 		}
 	}
 	return nil

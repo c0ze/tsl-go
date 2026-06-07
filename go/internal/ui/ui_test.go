@@ -191,3 +191,31 @@ func TestRunDescendToWin(t *testing.T) {
 		t.Error("descending at max depth should win and end the loop")
 	}
 }
+
+func TestRunEatHealsFromInventory(t *testing.T) {
+	g := testGame(t, []string{".....", ".@...", "....."})
+	g.PlayerHP, g.PlayerMax = 5, 20
+	g.Behaviors = map[string]game.Behavior{"eat": func(gg *game.Game, it *game.Item) []string {
+		gg.PlayerHP += it.Def.Power
+		return []string{"munch"}
+	}}
+	g.Inventory = append(g.Inventory, &game.Item{Def: &content.ItemDef{Name: "rat corpse", Kind: "food", Use: "eat", Power: 3}})
+	p := &menuPrompter{actions: []Action{{Kind: ActEat}, {Kind: ActQuit}}, pick: 0}
+	if err := Run(g, p, &nullRenderer{}); err != nil {
+		t.Fatal(err)
+	}
+	if g.PlayerHP != 8 {
+		t.Errorf("HP = %d, want 8 after eating", g.PlayerHP)
+	}
+}
+
+func TestRunEatWithNoFoodReports(t *testing.T) {
+	g := testGame(t, []string{".@."})
+	p := &scriptPrompter{actions: []Action{{Kind: ActEat}, {Kind: ActQuit}}}
+	if err := Run(g, p, &nullRenderer{}); err != nil {
+		t.Fatal(err)
+	}
+	if len(g.Messages) == 0 || !strings.Contains(g.Messages[len(g.Messages)-1], "nothing to eat") {
+		t.Errorf("expected a 'nothing to eat' message, got %v", g.Messages)
+	}
+}

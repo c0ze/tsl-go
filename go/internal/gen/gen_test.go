@@ -109,6 +109,20 @@ func TestRoomsPlacesItems(t *testing.T) {
 	}
 }
 
+func TestPlaceItemsSkipsNoSpawn(t *testing.T) {
+	c := testContent()
+	c.Items = map[string]*content.ItemDef{
+		"corpse": {ID: "corpse", Name: "corpse", Glyph: "%", Color: content.ColorBrown, Kind: "food", Use: "eat", Power: 3, NoSpawn: true},
+	}
+	l, _, _, err := Rooms(rng.NewWithSeed(3), c, 60, 24)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(l.Items) != 0 {
+		t.Errorf("nospawn items must not be placed as floor loot, got %d", len(l.Items))
+	}
+}
+
 func TestRoomsPlacesMonsters(t *testing.T) {
 	c := testContent()
 	c.Monsters = map[string]*content.MonsterDef{
