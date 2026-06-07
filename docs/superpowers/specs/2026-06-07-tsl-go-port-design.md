@@ -46,7 +46,7 @@ the author first** (ulf.astrom@gmail.com).
 The Go module lives in `go/` (module path `github.com/c0ze/tsl`). The C source is
 untouched and serves as the behavior reference.
 
-```
+```text
 go/
   cmd/tsl/            main: load config + content, wire registry, run loop
   internal/

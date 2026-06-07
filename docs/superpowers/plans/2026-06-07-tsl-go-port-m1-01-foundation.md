@@ -6,7 +6,7 @@
 
 **Architecture:** Approach A from the design spec (`docs/superpowers/specs/2026-06-07-tsl-go-port-design.md`). An I/O-free engine (`game`) owns state; content is loaded from TOML (`content`); the UI boundary (`ui`) is a `View` snapshot + a `Prompter`/`Renderer` pair the engine calls through; a tcell front-end implements them. The engine never imports the UI.
 
-**Tech Stack:** Go 1.22, `github.com/gdamore/tcell/v2` (terminal), `github.com/BurntSushi/toml` (content). Standard `go test`.
+**Tech Stack:** Go 1.21, `github.com/gdamore/tcell/v2` (terminal), `github.com/BurntSushi/toml` (content). Standard `go test`.
 
 ---
 
@@ -29,7 +29,7 @@ Each subsequent increment gets its own plan written when we reach it.
 
 ## File structure (this plan)
 
-```
+```text
 go/
   go.mod                              module github.com/c0ze/tsl
   go.sum
@@ -76,9 +76,11 @@ mkdir -p go/cmd/tsl go/internal/content go/internal/game go/internal/ui/tcell go
 Run (from `go/`):
 ```bash
 go mod init github.com/c0ze/tsl
-go get github.com/BurntSushi/toml@latest
-go get github.com/gdamore/tcell/v2@latest
+go get github.com/BurntSushi/toml@v1.4.0
+go get github.com/gdamore/tcell/v2@v2.7.4
 ```
+> Pinned for Go 1.21 compatibility (tcell@latest requires Go 1.24). Run go commands with GOTOOLCHAIN=local.
+
 Expected: `go.mod` and `go.sum` created; `go.mod` lists both requires.
 
 - [ ] **Step 3: Create the real tile content file**

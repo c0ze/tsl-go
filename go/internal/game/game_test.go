@@ -78,3 +78,11 @@ func TestDirectionDelta(t *testing.T) {
 		t.Errorf("DirNE delta = (%d,%d), want (1,-1)", dx, dy)
 	}
 }
+
+func TestParseLevelRequiresStart(t *testing.T) {
+	c := testContent()
+	_, _, err := ParseLevel(c, []string{"..", ".."}, map[rune]string{'.': "floor"})
+	if err == nil {
+		t.Fatal("expected error when no '@' start marker is present, got nil")
+	}
+}

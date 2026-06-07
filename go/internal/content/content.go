@@ -37,7 +37,8 @@ type TileDef struct {
 	Transparent bool   `toml:"transparent"`
 }
 
-// Rune returns the tile's glyph as a rune.
+// Rune returns the tile's glyph as a rune. Glyph is guaranteed by validateTile
+// to contain exactly one UTF-8 rune, so the decode always succeeds.
 func (t *TileDef) Rune() rune {
 	r, _ := utf8.DecodeRuneInString(t.Glyph)
 	return r

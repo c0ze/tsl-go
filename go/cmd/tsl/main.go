@@ -19,6 +19,9 @@ func main() {
 }
 
 func run() error {
+	// content.Load reads ./data relative to the working directory, so tsl must
+	// be run from the go/ module root for now. A configurable data path will
+	// come with the real game setup in a later plan.
 	c, err := content.Load("data")
 	if err != nil {
 		return err

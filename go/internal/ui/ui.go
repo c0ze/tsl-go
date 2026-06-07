@@ -20,7 +20,8 @@ type View struct {
 	Cells []Cell // len W*H, row-major
 }
 
-// At returns a pointer to the cell at (x, y).
+// At returns a pointer to the cell at (x, y), which must be in bounds
+// (0 <= x < W, 0 <= y < H). All callers in this package satisfy that.
 func (v *View) At(x, y int) *Cell { return &v.Cells[y*v.W+x] }
 
 // ActionKind enumerates player intents.

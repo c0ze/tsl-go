@@ -17,7 +17,7 @@ func ParseLevel(c *content.Content, rows []string, legend map[rune]string) (*Lev
 	}
 	w := len(rows[0])
 	l := &Level{W: w, H: h, tiles: make([]Tile, w*h)}
-	start := Pos{}
+	start := Pos{X: -1, Y: -1}
 	for y, row := range rows {
 		if len(row) != w {
 			return nil, Pos{}, fmt.Errorf("row %d width %d, want %d", y, len(row), w)
@@ -37,6 +37,9 @@ func ParseLevel(c *content.Content, rows []string, legend map[rune]string) (*Lev
 			}
 			l.tiles[y*w+x] = Tile{Def: def}
 		}
+	}
+	if start.X < 0 {
+		return nil, Pos{}, fmt.Errorf("no '@' player start marker found")
 	}
 	return l, start, nil
 }
