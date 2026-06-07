@@ -647,7 +647,7 @@ corpse = "ghoul_corpse"
 ```
 
 **Step 3: Ignore the morgue artifact.** Append to repo-root `/Users/arda/projects/tsl/.gitignore`:
-```
+```text
 morgue.txt
 ```
 
