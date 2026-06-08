@@ -33,7 +33,7 @@ damage = "1d6"
 
 [item.quarterstaff]
 name = "quarterstaff"
-glyph = "/"
+glyph = ")"
 color = "brown"
 kind = "weapon"
 attack = 2
@@ -154,3 +154,12 @@ color = "red"
 kind = "food"
 use = "eat_mushroom"
 power = 4
+
+# Wand (#15) — zap (z) to blast a targeted creature; power = charges.
+[item.wand_force_bolt]
+name = "wand of force bolt"
+glyph = "/"
+color = "blue"
+kind = "wand"
+damage = "2d6"
+power = 5

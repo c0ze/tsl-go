@@ -424,3 +424,33 @@ func TestLoadRejectsTrapsWithoutTrapTile(t *testing.T) {
 		t.Fatal("expected error: traps>0 needs a dart_trap tile")
 	}
 }
+
+func writeItemsFixture(t *testing.T, itemsBody string) string {
+	t.Helper()
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "tiles.toml"), []byte("[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "items.toml"), []byte(itemsBody), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return dir
+}
+
+func TestLoadWandItem(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.zap]\nname=\"zap wand\"\nglyph=\"/\"\ncolor=\"blue\"\nkind=\"wand\"\ndamage=\"2d6\"\npower=5\n")
+	c, err := Load(os.DirFS(dir))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if w := c.Items["zap"]; w == nil || w.Kind != "wand" || w.Damage != "2d6" {
+		t.Errorf("wand def unexpected: %+v", w)
+	}
+}
+
+func TestLoadRejectsWandBadDamage(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.zap]\nname=\"zap\"\nglyph=\"/\"\ncolor=\"blue\"\nkind=\"wand\"\ndamage=\"oops\"\n")
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error: wand needs a valid damage spec")
+	}
+}

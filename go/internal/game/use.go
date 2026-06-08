@@ -91,3 +91,14 @@ func (g *Game) EdibleInventory() []*Item {
 	}
 	return food
 }
+
+// WandInventory returns the wand items the player is carrying, in inventory order.
+func (g *Game) WandInventory() []*Item {
+	var wands []*Item
+	for _, it := range g.Inventory {
+		if it.Def != nil && it.Def.Kind == "wand" {
+			wands = append(wands, it)
+		}
+	}
+	return wands
+}

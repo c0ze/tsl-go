@@ -40,6 +40,7 @@ const (
 	ActInventory
 	ActTravel
 	ActEat
+	ActZap
 )
 
 // Action is a decoded player intent. Dir is meaningful only when Kind==ActMove.
@@ -54,10 +55,11 @@ type MenuSpec struct {
 	Items []string
 }
 
-// Prompter supplies player actions and menu selections.
+// Prompter supplies player actions, menu selections, and targeting.
 type Prompter interface {
 	NextAction() (Action, error)
 	Menu(MenuSpec) (index int, ok bool)
+	Target(origin game.Pos) (game.Pos, bool)
 }
 
 // Renderer draws a View.
@@ -179,6 +181,23 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			}
 			if idx, ok := p.Menu(MenuSpec{Title: "Eat what?", Items: names}); ok && idx >= 0 && idx < len(food) {
 				g.PlayerUse(food[idx])
+			}
+		case ActZap:
+			wands := g.WandInventory()
+			if len(wands) == 0 {
+				g.Messages = append(g.Messages, "You have no wand to zap.")
+				break
+			}
+			names := make([]string, len(wands))
+			for i, it := range wands {
+				names[i] = fmt.Sprintf("%s (%d charges)", it.Def.Name, it.Charges)
+			}
+			idx, ok := p.Menu(MenuSpec{Title: "Zap which wand?", Items: names})
+			if !ok || idx < 0 || idx >= len(wands) {
+				break
+			}
+			if target, ok := p.Target(g.Player); ok {
+				g.ZapWand(wands[idx], target)
 			}
 		}
 	}

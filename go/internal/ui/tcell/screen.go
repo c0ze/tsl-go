@@ -14,7 +14,8 @@ import (
 
 // Screen is a tcell-backed ui.Renderer and ui.Prompter.
 type Screen struct {
-	s tc.Screen
+	s    tc.Screen
+	last ui.View // most recently rendered view, reused by Target
 }
 
 // New creates and initializes a real terminal screen.
@@ -48,6 +49,13 @@ var colorMap = map[content.Color]tc.Color{
 
 // Render draws the view (map then message lines) and flushes it.
 func (sc *Screen) Render(v ui.View) {
+	sc.last = v
+	sc.drawView(v)
+	sc.s.Show()
+}
+
+// drawView paints the map, status line, and messages (without flushing).
+func (sc *Screen) drawView(v ui.View) {
 	sc.s.Clear()
 	for y := 0; y < v.H; y++ {
 		for x := 0; x < v.W; x++ {
@@ -63,7 +71,6 @@ func (sc *Screen) Render(v ui.View) {
 	for i, msg := range v.Messages {
 		drawString(sc.s, 0, v.H+1+i, msg)
 	}
-	sc.s.Show()
 }
 
 func drawString(s tc.Screen, x, y int, str string) {
@@ -120,6 +127,8 @@ func keyToAction(ev *tc.EventKey) (ui.Action, bool) {
 		return ui.Action{Kind: ui.ActPickup}, true
 	case 'i':
 		return ui.Action{Kind: ui.ActInventory}, true
+	case 'z':
+		return ui.Action{Kind: ui.ActZap}, true
 	case 'e':
 		return ui.Action{Kind: ui.ActEat}, true
 	case '>':
@@ -160,6 +169,53 @@ func (sc *Screen) Menu(m ui.MenuSpec) (int, bool) {
 			return 0, false
 		case ev.Rune() >= 'a' && int(ev.Rune()-'a') < len(m.Items):
 			return int(ev.Rune() - 'a'), true
+		}
+	}
+}
+
+// Target lets the player move a cursor over the last-rendered map and pick a
+// tile. Arrows/hjkl move the cursor; Enter confirms; Esc/q cancels.
+func (sc *Screen) Target(origin game.Pos) (game.Pos, bool) {
+	v := sc.last
+	clamp := func(p game.Pos) game.Pos {
+		if p.X < 0 {
+			p.X = 0
+		}
+		if p.Y < 0 {
+			p.Y = 0
+		}
+		if v.W > 0 && p.X >= v.W {
+			p.X = v.W - 1
+		}
+		if v.H > 0 && p.Y >= v.H {
+			p.Y = v.H - 1
+		}
+		return p
+	}
+	cur := clamp(origin)
+	cursorStyle := tc.StyleDefault.Foreground(tc.ColorYellow).Reverse(true)
+	for {
+		sc.drawView(v)
+		drawString(sc.s, 0, v.H+1+len(v.Messages), "Aim: move cursor, Enter to fire, Esc to cancel")
+		sc.s.SetContent(cur.X, cur.Y, '*', nil, cursorStyle)
+		sc.s.Show()
+		ev, ok := sc.s.PollEvent().(*tc.EventKey)
+		if !ok {
+			continue
+		}
+		switch {
+		case ev.Key() == tc.KeyEnter:
+			return cur, true
+		case ev.Key() == tc.KeyEscape || ev.Rune() == 'q':
+			return game.Pos{}, false
+		case ev.Key() == tc.KeyUp || ev.Rune() == 'k':
+			cur = clamp(game.Pos{X: cur.X, Y: cur.Y - 1})
+		case ev.Key() == tc.KeyDown || ev.Rune() == 'j':
+			cur = clamp(game.Pos{X: cur.X, Y: cur.Y + 1})
+		case ev.Key() == tc.KeyLeft || ev.Rune() == 'h':
+			cur = clamp(game.Pos{X: cur.X - 1, Y: cur.Y})
+		case ev.Key() == tc.KeyRight || ev.Rune() == 'l':
+			cur = clamp(game.Pos{X: cur.X + 1, Y: cur.Y})
 		}
 	}
 }

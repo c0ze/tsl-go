@@ -127,3 +127,15 @@ func TestPickupAutoEquipsWhenSlotEmpty(t *testing.T) {
 		t.Error("armor should auto-equip when the slot is empty")
 	}
 }
+
+func TestWandInventoryFilters(t *testing.T) {
+	g := useGame()
+	g.Inventory = append(g.Inventory,
+		&Item{Def: &content.ItemDef{Name: "dagger", Kind: "weapon"}},
+		&Item{Def: &content.ItemDef{Name: "wand", Kind: "wand", Damage: "1d1"}, Charges: 3},
+	)
+	wands := g.WandInventory()
+	if len(wands) != 1 || wands[0].Def.Name != "wand" {
+		t.Errorf("WandInventory = %v, want [wand]", wands)
+	}
+}

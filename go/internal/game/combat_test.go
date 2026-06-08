@@ -131,6 +131,31 @@ func TestPlayerStepTriggersTrap(t *testing.T) {
 	}
 }
 
+func TestZapWandDamagesAndKills(t *testing.T) {
+	g := combatGame()
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 3}, Pos: Pos{3, 1}, HP: 3}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	wand := &Item{Def: &content.ItemDef{Name: "wand", Kind: "wand", Damage: "10d1"}, Charges: 2}
+	g.ZapWand(wand, Pos{3, 1})
+	if g.Level.CreatureAt(Pos{3, 1}) != nil {
+		t.Error("wand should have killed the rat (10 dmg vs 3 HP)")
+	}
+	if wand.Charges != 1 {
+		t.Errorf("charges = %d, want 1 (spent one)", wand.Charges)
+	}
+}
+
+func TestZapEmptyWandDoesNothing(t *testing.T) {
+	g := combatGame()
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 3}, Pos: Pos{3, 1}, HP: 3}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	wand := &Item{Def: &content.ItemDef{Name: "wand", Kind: "wand", Damage: "10d1"}, Charges: 0}
+	g.ZapWand(wand, Pos{3, 1})
+	if g.Level.CreatureAt(Pos{3, 1}) == nil {
+		t.Error("an empty wand should not damage anything")
+	}
+}
+
 func TestKillCreatureNoCorpse(t *testing.T) {
 	g := combatGame()
 	ghost := &Creature{Def: &content.MonsterDef{ID: "ghost", Name: "ghost"}, Pos: Pos{2, 1}, HP: 1}
