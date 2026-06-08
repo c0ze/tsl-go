@@ -220,6 +220,27 @@ func TestLevelFromDefPlacesBossAndAltar(t *testing.T) {
 	}
 }
 
+func TestLevelFromDefScattersTraps(t *testing.T) {
+	c := levelDefContent()
+	c.Tiles["dart_trap"] = &content.TileDef{ID: "dart_trap", Glyph: "^", Color: content.ColorRed, Passable: true, Transparent: true, Effect: "poison", EffectTurns: 5}
+	def := &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"}, Traps: 5}
+	lvl, err := LevelFromDef(rng.NewWithSeed(3), c, def)
+	if err != nil {
+		t.Fatal(err)
+	}
+	traps := 0
+	for y := 0; y < lvl.H; y++ {
+		for x := 0; x < lvl.W; x++ {
+			if lvl.At(game.Pos{X: x, Y: y}).Def.Effect != "" {
+				traps++
+			}
+		}
+	}
+	if traps == 0 {
+		t.Error("expected some trap tiles placed")
+	}
+}
+
 func TestLevelFromDefDeterministic(t *testing.T) {
 	c := levelDefContent()
 	def := &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"}, Monsters: 5, Spawn: []content.SpawnEntry{{Monster: "ratman", Weight: 1}}}
