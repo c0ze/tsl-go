@@ -91,6 +91,17 @@ func TestEmbeddedTraps(t *testing.T) {
 	}
 }
 
+// TestEmbeddedWand checks the force-bolt wand loaded.
+func TestEmbeddedWand(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if w := c.Items["wand_force_bolt"]; w == nil || w.Kind != "wand" || w.Damage != "2d6" || w.Power != 5 {
+		t.Errorf("wand_force_bolt def unexpected: %+v", w)
+	}
+}
+
 // TestEmbeddedDungeon validates the shipped level graph loads with exactly one
 // start and the expected starter levels.
 func TestEmbeddedDungeon(t *testing.T) {
