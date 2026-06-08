@@ -102,6 +102,22 @@ func TestEmbeddedWand(t *testing.T) {
 	}
 }
 
+// TestEmbeddedVenomWand checks the status-effect (venom) wand loaded: a pure
+// poison wand with charges and no direct damage.
+func TestEmbeddedVenomWand(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	w := c.Items["wand_venom"]
+	if w == nil || w.Kind != "wand" || w.Effect != "poison" || w.EffectTurns <= 0 || w.Power <= 0 {
+		t.Errorf("wand_venom def unexpected: %+v", w)
+	}
+	if w != nil && w.Damage != "" {
+		t.Errorf("wand_venom should be a pure status wand (no damage), got %q", w.Damage)
+	}
+}
+
 // TestEmbeddedDungeon validates the shipped level graph loads with exactly one
 // start and the expected starter levels.
 func TestEmbeddedDungeon(t *testing.T) {
