@@ -38,7 +38,9 @@ type TileDef struct {
 	Color       Color  `toml:"color"`
 	Passable    bool   `toml:"passable"`
 	Transparent bool   `toml:"transparent"`
-	Win         bool   `toml:"win"` // stepping onto this tile wins (the ascension altar)
+	Win         bool   `toml:"win"`          // stepping onto this tile wins (the ascension altar)
+	Effect      string `toml:"effect"`       // status effect applied when stepped on ("" = none)
+	EffectTurns int    `toml:"effect_turns"` // duration of Effect
 }
 
 // Rune returns the tile's glyph as a rune. Glyph is guaranteed by validateTile
@@ -110,6 +112,7 @@ type LevelDef struct {
 	Spawn    []SpawnEntry `toml:"spawn"`
 	Altar    bool         `toml:"altar"` // place an ascension altar (a win tile)
 	Boss     string       `toml:"boss"`  // a guaranteed monster placed once on the level
+	Traps    int          `toml:"traps"` // number of dart_trap tiles to scatter
 }
 
 // Content is the fully-loaded, validated game content.
@@ -268,6 +271,14 @@ func validateLevels(c *Content) error {
 				return fmt.Errorf("level %q: altar set but no win tile %q is defined", id, "altar")
 			}
 		}
+		if l.Traps < 0 {
+			return fmt.Errorf("level %q: traps must be >= 0, got %d", id, l.Traps)
+		}
+		if l.Traps > 0 {
+			if t, ok := c.Tiles["dart_trap"]; !ok || t.Effect == "" {
+				return fmt.Errorf("level %q: traps set but no dart_trap effect tile is defined", id)
+			}
+		}
 	}
 	if starts != 1 {
 		return fmt.Errorf("levels: need exactly one start level, found %d", starts)
@@ -307,6 +318,9 @@ func validateTile(t *TileDef) error {
 	}
 	if !validColors[t.Color] {
 		return fmt.Errorf("invalid color %q", t.Color)
+	}
+	if t.Effect != "" && t.EffectTurns <= 0 {
+		return fmt.Errorf("tile effect %q needs effect_turns > 0", t.Effect)
 	}
 	return nil
 }

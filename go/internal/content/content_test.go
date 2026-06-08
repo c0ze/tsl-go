@@ -399,3 +399,28 @@ func TestLoadRejectsAltarWithoutWinTile(t *testing.T) {
 		t.Fatal("expected error: altar level needs a defined win tile")
 	}
 }
+
+func TestLoadTileEffect(t *testing.T) {
+	dir := writeTiles(t, "[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n\n[tile.dart_trap]\nglyph=\"^\"\ncolor=\"red\"\npassable=true\ntransparent=true\neffect=\"poison\"\neffect_turns=5\n")
+	c, err := Load(os.DirFS(dir))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if tr := c.Tiles["dart_trap"]; tr == nil || tr.Effect != "poison" || tr.EffectTurns != 5 {
+		t.Errorf("dart_trap def unexpected: %+v", tr)
+	}
+}
+
+func TestLoadRejectsEffectTileWithoutTurns(t *testing.T) {
+	dir := writeTiles(t, "[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n\n[tile.bad]\nglyph=\"^\"\ncolor=\"red\"\npassable=true\ntransparent=true\neffect=\"poison\"\n")
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error: effect tile needs effect_turns > 0")
+	}
+}
+
+func TestLoadRejectsTrapsWithoutTrapTile(t *testing.T) {
+	body := "[level.a]\nname=\"A\"\nwidth=60\nheight=24\nstart=true\nlinks=[\"a\"]\ntraps=3\n"
+	if _, err := Load(os.DirFS(writeLevelsFixture(t, body))); err == nil {
+		t.Fatal("expected error: traps>0 needs a dart_trap tile")
+	}
+}
