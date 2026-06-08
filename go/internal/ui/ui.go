@@ -41,6 +41,7 @@ const (
 	ActTravel
 	ActEat
 	ActZap
+	ActRead
 )
 
 // Action is a decoded player intent. Dir is meaningful only when Kind==ActMove.
@@ -181,6 +182,19 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			}
 			if idx, ok := p.Menu(MenuSpec{Title: "Eat what?", Items: names}); ok && idx >= 0 && idx < len(food) {
 				g.PlayerUse(food[idx])
+			}
+		case ActRead:
+			scrolls := g.ReadableInventory()
+			if len(scrolls) == 0 {
+				g.Messages = append(g.Messages, "You have nothing to read.")
+				break
+			}
+			names := make([]string, len(scrolls))
+			for i, it := range scrolls {
+				names[i] = it.Def.Name
+			}
+			if idx, ok := p.Menu(MenuSpec{Title: "Read what?", Items: names}); ok && idx >= 0 && idx < len(scrolls) {
+				g.PlayerUse(scrolls[idx])
 			}
 		case ActZap:
 			wands := g.WandInventory()
