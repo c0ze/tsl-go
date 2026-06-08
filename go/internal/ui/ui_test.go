@@ -54,6 +54,16 @@ func TestBuildViewStatusLine(t *testing.T) {
 	}
 }
 
+func TestBuildViewShowsEffects(t *testing.T) {
+	g := testGame(t, []string{".@."})
+	g.PlayerHP, g.PlayerMax = 10, 20
+	g.AddEffect("poison", 3)
+	v := BuildView(g)
+	if !strings.Contains(v.Status, "Poisoned") {
+		t.Errorf("status %q should show Poisoned", v.Status)
+	}
+}
+
 func TestBuildViewPlacesPlayer(t *testing.T) {
 	g := testGame(t, []string{"...", ".@.", "..."})
 	g.UpdateFOV()

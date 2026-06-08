@@ -120,8 +120,12 @@ func statusLine(g *game.Game) string {
 	if loc == "" {
 		loc = "the dungeon"
 	}
-	return fmt.Sprintf("HP %d/%d   %s   Wield: %s   Wear: %s",
+	s := fmt.Sprintf("HP %d/%d   %s   Wield: %s   Wear: %s",
 		g.PlayerHP, g.PlayerMax, loc, wield, wear)
+	if eff := g.EffectsSummary(); eff != "" {
+		s += "   [" + eff + "]"
+	}
+	return s
 }
 
 // lastN returns up to the last n elements of s.
