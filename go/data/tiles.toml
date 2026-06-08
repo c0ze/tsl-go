@@ -25,3 +25,12 @@ color = "cyan"
 passable = true
 transparent = true
 win = true
+
+# A dart trap — poisons whoever steps on it (#18).
+[tile.dart_trap]
+glyph = "^"
+color = "red"
+passable = true
+transparent = true
+effect = "poison"
+effect_turns = 5

@@ -71,6 +71,26 @@ func TestEmbeddedConsumables(t *testing.T) {
 	}
 }
 
+// TestEmbeddedTraps checks the dart trap tile + that some levels use traps.
+func TestEmbeddedTraps(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if tr := c.Tiles["dart_trap"]; tr == nil || tr.Effect != "poison" || tr.EffectTurns <= 0 {
+		t.Errorf("dart_trap tile unexpected: %+v", tr)
+	}
+	trapped := false
+	for _, l := range c.Levels {
+		if l.Traps > 0 {
+			trapped = true
+		}
+	}
+	if !trapped {
+		t.Error("expected at least one level with traps")
+	}
+}
+
 // TestEmbeddedDungeon validates the shipped level graph loads with exactly one
 // start and the expected starter levels.
 func TestEmbeddedDungeon(t *testing.T) {
