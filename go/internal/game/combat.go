@@ -54,6 +54,9 @@ func (g *Game) PlayerStep(d Direction) {
 			g.AddEffect(tile.Effect, tile.EffectTurns)
 			g.log("You trigger a trap!")
 		}
+	} else if g.openDoor(dst) { // blocked by a closed door: open it (costs the turn)
+		g.log("You open the door.")
+		acted = true
 	}
 	if acted { // a blocked move into a wall doesn't pass the turn
 		g.monstersAct()
@@ -222,7 +225,11 @@ func (g *Game) stepToward(m *Creature, target Pos) {
 		}
 	}
 	dst := Pos{m.Pos.X + step(m.Pos.X, target.X), m.Pos.Y + step(m.Pos.Y, target.Y)}
-	if dst == g.Player || !g.Level.Passable(dst) || g.Level.CreatureAt(dst) != nil {
+	if dst == g.Player || g.Level.CreatureAt(dst) != nil {
+		return
+	}
+	if !g.Level.Passable(dst) {
+		g.openDoor(dst) // open a door in the way (spends this move); a plain wall is a no-op
 		return
 	}
 	m.Pos = dst
