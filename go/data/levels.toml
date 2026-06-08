@@ -1,8 +1,9 @@
-# Level graph. [level.<id>] → LevelDef. Exactly one level has start = true.
-# Stairs (portals) connect linked levels; the player explores to find them and
-# levels persist once visited. `win = true` is a temporary goal until the
-# Chapel ascension altar (#16 increment 2c). This is the 3-level starter subset
-# of the full map (see the design spec); the rest land in 2b.
+# The dungeon graph (faithful to common/places.c). [level.<id>] → LevelDef.
+# Exactly one level has start = true (the Dungeon); exactly one has win = true
+# (the Chapel — a temporary goal until the ascension altar + bosses in 2c).
+# Links are reciprocal, so the graph is fully connected and bidirectional.
+# All levels are ~60x24 to fit a terminal (the faithful wide Chapel awaits a
+# camera/viewport). Spawn tables draw from the current roster, tougher deeper.
 
 [level.dungeon]
 name = "the Dungeon"
@@ -28,7 +29,7 @@ weight = 1
 name = "the Catacombs"
 width = 60
 height = 24
-links = ["dungeon", "ominous_cave"]
+links = ["dungeon", "laboratory"]
 monsters = 10
 [[level.catacombs.spawn]]
 monster = "ghoul"
@@ -47,18 +48,139 @@ weight = 1
 name = "the Ominous Cave"
 width = 60
 height = 24
-links = ["dungeon", "catacombs"]
-monsters = 10
-win = true
+links = ["dungeon", "comm_hub", "underpass"]
+monsters = 9
 [[level.ominous_cave.spawn]]
 monster = "graveling"
-weight = 2
-[[level.ominous_cave.spawn]]
-monster = "merman"
-weight = 2
+weight = 3
 [[level.ominous_cave.spawn]]
 monster = "crypt_vermin"
 weight = 2
 [[level.ominous_cave.spawn]]
+monster = "ratman"
+weight = 2
+[[level.ominous_cave.spawn]]
+monster = "merman"
+weight = 1
+
+[level.laboratory]
+name = "the Laboratory"
+width = 60
+height = 24
+links = ["catacombs", "drowned_city"]
+monsters = 10
+[[level.laboratory.spawn]]
+monster = "gnoblin"
+weight = 2
+[[level.laboratory.spawn]]
+monster = "scarecrow"
+weight = 2
+[[level.laboratory.spawn]]
+monster = "crypt_vermin"
+weight = 2
+[[level.laboratory.spawn]]
 monster = "slime"
+weight = 1
+
+[level.comm_hub]
+name = "the Communications Hub"
+width = 60
+height = 24
+links = ["ominous_cave", "frozen_vault"]
+monsters = 10
+[[level.comm_hub.spawn]]
+monster = "gnoblin"
+weight = 3
+[[level.comm_hub.spawn]]
+monster = "scarecrow"
+weight = 2
+[[level.comm_hub.spawn]]
+monster = "crypt_vermin"
+weight = 2
+
+[level.underpass]
+name = "the Underpass"
+width = 60
+height = 24
+links = ["ominous_cave", "drowned_city"]
+monsters = 10
+[[level.underpass.spawn]]
+monster = "ratman"
+weight = 2
+[[level.underpass.spawn]]
+monster = "graveling"
+weight = 2
+[[level.underpass.spawn]]
+monster = "crypt_vermin"
+weight = 3
+[[level.underpass.spawn]]
+monster = "merman"
+weight = 1
+
+[level.drowned_city]
+name = "the Drowned City"
+width = 60
+height = 24
+links = ["laboratory", "dragons_lair", "underpass"]
+monsters = 12
+[[level.drowned_city.spawn]]
+monster = "merman"
+weight = 4
+[[level.drowned_city.spawn]]
+monster = "slime"
+weight = 2
+[[level.drowned_city.spawn]]
+monster = "crypt_vermin"
+weight = 2
+
+[level.frozen_vault]
+name = "the Vault of the Frozen Saint"
+width = 60
+height = 24
+links = ["comm_hub", "dragons_lair"]
+monsters = 10
+[[level.frozen_vault.spawn]]
+monster = "scarecrow"
+weight = 3
+[[level.frozen_vault.spawn]]
+monster = "ghoul"
+weight = 2
+[[level.frozen_vault.spawn]]
+monster = "slime"
+weight = 2
+
+[level.dragons_lair]
+name = "the Dragons Lair"
+width = 60
+height = 24
+links = ["chapel", "drowned_city", "frozen_vault"]
+monsters = 14
+[[level.dragons_lair.spawn]]
+monster = "ghoul"
+weight = 3
+[[level.dragons_lair.spawn]]
+monster = "scarecrow"
+weight = 3
+[[level.dragons_lair.spawn]]
+monster = "slime"
+weight = 3
+
+[level.chapel]
+name = "the Chapel of Fallen Stars"
+width = 60
+height = 24
+links = ["dragons_lair"]
+monsters = 12
+win = true
+[[level.chapel.spawn]]
+monster = "ghoul"
+weight = 3
+[[level.chapel.spawn]]
+monster = "scarecrow"
+weight = 2
+[[level.chapel.spawn]]
+monster = "slime"
+weight = 3
+[[level.chapel.spawn]]
+monster = "merman"
 weight = 1
