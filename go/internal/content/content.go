@@ -38,6 +38,7 @@ type TileDef struct {
 	Color       Color  `toml:"color"`
 	Passable    bool   `toml:"passable"`
 	Transparent bool   `toml:"transparent"`
+	Win         bool   `toml:"win"` // stepping onto this tile wins (the ascension altar)
 }
 
 // Rune returns the tile's glyph as a rune. Glyph is guaranteed by validateTile
@@ -107,7 +108,9 @@ type LevelDef struct {
 	Links    []string     `toml:"links"` // ids of connected levels
 	Monsters int          `toml:"monsters"`
 	Spawn    []SpawnEntry `toml:"spawn"`
-	Win      bool         `toml:"win"` // arriving here wins (temporary, pre-2c)
+	Win      bool         `toml:"win"`   // arriving here wins (temporary; removed in 2c)
+	Altar    bool         `toml:"altar"` // place an ascension altar (a win tile)
+	Boss     string       `toml:"boss"`  // a guaranteed monster placed once on the level
 }
 
 // Content is the fully-loaded, validated game content.
@@ -255,6 +258,16 @@ func validateLevels(c *Content) error {
 		}
 		if l.Monsters > 0 && len(l.Spawn) == 0 {
 			return fmt.Errorf("level %q: monsters > 0 but spawn table is empty", id)
+		}
+		if l.Boss != "" {
+			if _, ok := c.Monsters[l.Boss]; !ok {
+				return fmt.Errorf("level %q: boss %q is not a defined monster", id, l.Boss)
+			}
+		}
+		if l.Altar {
+			if t, ok := c.Tiles["altar"]; !ok || !t.Win {
+				return fmt.Errorf("level %q: altar set but no win tile %q is defined", id, "altar")
+			}
 		}
 	}
 	if starts != 1 {
