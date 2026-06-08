@@ -483,3 +483,21 @@ func TestLoadRejectsItemEffectWithoutTurns(t *testing.T) {
 		t.Fatal("expected error: item effect needs effect_turns > 0")
 	}
 }
+
+func TestLoadScrollItem(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.tele]\nname=\"scroll of teleportation\"\nglyph=\"?\"\ncolor=\"normal\"\nkind=\"scroll\"\nuse=\"teleport\"\n")
+	c, err := Load(os.DirFS(dir))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if s := c.Items["tele"]; s == nil || s.Kind != "scroll" || s.Use != "teleport" {
+		t.Errorf("scroll def unexpected: %+v", s)
+	}
+}
+
+func TestLoadRejectsScrollWithoutUse(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.blank]\nname=\"blank scroll\"\nglyph=\"?\"\ncolor=\"normal\"\nkind=\"scroll\"\n")
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error: scroll needs a non-empty use")
+	}
+}

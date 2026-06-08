@@ -278,6 +278,37 @@ func TestRunEatHealsFromInventory(t *testing.T) {
 	}
 }
 
+func TestRunReadScrollFromInventory(t *testing.T) {
+	g := testGame(t, []string{".....", ".@...", "....."})
+	read := false
+	g.Behaviors = map[string]game.Behavior{"teleport": func(gg *game.Game, it *game.Item) []string {
+		read = true
+		return []string{"blink"}
+	}}
+	g.Inventory = append(g.Inventory, &game.Item{Def: &content.ItemDef{Name: "scroll of teleportation", Kind: "scroll", Use: "teleport"}})
+	p := &menuPrompter{actions: []Action{{Kind: ActRead}, {Kind: ActQuit}}, pick: 0}
+	if err := Run(g, p, &nullRenderer{}); err != nil {
+		t.Fatal(err)
+	}
+	if !read {
+		t.Error("reading a scroll should invoke its behavior")
+	}
+	if len(g.Inventory) != 0 {
+		t.Errorf("the scroll should be consumed, inventory = %v", g.Inventory)
+	}
+}
+
+func TestRunReadWithNoScrollReports(t *testing.T) {
+	g := testGame(t, []string{".@."})
+	p := &scriptPrompter{actions: []Action{{Kind: ActRead}, {Kind: ActQuit}}}
+	if err := Run(g, p, &nullRenderer{}); err != nil {
+		t.Fatal(err)
+	}
+	if len(g.Messages) == 0 || !strings.Contains(g.Messages[len(g.Messages)-1], "nothing to read") {
+		t.Errorf("expected a 'nothing to read' message, got %v", g.Messages)
+	}
+}
+
 func TestRunEatWithNoFoodReports(t *testing.T) {
 	g := testGame(t, []string{".@."})
 	p := &scriptPrompter{actions: []Action{{Kind: ActEat}, {Kind: ActQuit}}}

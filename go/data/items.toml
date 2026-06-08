@@ -184,3 +184,18 @@ kind = "wand"
 effect = "slow"
 effect_turns = 10
 power = 5
+
+# Scrolls (#15) — read (r) to invoke. Glyph ?.
+[item.scroll_teleport]
+name = "scroll of teleportation"
+glyph = "?"
+color = "magenta"
+kind = "scroll"
+use = "teleport"
+
+[item.scroll_magic_mapping]
+name = "scroll of magic mapping"
+glyph = "?"
+color = "blue"
+kind = "scroll"
+use = "reveal"

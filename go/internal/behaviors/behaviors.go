@@ -16,6 +16,8 @@ func Registry() map[string]game.Behavior {
 		"eat":          eat,
 		"regenerate":   regenerate,
 		"eat_mushroom": eatMushroom,
+		"teleport":     teleport,
+		"reveal":       reveal,
 	}
 }
 
@@ -54,4 +56,18 @@ func eatMushroom(g *game.Game, it *game.Item) []string {
 	recovered := restoreHP(g, it.Def.Power)
 	g.AddEffect("poison", 6)
 	return []string{fmt.Sprintf("You eat the %s and recover %d HP, but you feel ill.", it.Def.Name, recovered)}
+}
+
+// teleport blinks the player to a random spot on the level (an escape hatch).
+func teleport(g *game.Game, it *game.Item) []string {
+	if g.Teleport() {
+		return []string{fmt.Sprintf("You read the %s and blink across the dungeon.", it.Def.Name)}
+	}
+	return []string{fmt.Sprintf("You read the %s, but nothing happens.", it.Def.Name)}
+}
+
+// reveal maps the whole level (a scroll of magic mapping).
+func reveal(g *game.Game, it *game.Item) []string {
+	g.RevealMap()
+	return []string{fmt.Sprintf("You read the %s; the layout floods into your mind.", it.Def.Name)}
 }

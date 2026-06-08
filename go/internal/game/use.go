@@ -51,7 +51,7 @@ func (g *Game) PlayerUse(it *Item) {
 	case "armor":
 		g.Armor = it
 		g.log("You wear the %s.", it.Def.Name)
-	case "potion", "food":
+	case "potion", "food", "scroll":
 		if b, ok := g.Behaviors[it.Def.Use]; ok {
 			g.Messages = append(g.Messages, b(g, it)...)
 		} else {
@@ -101,4 +101,16 @@ func (g *Game) WandInventory() []*Item {
 		}
 	}
 	return wands
+}
+
+// ReadableInventory returns the scroll items the player is carrying, in inventory
+// order. The UI uses it to build the "read what?" menu.
+func (g *Game) ReadableInventory() []*Item {
+	var scrolls []*Item
+	for _, it := range g.Inventory {
+		if it.Def != nil && it.Def.Kind == "scroll" {
+			scrolls = append(scrolls, it)
+		}
+	}
+	return scrolls
 }
