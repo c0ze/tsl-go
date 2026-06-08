@@ -119,4 +119,11 @@ func TestPickupAutoEquipsWhenSlotEmpty(t *testing.T) {
 	if len(g.Inventory) != 2 {
 		t.Errorf("both weapons should be carried, inventory = %d", len(g.Inventory))
 	}
+	// armor auto-equips into the empty armor slot
+	mail := &Item{Def: &content.ItemDef{ID: "chainmail", Name: "chainmail", Kind: "armor", Dodge: 4}, Pos: g.Player}
+	g.Level.Items = append(g.Level.Items, mail)
+	g.PlayerPickup()
+	if g.Armor != mail {
+		t.Error("armor should auto-equip when the slot is empty")
+	}
 }

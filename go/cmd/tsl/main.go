@@ -92,12 +92,12 @@ func newGame(c *content.Content, seed uint32) (*game.Game, error) {
 // equipStartingKit gives the player a basic dagger + leather armor, equipped, so
 // the early game is playable before better gear is found.
 func equipStartingKit(g *game.Game, c *content.Content) {
-	if d := c.Items["dagger"]; d != nil {
+	if d := c.Items["dagger"]; d != nil && d.Kind == "weapon" {
 		it := &game.Item{Def: d}
 		g.Inventory = append(g.Inventory, it)
 		g.Weapon = it
 	}
-	if a := c.Items["leather_armor"]; a != nil {
+	if a := c.Items["leather_armor"]; a != nil && a.Kind == "armor" {
 		it := &game.Item{Def: a}
 		g.Inventory = append(g.Inventory, it)
 		g.Armor = it
