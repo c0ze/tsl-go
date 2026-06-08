@@ -22,6 +22,76 @@ color = "brown"
 kind = "armor"
 dodge = 2
 
+# Melee weapons (better than the starting dagger; found as floor loot).
+[item.machete]
+name = "machete"
+glyph = ")"
+color = "normal"
+kind = "weapon"
+attack = 3
+damage = "1d6"
+
+[item.quarterstaff]
+name = "quarterstaff"
+glyph = "/"
+color = "brown"
+kind = "weapon"
+attack = 2
+damage = "1d6"
+
+[item.cleaver]
+name = "cleaver"
+glyph = ")"
+color = "normal"
+kind = "weapon"
+attack = 3
+damage = "1d8"
+
+[item.crystal_sword]
+name = "crystal sword"
+glyph = ")"
+color = "cyan"
+kind = "weapon"
+attack = 4
+damage = "2d4"
+
+[item.doomblade]
+name = "doomblade"
+glyph = ")"
+color = "red"
+kind = "weapon"
+attack = 5
+damage = "2d6"
+
+# Body armor (dodge bonus).
+[item.filthy_rags]
+name = "filthy rags"
+glyph = "["
+color = "brown"
+kind = "armor"
+dodge = 1
+
+[item.fish_scale_armor]
+name = "fish-scale armor"
+glyph = "["
+color = "green"
+kind = "armor"
+dodge = 3
+
+[item.chainmail]
+name = "chainmail"
+glyph = "["
+color = "normal"
+kind = "armor"
+dodge = 4
+
+[item.rune_armor]
+name = "rune armor"
+glyph = "["
+color = "magenta"
+kind = "armor"
+dodge = 5
+
 # Food. Eaten with `e` to restore HP. Corpses are nospawn (drops only).
 [item.ration]
 name = "ration"

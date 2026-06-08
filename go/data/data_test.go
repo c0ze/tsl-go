@@ -43,6 +43,20 @@ func TestDepthGatedTanks(t *testing.T) {
 	}
 }
 
+// TestEmbeddedGear checks the shipped weapon/armor table loaded.
+func TestEmbeddedGear(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if w := c.Items["crystal_sword"]; w == nil || w.Kind != "weapon" || w.Attack != 4 || w.Damage != "2d4" {
+		t.Errorf("crystal_sword def unexpected: %+v", w)
+	}
+	if a := c.Items["chainmail"]; a == nil || a.Kind != "armor" || a.Dodge != 4 {
+		t.Errorf("chainmail def unexpected: %+v", a)
+	}
+}
+
 // TestEmbeddedDungeon validates the shipped level graph loads with exactly one
 // start and the expected starter levels.
 func TestEmbeddedDungeon(t *testing.T) {
