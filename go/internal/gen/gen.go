@@ -196,6 +196,22 @@ func LevelFromDef(r *rng.MT, c *content.Content, def *content.LevelDef) (*game.L
 		lvl.Set(pos, stairs)
 		lvl.Portals = append(lvl.Portals, game.Portal{Pos: pos, Target: target})
 	}
+	if def.Altar {
+		altar := c.Tiles["altar"]
+		if altar == nil {
+			return nil, fmt.Errorf("gen: level %q has altar but no \"altar\" tile defined", def.ID)
+		}
+		lvl.Set(rooms[len(rooms)-1].center(), altar)
+	}
+	if def.Boss != "" {
+		bdef := c.Monsters[def.Boss]
+		if bdef == nil {
+			return nil, fmt.Errorf("gen: level %q boss %q is not a defined monster", def.ID, def.Boss)
+		}
+		if pos, ok := bossSpot(r, lvl, rooms[len(rooms)-1]); ok {
+			lvl.Creatures = append(lvl.Creatures, &game.Creature{Def: bdef, Pos: pos, HP: bdef.HP})
+		}
+	}
 	placeSpawnMonsters(r, c, lvl, rooms, def)
 	placeItems(r, c, lvl, rooms, lvl.Start)
 	return lvl, nil
@@ -220,6 +236,18 @@ func placeSpawnMonsters(r *rng.MT, c *content.Content, lvl *game.Level, rooms []
 		mdef := c.Monsters[pickSpawn(r, def.Spawn, total)]
 		lvl.Creatures = append(lvl.Creatures, &game.Creature{Def: mdef, Pos: pos, HP: mdef.HP})
 	}
+}
+
+// bossSpot finds a passable tile in room free of the altar and other creatures,
+// for placing a guaranteed boss. Returns false if none is found.
+func bossSpot(r *rng.MT, lvl *game.Level, room rect) (game.Pos, bool) {
+	for try := 0; try < 30; try++ {
+		p := game.Pos{X: room.x + r.Intn(room.w), Y: room.y + r.Intn(room.h)}
+		if lvl.Passable(p) && lvl.At(p).Def.ID != "altar" && lvl.CreatureAt(p) == nil {
+			return p, true
+		}
+	}
+	return game.Pos{}, false
 }
 
 // pickSpawn returns a monster id from the weighted spawn table (total is the sum
