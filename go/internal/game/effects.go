@@ -14,21 +14,68 @@ var effectLabels = map[string]string{
 	"regen":  "Regenerating",
 }
 
-// AddEffect applies a status effect for the given number of turns, refreshing an
-// already-active effect of the same kind to the longer duration.
-func (g *Game) AddEffect(kind string, turns int) {
-	if kind == "" || turns <= 0 {
-		return
+// effectVerbs phrases how a source inflicts an effect, for the zap message.
+var effectVerbs = map[string]string{
+	"poison": "poisons",
+}
+
+// effectVerb returns the verb describing inflicting kind, with a generic
+// fallback for effects that have no specific phrasing.
+func effectVerb(kind string) string {
+	if v := effectVerbs[kind]; v != "" {
+		return v
 	}
-	for i := range g.Effects {
-		if g.Effects[i].Kind == kind {
-			if turns > g.Effects[i].Turns {
-				g.Effects[i].Turns = turns
+	return "afflicts"
+}
+
+// addEffect adds or refreshes a timed effect in effects and returns the updated
+// slice. An already-active effect of the same kind is kept at the longer of the
+// two durations. Empty kinds and non-positive durations are ignored. Shared by
+// the player and creatures so both get identical stacking semantics.
+func addEffect(effects []Effect, kind string, turns int) []Effect {
+	if kind == "" || turns <= 0 {
+		return effects
+	}
+	for i := range effects {
+		if effects[i].Kind == kind {
+			if turns > effects[i].Turns {
+				effects[i].Turns = turns
 			}
-			return
+			return effects
 		}
 	}
-	g.Effects = append(g.Effects, Effect{Kind: kind, Turns: turns})
+	return append(effects, Effect{Kind: kind, Turns: turns})
+}
+
+// AddEffect applies a status effect to the player for the given number of turns,
+// refreshing an already-active effect of the same kind to the longer duration.
+func (g *Game) AddEffect(kind string, turns int) {
+	g.Effects = addEffect(g.Effects, kind, turns)
+}
+
+// tickCreatureEffects applies each of a creature's active effects (poison costs
+// it 1 HP), decrements and expires them, and resolves death through killCreature
+// when its HP reaches 0. It reports whether the creature died this tick.
+func (g *Game) tickCreatureEffects(m *Creature) bool {
+	if len(m.Effects) == 0 {
+		return false
+	}
+	kept := m.Effects[:0]
+	for _, e := range m.Effects {
+		if e.Kind == "poison" {
+			m.HP--
+		}
+		e.Turns--
+		if e.Turns > 0 {
+			kept = append(kept, e)
+		}
+	}
+	m.Effects = kept
+	if m.HP <= 0 {
+		g.killCreature(m)
+		return true
+	}
+	return false
 }
 
 // tickEffects applies each active effect's per-turn outcome, then decrements and

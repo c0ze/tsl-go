@@ -1,6 +1,10 @@
 package game
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/c0ze/tsl/internal/content"
+)
 
 func TestPoisonDamagesAndKills(t *testing.T) {
 	g := &Game{PlayerHP: 3, PlayerMax: 20}
@@ -72,5 +76,44 @@ func TestAddEffectRejectsBadInput(t *testing.T) {
 	g.AddEffect("poison", -3) // negative duration
 	if len(g.Effects) != 0 {
 		t.Errorf("bad inputs should add no effects, got %v", g.Effects)
+	}
+}
+
+// Creatures carry the same timed effects as the player; poison whittles their
+// HP and resolves death through killCreature (corpse drop + removal).
+func TestCreaturePoisonDamagesAndKills(t *testing.T) {
+	g := combatGame()
+	m := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 3, Damage: "1d1"}, Pos: Pos{3, 1}, HP: 3}
+	g.Level.Creatures = append(g.Level.Creatures, m)
+	m.AddEffect("poison", 5)
+
+	if g.tickCreatureEffects(m) { // 3 -> 2
+		t.Fatal("one tick should not kill a 3-HP creature")
+	}
+	if m.HP != 2 {
+		t.Errorf("HP = %d, want 2 after one poison tick", m.HP)
+	}
+	died := false
+	for i := 0; i < 5 && !died; i++ {
+		died = g.tickCreatureEffects(m)
+	}
+	if !died {
+		t.Fatal("poison should eventually kill the creature")
+	}
+	if g.Level.CreatureAt(Pos{3, 1}) != nil {
+		t.Error("a creature poisoned to death should be removed from the level")
+	}
+}
+
+func TestCreatureAddEffectRefreshesToLonger(t *testing.T) {
+	m := &Creature{Def: &content.MonsterDef{ID: "rat"}, HP: 5}
+	m.AddEffect("poison", 3)
+	m.AddEffect("poison", 6) // refresh to the longer duration
+	if len(m.Effects) != 1 || m.Effects[0].Turns != 6 {
+		t.Errorf("expected one poison effect with 6 turns, got %v", m.Effects)
+	}
+	m.AddEffect("poison", 2) // shorter — no change
+	if m.Effects[0].Turns != 6 {
+		t.Errorf("shorter refresh should not shorten, got %d", m.Effects[0].Turns)
 	}
 }

@@ -107,9 +107,11 @@ func (g *Game) killCreature(m *Creature) {
 	g.Level.RemoveCreature(m)
 }
 
-// ZapWand fires a wand at target: it spends a charge and damages the creature
-// there (killing it if reduced to 0), then passes a turn. A wand with no charges
-// fizzles without costing a turn.
+// ZapWand fires a wand at target: it spends a charge, then on the creature there
+// deals the wand's damage (if any, killing it at 0 HP) and — if the target
+// survives — applies the wand's status effect (e.g. poison). A wand may carry
+// damage, an effect, or both. It passes a turn; a wand with no charges fizzles
+// without costing a turn.
 func (g *Game) ZapWand(it *Item, target Pos) {
 	if g.Dead || g.Won {
 		return
@@ -120,11 +122,16 @@ func (g *Game) ZapWand(it *Item, target Pos) {
 	}
 	it.Charges--
 	if m := g.Level.CreatureAt(target); m != nil {
-		dmg := g.RNG.RollSpec(it.Def.Damage)
-		m.HP -= dmg
-		g.log("The %s blasts the %s for %d.", it.Def.Name, m.Def.Name, dmg)
+		if it.Def.Damage != "" {
+			dmg := g.RNG.RollSpec(it.Def.Damage)
+			m.HP -= dmg
+			g.log("The %s blasts the %s for %d.", it.Def.Name, m.Def.Name, dmg)
+		}
 		if m.HP <= 0 {
 			g.killCreature(m)
+		} else if it.Def.Effect != "" {
+			m.AddEffect(it.Def.Effect, it.Def.EffectTurns)
+			g.log("The %s %s the %s.", it.Def.Name, effectVerb(it.Def.Effect), m.Def.Name)
 		}
 	} else {
 		g.log("The bolt fizzles against nothing.")
@@ -166,6 +173,9 @@ func (g *Game) monstersAct() {
 		}
 		if g.Level.CreatureAt(m.Pos) != m {
 			continue // already removed this turn
+		}
+		if g.tickCreatureEffects(m) {
+			continue // succumbed to its afflictions before acting
 		}
 		m.Energy += speedOf(m)
 		for m.Energy >= turnCost {

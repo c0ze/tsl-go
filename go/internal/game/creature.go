@@ -18,6 +18,13 @@ type Creature struct {
 	HP      int
 	Faction Faction
 	Energy  int
+	Effects []Effect // timed afflictions (e.g. poison from a venom wand)
+}
+
+// AddEffect applies a timed status effect to the creature, refreshing an
+// already-active effect of the same kind to the longer duration.
+func (m *Creature) AddEffect(kind string, turns int) {
+	m.Effects = addEffect(m.Effects, kind, turns)
 }
 
 // CreatureAt returns the creature standing on p, or nil.
