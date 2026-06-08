@@ -5,6 +5,7 @@ import (
 
 	"github.com/c0ze/tsl/internal/content"
 	"github.com/c0ze/tsl/internal/game"
+	"github.com/c0ze/tsl/internal/rng"
 )
 
 func TestHealCapsAtMax(t *testing.T) {
@@ -50,6 +51,37 @@ func TestRegenerateAddsEffect(t *testing.T) {
 	regen(g, &game.Item{Def: &content.ItemDef{Name: "potion of regeneration", Power: 8}})
 	if len(g.Effects) != 1 || g.Effects[0].Kind != "regen" || g.Effects[0].Turns != 8 {
 		t.Errorf("expected a regen effect for 8 turns, got %v", g.Effects)
+	}
+}
+
+func TestTeleportBehaviorMovesPlayer(t *testing.T) {
+	tele, ok := Registry()["teleport"]
+	if !ok {
+		t.Fatal("teleport behavior not registered")
+	}
+	floor := &content.TileDef{ID: "floor", Glyph: ".", Color: content.ColorNormal, Passable: true, Transparent: true}
+	g := &game.Game{Level: game.NewLevel(8, 3, floor), Player: game.Pos{X: 1, Y: 1}, RNG: rng.NewWithSeed(1)}
+	start := g.Player
+	msgs := tele(g, &game.Item{Def: &content.ItemDef{Name: "scroll of teleportation"}})
+	if g.Player == start {
+		t.Error("teleport scroll should move the player")
+	}
+	if len(msgs) == 0 {
+		t.Error("teleport should return a message")
+	}
+}
+
+func TestRevealBehaviorMarksSeen(t *testing.T) {
+	reveal, ok := Registry()["reveal"]
+	if !ok {
+		t.Fatal("reveal behavior not registered")
+	}
+	floor := &content.TileDef{ID: "floor", Glyph: ".", Color: content.ColorNormal, Passable: true, Transparent: true}
+	lvl := game.NewLevel(6, 3, floor)
+	g := &game.Game{Level: lvl, Player: game.Pos{X: 1, Y: 1}}
+	reveal(g, &game.Item{Def: &content.ItemDef{Name: "scroll of magic mapping"}})
+	if !lvl.At(game.Pos{X: 4, Y: 2}).Seen {
+		t.Error("magic mapping should mark distant tiles seen")
 	}
 }
 
