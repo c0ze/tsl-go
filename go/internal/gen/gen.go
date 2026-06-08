@@ -40,6 +40,24 @@ func Rooms(r *rng.MT, c *content.Content, w, h, depth int) (*game.Level, game.Po
 	}
 
 	lvl := game.NewLevel(w, h, wall)
+	rooms := carveRooms(r, lvl, floor)
+	if len(rooms) == 0 {
+		return nil, game.Pos{}, game.Pos{}, fmt.Errorf("gen: no rooms placed (level too small)")
+	}
+
+	start := rooms[0].center()
+	down := rooms[len(rooms)-1].center()
+	lvl.Set(down, stairs)
+	placeMonsters(r, c, lvl, rooms, start, depth)
+	placeItems(r, c, lvl, rooms, start)
+	return lvl, start, down, nil
+}
+
+// carveRooms places up to maxRooms non-overlapping rooms into lvl (which starts
+// filled with wall), joining each to the previous with a corridor so the result
+// is fully connected, and returns the rooms in placement order.
+func carveRooms(r *rng.MT, lvl *game.Level, floor *content.TileDef) []rect {
+	w, h := lvl.W, lvl.H
 	var rooms []rect
 	for i := 0; i < maxRooms; i++ {
 		rw := minRoomW + r.Intn(maxRoomW-minRoomW+1)
@@ -64,16 +82,7 @@ func Rooms(r *rng.MT, c *content.Content, w, h, depth int) (*game.Level, game.Po
 		}
 		rooms = append(rooms, room)
 	}
-	if len(rooms) == 0 {
-		return nil, game.Pos{}, game.Pos{}, fmt.Errorf("gen: no rooms placed (level too small)")
-	}
-
-	start := rooms[0].center()
-	down := rooms[len(rooms)-1].center()
-	lvl.Set(down, stairs)
-	placeMonsters(r, c, lvl, rooms, start, depth)
-	placeItems(r, c, lvl, rooms, start)
-	return lvl, start, down, nil
+	return rooms
 }
 
 func carveRoom(lvl *game.Level, r rect, floor *content.TileDef) {
@@ -165,4 +174,63 @@ func placeMonsters(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect,
 			lvl.Creatures = append(lvl.Creatures, &game.Creature{Def: def, Pos: pos, HP: def.HP})
 		}
 	}
+}
+
+// LevelFromDef builds a level described by def: rooms + corridors sized to the
+// def, one portal per link (in distinct rooms), monsters drawn from the def's
+// weighted spawn table, and the usual scattered items. The Start (first-arrival
+// spawn) is the first room's center.
+func LevelFromDef(r *rng.MT, c *content.Content, def *content.LevelDef) (*game.Level, error) {
+	floor, wall, stairs := c.Tiles["floor"], c.Tiles["wall"], c.Tiles["stairs_down"]
+	if floor == nil || wall == nil || stairs == nil {
+		return nil, fmt.Errorf("gen: tiles floor/wall/stairs_down must all be defined")
+	}
+	lvl := game.NewLevel(def.W, def.H, wall)
+	rooms := carveRooms(r, lvl, floor)
+	if len(rooms) == 0 {
+		return nil, fmt.Errorf("gen: level %q too small for any rooms", def.ID)
+	}
+	lvl.Start = rooms[0].center()
+	for i, target := range def.Links {
+		pos := rooms[(i+1)%len(rooms)].center() // distinct rooms after the start
+		lvl.Set(pos, stairs)
+		lvl.Portals = append(lvl.Portals, game.Portal{Pos: pos, Target: target})
+	}
+	placeSpawnMonsters(r, c, lvl, rooms, def)
+	placeItems(r, c, lvl, rooms, lvl.Start)
+	return lvl, nil
+}
+
+// placeSpawnMonsters scatters def.Monsters monsters drawn from def's weighted
+// spawn table across the rooms (never on the start tile).
+func placeSpawnMonsters(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, def *content.LevelDef) {
+	if def.Monsters <= 0 || len(def.Spawn) == 0 {
+		return
+	}
+	total := 0
+	for _, s := range def.Spawn {
+		total += s.Weight
+	}
+	for k := 0; k < def.Monsters; k++ {
+		room := rooms[r.Intn(len(rooms))]
+		pos := game.Pos{X: room.x + r.Intn(room.w), Y: room.y + r.Intn(room.h)}
+		if pos == lvl.Start || !lvl.Passable(pos) || lvl.CreatureAt(pos) != nil {
+			continue
+		}
+		mdef := c.Monsters[pickSpawn(r, def.Spawn, total)]
+		lvl.Creatures = append(lvl.Creatures, &game.Creature{Def: mdef, Pos: pos, HP: mdef.HP})
+	}
+}
+
+// pickSpawn returns a monster id from the weighted spawn table (total is the sum
+// of weights).
+func pickSpawn(r *rng.MT, spawn []content.SpawnEntry, total int) string {
+	n := r.Intn(total)
+	for _, s := range spawn {
+		if n < s.Weight {
+			return s.Monster
+		}
+		n -= s.Weight
+	}
+	return spawn[len(spawn)-1].Monster
 }
