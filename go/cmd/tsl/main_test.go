@@ -3,6 +3,7 @@ package main
 import (
 	"testing"
 
+	"github.com/c0ze/tsl/data"
 	"github.com/c0ze/tsl/internal/content"
 	"github.com/c0ze/tsl/internal/game"
 )
@@ -79,6 +80,25 @@ func TestNewGameHasPlayerHPAndRNG(t *testing.T) {
 	}
 	if g.RNG == nil {
 		t.Error("game RNG not set")
+	}
+}
+
+// TestNewGameFromShippedData boots the game on the real embedded content,
+// proving the dungeon graph + generator wire up end-to-end.
+func TestNewGameFromShippedData(t *testing.T) {
+	c, err := content.Load(data.Files)
+	if err != nil {
+		t.Fatalf("load shipped content: %v", err)
+	}
+	g, err := newGame(c, 42)
+	if err != nil {
+		t.Fatalf("newGame on shipped data: %v", err)
+	}
+	if g.Dungeon == nil || g.Level == nil {
+		t.Fatal("dungeon/level not wired")
+	}
+	if !g.Level.Passable(g.Player) {
+		t.Errorf("player start %v not passable", g.Player)
 	}
 }
 
