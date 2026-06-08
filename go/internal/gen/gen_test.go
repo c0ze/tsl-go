@@ -123,6 +123,28 @@ func TestPlaceItemsSkipsNoSpawn(t *testing.T) {
 	}
 }
 
+func TestPlaceItemsSeedsWandCharges(t *testing.T) {
+	c := testContent()
+	c.Items = map[string]*content.ItemDef{
+		"wand": {ID: "wand", Name: "wand", Glyph: "/", Color: content.ColorBlue, Kind: "wand", Damage: "2d6", Power: 5},
+	}
+	for seed := uint32(1); seed <= 20; seed++ {
+		lvl, err := LevelFromDef(rng.NewWithSeed(seed), c, &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, it := range lvl.Items {
+			if it.Def.Kind == "wand" {
+				if it.Charges != 5 {
+					t.Fatalf("wand charges = %d, want 5 (from power)", it.Charges)
+				}
+				return // found a placed wand and verified its charges
+			}
+		}
+	}
+	t.Fatal("no wand was placed across 20 seeds")
+}
+
 func TestPlaceMonstersRespectsMinDepth(t *testing.T) {
 	c := testContent()
 	c.Monsters = map[string]*content.MonsterDef{

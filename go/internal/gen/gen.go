@@ -143,7 +143,11 @@ func placeItems(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, st
 			continue
 		}
 		def := c.Items[ids[r.Intn(len(ids))]]
-		lvl.Items = append(lvl.Items, &game.Item{Def: def, Pos: pos})
+		it := &game.Item{Def: def, Pos: pos}
+		if def.Kind == "wand" {
+			it.Charges = def.Power // seed wand charges from its power
+		}
+		lvl.Items = append(lvl.Items, it)
 	}
 }
 
