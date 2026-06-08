@@ -57,6 +57,20 @@ func TestEmbeddedGear(t *testing.T) {
 	}
 }
 
+// TestEmbeddedConsumables checks the status-effect consumables loaded.
+func TestEmbeddedConsumables(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if m := c.Items["red_mushroom"]; m == nil || m.Kind != "food" || m.Use != "eat_mushroom" {
+		t.Errorf("red_mushroom def unexpected: %+v", m)
+	}
+	if p := c.Items["potion_regeneration"]; p == nil || p.Kind != "potion" || p.Use != "regenerate" {
+		t.Errorf("potion_regeneration def unexpected: %+v", p)
+	}
+}
+
 // TestEmbeddedDungeon validates the shipped level graph loads with exactly one
 // start and the expected starter levels.
 func TestEmbeddedDungeon(t *testing.T) {

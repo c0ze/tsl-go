@@ -137,3 +137,20 @@ kind = "food"
 use = "eat"
 power = 1
 nospawn = true
+
+# Status-effect consumables (#15).
+[item.potion_regeneration]
+name = "potion of regeneration"
+glyph = "!"
+color = "green"
+kind = "potion"
+use = "regenerate"
+power = 8
+
+[item.red_mushroom]
+name = "red mushroom"
+glyph = "%"
+color = "red"
+kind = "food"
+use = "eat_mushroom"
+power = 4
