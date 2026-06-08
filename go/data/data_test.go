@@ -118,6 +118,21 @@ func TestEmbeddedVenomWand(t *testing.T) {
 	}
 }
 
+// TestEmbeddedSlowingWand checks the control (slowing) wand loaded.
+func TestEmbeddedSlowingWand(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	w := c.Items["wand_slowing"]
+	if w == nil || w.Kind != "wand" || w.Effect != "slow" || w.EffectTurns <= 0 || w.Power <= 0 {
+		t.Errorf("wand_slowing def unexpected: %+v", w)
+	}
+	if w != nil && w.Damage != "" {
+		t.Errorf("wand_slowing should be a pure status wand (no damage), got %q", w.Damage)
+	}
+}
+
 // TestEmbeddedDungeon validates the shipped level graph loads with exactly one
 // start and the expected starter levels.
 func TestEmbeddedDungeon(t *testing.T) {

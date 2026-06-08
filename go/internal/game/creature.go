@@ -27,6 +27,17 @@ func (m *Creature) AddEffect(kind string, turns int) {
 	m.Effects = addEffect(m.Effects, kind, turns)
 }
 
+// HasEffect reports whether a timed effect of the given kind is currently active
+// on the creature.
+func (m *Creature) HasEffect(kind string) bool {
+	for _, e := range m.Effects {
+		if e.Kind == kind {
+			return true
+		}
+	}
+	return false
+}
+
 // CreatureAt returns the creature standing on p, or nil.
 func (l *Level) CreatureAt(p Pos) *Creature {
 	for _, cr := range l.Creatures {

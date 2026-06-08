@@ -181,6 +181,35 @@ func TestZapWandAppliesEffect(t *testing.T) {
 	}
 }
 
+func TestSlowedMonsterActsLessOften(t *testing.T) {
+	g := combatGame() // 10x3 floor, player at (1,1)
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 9, Damage: "1d1"}, Pos: Pos{9, 1}, HP: 9}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	rat.AddEffect("slow", 10)
+	start := rat.Pos.X
+	g.monstersAct() // gains 50 energy: not enough to act
+	g.monstersAct() // 50+50=100: acts once
+	if moved := start - rat.Pos.X; moved != 1 {
+		t.Errorf("slowed default-speed monster moved %d tiles in two turns, want 1", moved)
+	}
+}
+
+func TestZapWandSlows(t *testing.T) {
+	g := combatGame()
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 5, Damage: "1d1"}, Pos: Pos{3, 1}, HP: 5}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	wand := &Item{Def: &content.ItemDef{Name: "wand of slowing", Kind: "wand", Effect: "slow", EffectTurns: 10}, Charges: 1}
+
+	g.ZapWand(wand, Pos{3, 1})
+
+	if g.Level.CreatureAt(rat.Pos) != rat {
+		t.Fatal("a slowing wand should not kill its target")
+	}
+	if !rat.HasEffect("slow") {
+		t.Error("zapping a slowing wand should slow the target")
+	}
+}
+
 func TestPoisonedMonsterDiesOverTurns(t *testing.T) {
 	g := combatGame() // 10x3 floor, player at (1,1)
 	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 4, Damage: "1d1"}, Pos: Pos{9, 1}, HP: 4}

@@ -174,3 +174,13 @@ kind = "wand"
 effect = "poison"
 effect_turns = 8
 power = 5
+
+# Control wand: slows the target so it moves and attacks at half pace — kite it.
+[item.wand_slowing]
+name = "wand of slowing"
+glyph = "/"
+color = "cyan"
+kind = "wand"
+effect = "slow"
+effect_turns = 10
+power = 5
