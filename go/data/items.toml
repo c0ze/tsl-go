@@ -33,7 +33,7 @@ damage = "1d6"
 
 [item.quarterstaff]
 name = "quarterstaff"
-glyph = "/"
+glyph = ")"
 color = "brown"
 kind = "weapon"
 attack = 2
