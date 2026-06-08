@@ -454,3 +454,32 @@ func TestLoadRejectsWandBadDamage(t *testing.T) {
 		t.Fatal("expected error: wand needs a valid damage spec")
 	}
 }
+
+func TestLoadEffectWand(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.venom]\nname=\"venom wand\"\nglyph=\"/\"\ncolor=\"green\"\nkind=\"wand\"\neffect=\"poison\"\neffect_turns=8\npower=5\n")
+	c, err := Load(os.DirFS(dir))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	w := c.Items["venom"]
+	if w == nil || w.Kind != "wand" || w.Effect != "poison" || w.EffectTurns != 8 {
+		t.Errorf("effect wand def unexpected: %+v", w)
+	}
+	if w != nil && w.Damage != "" {
+		t.Errorf("effect-only wand should carry no damage spec, got %q", w.Damage)
+	}
+}
+
+func TestLoadRejectsWandWithoutDamageOrEffect(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.dud]\nname=\"dud\"\nglyph=\"/\"\ncolor=\"blue\"\nkind=\"wand\"\npower=5\n")
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error: a wand needs a damage spec or an effect")
+	}
+}
+
+func TestLoadRejectsItemEffectWithoutTurns(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.venom]\nname=\"venom\"\nglyph=\"/\"\ncolor=\"green\"\nkind=\"wand\"\neffect=\"poison\"\n")
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error: item effect needs effect_turns > 0")
+	}
+}

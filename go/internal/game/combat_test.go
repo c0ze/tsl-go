@@ -156,6 +156,47 @@ func TestZapEmptyWandDoesNothing(t *testing.T) {
 	}
 }
 
+func TestZapWandAppliesEffect(t *testing.T) {
+	g := combatGame()
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 5, Damage: "1d1"}, Pos: Pos{3, 1}, HP: 5}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	wand := &Item{Def: &content.ItemDef{Name: "wand of venom", Kind: "wand", Effect: "poison", EffectTurns: 6}, Charges: 2}
+
+	g.ZapWand(wand, Pos{3, 1})
+
+	if wand.Charges != 1 {
+		t.Errorf("charges = %d, want 1 (spent one)", wand.Charges)
+	}
+	if g.Level.CreatureAt(rat.Pos) != rat {
+		t.Fatal("a venom wand should not kill its target instantly")
+	}
+	poisoned := false
+	for _, e := range rat.Effects {
+		if e.Kind == "poison" {
+			poisoned = true
+		}
+	}
+	if !poisoned {
+		t.Error("zapping a venom wand should poison the target")
+	}
+}
+
+func TestPoisonedMonsterDiesOverTurns(t *testing.T) {
+	g := combatGame() // 10x3 floor, player at (1,1)
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 4, Damage: "1d1"}, Pos: Pos{9, 1}, HP: 4}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	rat.AddEffect("poison", 8)
+
+	for i := 0; i < 8 && g.Level.CreatureAt(rat.Pos) == rat; i++ {
+		g.monstersAct()
+	}
+	for _, m := range g.Level.Creatures {
+		if m == rat {
+			t.Fatal("poison should have killed the rat within its duration")
+		}
+	}
+}
+
 func TestKillCreatureNoCorpse(t *testing.T) {
 	g := combatGame()
 	ghost := &Creature{Def: &content.MonsterDef{ID: "ghost", Name: "ghost"}, Pos: Pos{2, 1}, HP: 1}

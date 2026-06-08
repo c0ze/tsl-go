@@ -155,11 +155,22 @@ kind = "food"
 use = "eat_mushroom"
 power = 4
 
-# Wand (#15) — zap (z) to blast a targeted creature; power = charges.
+# Wands (#15) — zap (z) to target a creature; power = charges.
 [item.wand_force_bolt]
 name = "wand of force bolt"
 glyph = "/"
 color = "blue"
 kind = "wand"
 damage = "2d6"
+power = 5
+
+# Status-effect wand: no direct hit, but poisons the target so it withers over
+# the next several turns (effect/effect_turns mirror a trap tile).
+[item.wand_venom]
+name = "wand of venom"
+glyph = "/"
+color = "green"
+kind = "wand"
+effect = "poison"
+effect_turns = 8
 power = 5
