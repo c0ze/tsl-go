@@ -12,8 +12,10 @@ import (
 // Registry returns the name→behavior map referenced by item `use` fields.
 func Registry() map[string]game.Behavior {
 	return map[string]game.Behavior{
-		"heal": heal,
-		"eat":  eat,
+		"heal":         heal,
+		"eat":          eat,
+		"regenerate":   regenerate,
+		"eat_mushroom": eatMushroom,
 	}
 }
 
@@ -39,4 +41,17 @@ func eat(g *game.Game, it *game.Item) []string {
 		return []string{fmt.Sprintf("You eat the %s and recover %d HP.", it.Def.Name, recovered)}
 	}
 	return []string{fmt.Sprintf("You eat the %s.", it.Def.Name)}
+}
+
+// regenerate grants healing-over-time for Power turns.
+func regenerate(g *game.Game, it *game.Item) []string {
+	g.AddEffect("regen", it.Def.Power)
+	return []string{fmt.Sprintf("You quaff the %s; your wounds begin to close.", it.Def.Name)}
+}
+
+// eatMushroom heals by Power but poisons the eater (the faithful red mushroom).
+func eatMushroom(g *game.Game, it *game.Item) []string {
+	recovered := restoreHP(g, it.Def.Power)
+	g.AddEffect("poison", 6)
+	return []string{fmt.Sprintf("You eat the %s and recover %d HP, but you feel ill.", it.Def.Name, recovered)}
 }
