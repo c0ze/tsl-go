@@ -34,3 +34,18 @@ passable = true
 transparent = true
 effect = "poison"
 effect_turns = 5
+
+# Doors (#18). A closed door blocks movement and sight; bumping it opens it into
+# door_open (passable + transparent). Placed in room doorways on doored levels.
+[tile.door_closed]
+glyph = "+"
+color = "brown"
+passable = false
+transparent = false
+opens_to = "door_open"
+
+[tile.door_open]
+glyph = "'"
+color = "brown"
+passable = true
+transparent = true

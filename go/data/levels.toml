@@ -71,6 +71,7 @@ height = 24
 links = ["catacombs", "drowned_city"]
 monsters = 10
 traps = 4
+doors = true
 [[level.laboratory.spawn]]
 monster = "gnoblin"
 weight = 2
@@ -90,6 +91,7 @@ width = 60
 height = 24
 links = ["ominous_cave", "frozen_vault"]
 monsters = 10
+doors = true
 [[level.comm_hub.spawn]]
 monster = "gnoblin"
 weight = 3
@@ -141,6 +143,7 @@ width = 60
 height = 24
 links = ["comm_hub", "dragons_lair"]
 monsters = 10
+doors = true
 [[level.frozen_vault.spawn]]
 monster = "scarecrow"
 weight = 3
@@ -177,6 +180,7 @@ links = ["dragons_lair"]
 monsters = 12
 altar = true
 boss = "elder_mummylich"
+doors = true
 [[level.chapel.spawn]]
 monster = "ghoul"
 weight = 3
