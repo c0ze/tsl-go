@@ -85,7 +85,23 @@ func newGame(c *content.Content, seed uint32) (*game.Game, error) {
 		Behaviors: behaviors.Registry(),
 	}
 	g.EnterStart()
+	equipStartingKit(g, c)
 	return g, nil
+}
+
+// equipStartingKit gives the player a basic dagger + leather armor, equipped, so
+// the early game is playable before better gear is found.
+func equipStartingKit(g *game.Game, c *content.Content) {
+	if d := c.Items["dagger"]; d != nil {
+		it := &game.Item{Def: d}
+		g.Inventory = append(g.Inventory, it)
+		g.Weapon = it
+	}
+	if a := c.Items["leather_armor"]; a != nil {
+		it := &game.Item{Def: a}
+		g.Inventory = append(g.Inventory, it)
+		g.Armor = it
+	}
 }
 
 // startLevelID returns the id of the single level flagged start.

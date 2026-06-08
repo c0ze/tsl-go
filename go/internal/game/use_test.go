@@ -100,3 +100,23 @@ func TestEdibleInventoryFiltersFood(t *testing.T) {
 		t.Errorf("EdibleInventory = %v, want [ration]", food)
 	}
 }
+
+func TestPickupAutoEquipsWhenSlotEmpty(t *testing.T) {
+	g := useGame()
+	sword := &Item{Def: &content.ItemDef{ID: "sword", Name: "sword", Kind: "weapon", Attack: 4, Damage: "2d4"}, Pos: g.Player}
+	g.Level.Items = append(g.Level.Items, sword)
+	g.PlayerPickup()
+	if g.Weapon != sword {
+		t.Fatal("first weapon should auto-equip when the slot is empty")
+	}
+	// a second weapon must NOT auto-replace the equipped one
+	dagger := &Item{Def: &content.ItemDef{ID: "dagger", Name: "dagger", Kind: "weapon", Attack: 2, Damage: "1d4"}, Pos: g.Player}
+	g.Level.Items = append(g.Level.Items, dagger)
+	g.PlayerPickup()
+	if g.Weapon != sword {
+		t.Error("second weapon should not auto-replace the equipped one")
+	}
+	if len(g.Inventory) != 2 {
+		t.Errorf("both weapons should be carried, inventory = %d", len(g.Inventory))
+	}
+}
