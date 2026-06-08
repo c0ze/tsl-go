@@ -118,6 +118,20 @@ func TestEmbeddedVenomWand(t *testing.T) {
 	}
 }
 
+// TestEmbeddedScrolls checks the read-verb scrolls loaded.
+func TestEmbeddedScrolls(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if s := c.Items["scroll_teleport"]; s == nil || s.Kind != "scroll" || s.Use != "teleport" {
+		t.Errorf("scroll_teleport def unexpected: %+v", s)
+	}
+	if s := c.Items["scroll_magic_mapping"]; s == nil || s.Kind != "scroll" || s.Use != "reveal" {
+		t.Errorf("scroll_magic_mapping def unexpected: %+v", s)
+	}
+}
+
 // TestEmbeddedSlowingWand checks the control (slowing) wand loaded.
 func TestEmbeddedSlowingWand(t *testing.T) {
 	c, err := content.Load(Files)
