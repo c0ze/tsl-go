@@ -59,19 +59,22 @@ func TestEmbeddedDungeon(t *testing.T) {
 	if len(c.Levels) != len(all) {
 		t.Errorf("level count = %d, want %d", len(c.Levels), len(all))
 	}
-	starts, wins := 0, 0
+	starts := 0
 	for _, l := range c.Levels {
 		if l.Start {
 			starts++
-		}
-		if l.Win {
-			wins++
 		}
 	}
 	if d := c.Levels["dungeon"]; starts != 1 || d == nil || !d.Start {
 		t.Errorf("want exactly one start (the Dungeon), got %d", starts)
 	}
-	if ch := c.Levels["chapel"]; wins != 1 || ch == nil || !ch.Win {
-		t.Errorf("want exactly one win (the Chapel), got %d", wins)
+	if ch := c.Levels["chapel"]; ch == nil || !ch.Altar || ch.Boss != "elder_mummylich" {
+		t.Errorf("Chapel should have the altar + mummylich boss, got %+v", ch)
+	}
+	if dl := c.Levels["dragons_lair"]; dl == nil || dl.Boss != "dragon" {
+		t.Errorf("Dragons Lair should have the dragon boss, got %+v", dl)
+	}
+	if a := c.Tiles["altar"]; a == nil || !a.Win {
+		t.Error("altar tile should be a win tile")
 	}
 }

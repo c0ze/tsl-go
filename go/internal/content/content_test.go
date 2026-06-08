@@ -355,3 +355,47 @@ func TestLoadRejectsZeroSpawnWeight(t *testing.T) {
 		t.Fatal("expected error: spawn weight must be >= 1")
 	}
 }
+
+func writeEndgameFixture(t *testing.T, tilesExtra, levelsBody string) string {
+	t.Helper()
+	dir := t.TempDir()
+	w := func(name, body string) {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	w("tiles.toml", "[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n"+tilesExtra)
+	w("monsters.toml", "[monster.ratman]\nname=\"ratman\"\nglyph=\"r\"\ncolor=\"brown\"\nhp=3\nattack=2\ndodge=1\ndamage=\"1d2\"\n")
+	w("levels.toml", levelsBody)
+	return dir
+}
+
+const altarTileTOML = "[tile.altar]\nglyph=\"_\"\ncolor=\"cyan\"\npassable=true\ntransparent=true\nwin=true\n"
+
+func TestLoadAltarBossLevel(t *testing.T) {
+	body := "[level.chapel]\nname=\"Chapel\"\nwidth=60\nheight=24\nstart=true\nlinks=[\"chapel\"]\naltar=true\nboss=\"ratman\"\n"
+	c, err := Load(os.DirFS(writeEndgameFixture(t, altarTileTOML, body)))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if ch := c.Levels["chapel"]; ch == nil || !ch.Altar || ch.Boss != "ratman" {
+		t.Errorf("unexpected chapel: %+v", ch)
+	}
+	if a := c.Tiles["altar"]; a == nil || !a.Win {
+		t.Error("altar tile should have win=true")
+	}
+}
+
+func TestLoadRejectsUnknownBoss(t *testing.T) {
+	body := "[level.a]\nname=\"A\"\nwidth=60\nheight=24\nstart=true\nlinks=[\"a\"]\nboss=\"dragon\"\n"
+	if _, err := Load(os.DirFS(writeEndgameFixture(t, altarTileTOML, body))); err == nil {
+		t.Fatal("expected error: boss references unknown monster")
+	}
+}
+
+func TestLoadRejectsAltarWithoutWinTile(t *testing.T) {
+	body := "[level.a]\nname=\"A\"\nwidth=60\nheight=24\nstart=true\nlinks=[\"a\"]\naltar=true\n"
+	if _, err := Load(os.DirFS(writeEndgameFixture(t, "", body))); err == nil {
+		t.Fatal("expected error: altar level needs a defined win tile")
+	}
+}

@@ -184,7 +184,7 @@ func travelGame(t *testing.T) *game.Game {
 	floor := &content.TileDef{ID: "floor", Glyph: ".", Color: content.ColorNormal, Passable: true, Transparent: true}
 	defs := map[string]*content.LevelDef{
 		"start": {ID: "start", Name: "the Start", W: 5, H: 3, Start: true, Links: []string{"end"}},
-		"end":   {ID: "end", Name: "the End", W: 5, H: 3, Links: []string{"start"}, Win: true},
+		"end":   {ID: "end", Name: "the End", W: 5, H: 3, Links: []string{"start"}},
 	}
 	build := func(def *content.LevelDef) (*game.Level, error) {
 		l := game.NewLevel(def.W, def.H, floor)
@@ -201,15 +201,15 @@ func travelGame(t *testing.T) *game.Game {
 	return g
 }
 
-func TestRunTravelToWin(t *testing.T) {
+func TestRunTravelChangesLevel(t *testing.T) {
 	g := travelGame(t)
-	g.Player = game.Pos{X: 3, Y: 1} // on the start portal to the win level
-	p := &scriptPrompter{actions: []Action{{Kind: ActTravel}}}
+	g.Player = game.Pos{X: 3, Y: 1} // on the start portal
+	p := &scriptPrompter{actions: []Action{{Kind: ActTravel}, {Kind: ActQuit}}}
 	if err := Run(g, p, &nullRenderer{}); err != nil {
 		t.Fatal(err)
 	}
-	if !g.Won {
-		t.Error("traveling to the win level should win and end the loop")
+	if g.LocationName() != "the End" {
+		t.Errorf("after travel, location = %q, want the End", g.LocationName())
 	}
 }
 

@@ -33,7 +33,7 @@ func (g *Game) log(format string, args ...any) {
 // PlayerStep performs the player's turn: bump-attack a monster in direction d,
 // otherwise move. Then every monster acts.
 func (g *Game) PlayerStep(d Direction) {
-	if g.Dead {
+	if g.Dead || g.Won {
 		return
 	}
 	dx, dy := d.Delta()
@@ -44,6 +44,11 @@ func (g *Game) PlayerStep(d Direction) {
 		acted = true
 	} else if g.Move(d) {
 		acted = true
+		if g.Level.At(g.Player).Def.Win {
+			g.Won = true
+			g.log("You ascend to demigodhood. You win!")
+			return // winning ends the turn immediately
+		}
 	}
 	if acted { // a blocked move into a wall doesn't pass the turn
 		g.monstersAct()

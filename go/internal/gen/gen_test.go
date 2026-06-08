@@ -188,6 +188,38 @@ func TestLevelFromDefSpawnsOnlyFromTable(t *testing.T) {
 	}
 }
 
+func TestLevelFromDefPlacesBossAndAltar(t *testing.T) {
+	c := levelDefContent()
+	c.Monsters["mummylich"] = &content.MonsterDef{ID: "mummylich", Name: "elder mummylich", Glyph: "E", Color: content.ColorMagenta, HP: 40, Attack: 6, Dodge: 3, Damage: "1d8"}
+	c.Tiles["altar"] = &content.TileDef{ID: "altar", Glyph: "_", Color: content.ColorCyan, Passable: true, Transparent: true, Win: true}
+	def := &content.LevelDef{ID: "chapel", Name: "Chapel", W: 60, H: 24, Links: []string{"x"}, Altar: true, Boss: "mummylich"}
+	lvl, err := LevelFromDef(rng.NewWithSeed(1), c, def)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bosses := 0
+	for _, m := range lvl.Creatures {
+		if m.Def.ID == "mummylich" {
+			bosses++
+		}
+	}
+	if bosses != 1 {
+		t.Errorf("want exactly 1 boss, got %d", bosses)
+	}
+	found := false
+	for y := 0; y < lvl.H && !found; y++ {
+		for x := 0; x < lvl.W; x++ {
+			if lvl.At(game.Pos{X: x, Y: y}).Def.Win {
+				found = true
+				break
+			}
+		}
+	}
+	if !found {
+		t.Error("expected an altar (win) tile on the level")
+	}
+}
+
 func TestLevelFromDefDeterministic(t *testing.T) {
 	c := levelDefContent()
 	def := &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"}, Monsters: 5, Spawn: []content.SpawnEntry{{Monster: "ratman", Weight: 1}}}

@@ -7,13 +7,13 @@ import (
 )
 
 // fakeDungeon builds a tiny 2-level graph (a↔b) with a fake builder; each level
-// has one portal (at 3,1) to the other. b is a win level iff bWins.
-func fakeDungeon(t *testing.T, bWins bool) *Game {
+// has one portal (at 3,1) to the other.
+func fakeDungeon(t *testing.T) *Game {
 	t.Helper()
 	floor := &content.TileDef{ID: "floor", Glyph: ".", Passable: true, Transparent: true}
 	defs := map[string]*content.LevelDef{
 		"a": {ID: "a", Name: "Level A", W: 5, H: 3, Start: true, Links: []string{"b"}},
-		"b": {ID: "b", Name: "Level B", W: 5, H: 3, Links: []string{"a"}, Win: bWins},
+		"b": {ID: "b", Name: "Level B", W: 5, H: 3, Links: []string{"a"}},
 	}
 	build := func(def *content.LevelDef) (*Level, error) {
 		l := NewLevel(def.W, def.H, floor)
@@ -32,7 +32,7 @@ func fakeDungeon(t *testing.T, bWins bool) *Game {
 }
 
 func TestTravelMovesToLinkedLevel(t *testing.T) {
-	g := fakeDungeon(t, false)
+	g := fakeDungeon(t)
 	g.Player = Pos{3, 1} // stand on A's portal to B
 	g.Travel()
 	if g.Dungeon.current != "b" {
@@ -43,17 +43,8 @@ func TestTravelMovesToLinkedLevel(t *testing.T) {
 	}
 }
 
-func TestTravelWinsOnWinLevel(t *testing.T) {
-	g := fakeDungeon(t, true)
-	g.Player = Pos{3, 1}
-	g.Travel()
-	if !g.Won {
-		t.Error("arriving at a win level should win")
-	}
-}
-
 func TestTravelPersistsLevelState(t *testing.T) {
-	g := fakeDungeon(t, false)
+	g := fakeDungeon(t)
 	g.Player = Pos{3, 1}
 	g.Travel() // → B
 	b := g.Level

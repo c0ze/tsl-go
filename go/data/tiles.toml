@@ -17,3 +17,11 @@ glyph = ">"
 color = "normal"
 passable = true
 transparent = true
+
+# The ascension altar in the Chapel — stepping onto it wins the game.
+[tile.altar]
+glyph = "_"
+color = "cyan"
+passable = true
+transparent = true
+win = true
