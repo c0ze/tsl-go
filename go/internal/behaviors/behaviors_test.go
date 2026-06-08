@@ -40,3 +40,36 @@ func TestEatRestoresHPClamped(t *testing.T) {
 		t.Error("expected an eat message")
 	}
 }
+
+func TestRegenerateAddsEffect(t *testing.T) {
+	regen, ok := Registry()["regenerate"]
+	if !ok {
+		t.Fatal("regenerate behavior not registered")
+	}
+	g := &game.Game{PlayerHP: 10, PlayerMax: 20}
+	regen(g, &game.Item{Def: &content.ItemDef{Name: "potion of regeneration", Power: 8}})
+	if len(g.Effects) != 1 || g.Effects[0].Kind != "regen" || g.Effects[0].Turns != 8 {
+		t.Errorf("expected a regen effect for 8 turns, got %v", g.Effects)
+	}
+}
+
+func TestEatMushroomHealsAndPoisons(t *testing.T) {
+	eat, ok := Registry()["eat_mushroom"]
+	if !ok {
+		t.Fatal("eat_mushroom behavior not registered")
+	}
+	g := &game.Game{PlayerHP: 10, PlayerMax: 20}
+	eat(g, &game.Item{Def: &content.ItemDef{Name: "red mushroom", Power: 4}})
+	if g.PlayerHP != 14 {
+		t.Errorf("HP = %d, want 14 (healed 4)", g.PlayerHP)
+	}
+	poisoned := false
+	for _, e := range g.Effects {
+		if e.Kind == "poison" {
+			poisoned = true
+		}
+	}
+	if !poisoned {
+		t.Error("eating the red mushroom should poison the player")
+	}
+}
