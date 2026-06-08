@@ -116,6 +116,7 @@ type LevelDef struct {
 	Altar    bool         `toml:"altar"` // place an ascension altar (a win tile)
 	Boss     string       `toml:"boss"`  // a guaranteed monster placed once on the level
 	Traps    int          `toml:"traps"` // number of dart_trap tiles to scatter
+	Doors    bool         `toml:"doors"` // place closed doors in room doorways
 }
 
 // Content is the fully-loaded, validated game content.
