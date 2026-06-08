@@ -8,11 +8,17 @@ import (
 )
 
 func testTiles() *content.Content {
-	return &content.Content{Tiles: map[string]*content.TileDef{
-		"floor":       {ID: "floor", Glyph: ".", Color: content.ColorNormal, Passable: true, Transparent: true},
-		"wall":        {ID: "wall", Glyph: "#", Color: content.ColorNormal, Passable: false, Transparent: false},
-		"stairs_down": {ID: "stairs_down", Glyph: ">", Color: content.ColorNormal, Passable: true, Transparent: true},
-	}}
+	return &content.Content{
+		Tiles: map[string]*content.TileDef{
+			"floor":       {ID: "floor", Glyph: ".", Color: content.ColorNormal, Passable: true, Transparent: true},
+			"wall":        {ID: "wall", Glyph: "#", Color: content.ColorNormal, Passable: false, Transparent: false},
+			"stairs_down": {ID: "stairs_down", Glyph: ">", Color: content.ColorNormal, Passable: true, Transparent: true},
+		},
+		Items: map[string]*content.ItemDef{},
+		Levels: map[string]*content.LevelDef{
+			"dungeon": {ID: "dungeon", Name: "the Dungeon", W: 60, H: 24, Start: true},
+		},
+	}
 }
 
 func TestNewGamePlayable(t *testing.T) {
@@ -76,15 +82,18 @@ func TestNewGameHasPlayerHPAndRNG(t *testing.T) {
 	}
 }
 
-func TestNewGameStartsAtDepthOne(t *testing.T) {
+func TestNewGameStartsOnStartLevel(t *testing.T) {
 	g, err := newGame(testTiles(), 1)
 	if err != nil {
 		t.Fatalf("newGame: %v", err)
 	}
-	if g.Depth != 1 {
-		t.Errorf("depth = %d, want 1", g.Depth)
+	if g.Dungeon == nil {
+		t.Fatal("dungeon should be wired")
 	}
-	if g.NewLevelFn == nil {
-		t.Error("NewLevelFn should be wired so the player can descend")
+	if g.LocationName() != "the Dungeon" {
+		t.Errorf("location = %q, want the Dungeon", g.LocationName())
+	}
+	if g.Player != g.Level.Start {
+		t.Errorf("player at %v, want start level's Start %v", g.Player, g.Level.Start)
 	}
 }

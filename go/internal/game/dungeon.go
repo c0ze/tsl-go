@@ -101,3 +101,19 @@ func (g *Game) Travel() {
 		g.log("You ascend to demigodhood. You win!")
 	}
 }
+
+// EnterStart places the player on the current (start) level's entry tile and
+// marks it visited. Called once after the dungeon is built.
+func (g *Game) EnterStart() {
+	g.Player = g.Level.Start
+	g.Level.entered = true
+}
+
+// LocationName is the display name of the player's current level (for the HUD
+// and morgue), or "" when no dungeon is wired (some unit tests).
+func (g *Game) LocationName() string {
+	if g.Dungeon != nil {
+		return g.Dungeon.Name()
+	}
+	return ""
+}
