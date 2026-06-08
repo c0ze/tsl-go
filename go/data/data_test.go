@@ -50,21 +50,28 @@ func TestEmbeddedDungeon(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	starts := 0
-	for _, l := range c.Levels {
-		if l.Start {
-			starts++
-		}
-	}
-	if starts != 1 {
-		t.Errorf("want exactly one start level, got %d", starts)
-	}
-	for _, id := range []string{"dungeon", "catacombs", "ominous_cave"} {
+	all := []string{"dungeon", "catacombs", "ominous_cave", "laboratory", "comm_hub", "underpass", "drowned_city", "frozen_vault", "dragons_lair", "chapel"}
+	for _, id := range all {
 		if _, ok := c.Levels[id]; !ok {
 			t.Errorf("missing level %q", id)
 		}
 	}
-	if d := c.Levels["dungeon"]; d == nil || !d.Start {
-		t.Error("the Dungeon should be the start level")
+	if len(c.Levels) != len(all) {
+		t.Errorf("level count = %d, want %d", len(c.Levels), len(all))
+	}
+	starts, wins := 0, 0
+	for _, l := range c.Levels {
+		if l.Start {
+			starts++
+		}
+		if l.Win {
+			wins++
+		}
+	}
+	if d := c.Levels["dungeon"]; starts != 1 || d == nil || !d.Start {
+		t.Errorf("want exactly one start (the Dungeon), got %d", starts)
+	}
+	if ch := c.Levels["chapel"]; wins != 1 || ch == nil || !ch.Win {
+		t.Errorf("want exactly one win (the Chapel), got %d", wins)
 	}
 }
