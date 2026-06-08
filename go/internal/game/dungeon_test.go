@@ -7,7 +7,7 @@ import (
 )
 
 // fakeDungeon builds a tiny 2-level graph (a↔b) with a fake builder; each level
-// has one portal (at 3,1) to the other. b is a win level iff bWins.
+// has one portal (at 3,1) to the other.
 func fakeDungeon(t *testing.T) *Game {
 	t.Helper()
 	floor := &content.TileDef{ID: "floor", Glyph: ".", Passable: true, Transparent: true}
