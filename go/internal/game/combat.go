@@ -107,6 +107,31 @@ func (g *Game) killCreature(m *Creature) {
 	g.Level.RemoveCreature(m)
 }
 
+// ZapWand fires a wand at target: it spends a charge and damages the creature
+// there (killing it if reduced to 0), then passes a turn. A wand with no charges
+// fizzles without costing a turn.
+func (g *Game) ZapWand(it *Item, target Pos) {
+	if g.Dead || g.Won {
+		return
+	}
+	if it.Charges <= 0 {
+		g.log("The %s has no charges left.", it.Def.Name)
+		return
+	}
+	it.Charges--
+	if m := g.Level.CreatureAt(target); m != nil {
+		dmg := g.RNG.RollSpec(it.Def.Damage)
+		m.HP -= dmg
+		g.log("The %s blasts the %s for %d.", it.Def.Name, m.Def.Name, dmg)
+		if m.HP <= 0 {
+			g.killCreature(m)
+		}
+	} else {
+		g.log("The bolt fizzles against nothing.")
+	}
+	g.monstersAct()
+}
+
 func (g *Game) monsterAttacks(m *Creature) {
 	if !g.RNG.Chance(m.Def.Attack, g.playerDodgeStat()) {
 		g.log("The %s misses you.", m.Def.Name)

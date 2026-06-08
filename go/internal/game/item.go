@@ -8,8 +8,9 @@ import (
 
 // Item is an item instance (on the ground while Pos is meaningful, or carried).
 type Item struct {
-	Def *content.ItemDef
-	Pos Pos
+	Def     *content.ItemDef
+	Pos     Pos
+	Charges int // remaining wand charges (0 for non-wands)
 }
 
 // Behavior is an item effect, looked up by name from Game.Behaviors and invoked
