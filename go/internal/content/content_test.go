@@ -266,3 +266,92 @@ func TestLoadRejectsNonFoodCorpse(t *testing.T) {
 		t.Fatal("expected error: corpse must reference a food item")
 	}
 }
+
+func writeLevelsFixture(t *testing.T, levelsBody string) string {
+	t.Helper()
+	dir := t.TempDir()
+	w := func(name, body string) {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	w("tiles.toml", "[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n")
+	w("monsters.toml", "[monster.ratman]\nname=\"ratman\"\nglyph=\"r\"\ncolor=\"brown\"\nhp=3\nattack=2\ndodge=1\ndamage=\"1d2\"\n")
+	w("levels.toml", levelsBody)
+	return dir
+}
+
+const twoLevelGraph = `
+[level.dungeon]
+name = "the Dungeon"
+width = 60
+height = 24
+start = true
+links = ["cave"]
+monsters = 5
+[[level.dungeon.spawn]]
+monster = "ratman"
+weight = 1
+
+[level.cave]
+name = "the Cave"
+width = 40
+height = 20
+links = ["dungeon"]
+monsters = 3
+[[level.cave.spawn]]
+monster = "ratman"
+weight = 2
+`
+
+func TestLoadLevels(t *testing.T) {
+	c, err := Load(os.DirFS(writeLevelsFixture(t, twoLevelGraph)))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	d, ok := c.Levels["dungeon"]
+	if !ok || d.Name != "the Dungeon" || !d.Start || d.W != 60 || d.H != 24 {
+		t.Fatalf("unexpected dungeon level: %+v", d)
+	}
+	if len(d.Links) != 1 || d.Links[0] != "cave" {
+		t.Errorf("dungeon links = %v", d.Links)
+	}
+	if len(d.Spawn) != 1 || d.Spawn[0].Monster != "ratman" || d.Spawn[0].Weight != 1 {
+		t.Errorf("dungeon spawn = %+v", d.Spawn)
+	}
+}
+
+func TestLoadRejectsNoStart(t *testing.T) {
+	body := "[level.a]\nname=\"A\"\nwidth=60\nheight=24\nlinks=[\"a\"]\n"
+	if _, err := Load(os.DirFS(writeLevelsFixture(t, body))); err == nil {
+		t.Fatal("expected error: no start level")
+	}
+}
+
+func TestLoadRejectsTwoStarts(t *testing.T) {
+	body := "[level.a]\nname=\"A\"\nwidth=60\nheight=24\nstart=true\nlinks=[\"b\"]\n[level.b]\nname=\"B\"\nwidth=60\nheight=24\nstart=true\nlinks=[\"a\"]\n"
+	if _, err := Load(os.DirFS(writeLevelsFixture(t, body))); err == nil {
+		t.Fatal("expected error: two start levels")
+	}
+}
+
+func TestLoadRejectsUnknownLink(t *testing.T) {
+	body := "[level.a]\nname=\"A\"\nwidth=60\nheight=24\nstart=true\nlinks=[\"nowhere\"]\n"
+	if _, err := Load(os.DirFS(writeLevelsFixture(t, body))); err == nil {
+		t.Fatal("expected error: link to unknown level")
+	}
+}
+
+func TestLoadRejectsUnknownSpawnMonster(t *testing.T) {
+	body := "[level.a]\nname=\"A\"\nwidth=60\nheight=24\nstart=true\nlinks=[\"a\"]\nmonsters=1\n[[level.a.spawn]]\nmonster=\"dragon\"\nweight=1\n"
+	if _, err := Load(os.DirFS(writeLevelsFixture(t, body))); err == nil {
+		t.Fatal("expected error: spawn references unknown monster")
+	}
+}
+
+func TestLoadRejectsZeroSpawnWeight(t *testing.T) {
+	body := "[level.a]\nname=\"A\"\nwidth=60\nheight=24\nstart=true\nlinks=[\"a\"]\nmonsters=1\n[[level.a.spawn]]\nmonster=\"ratman\"\nweight=0\n"
+	if _, err := Load(os.DirFS(writeLevelsFixture(t, body))); err == nil {
+		t.Fatal("expected error: spawn weight must be >= 1")
+	}
+}

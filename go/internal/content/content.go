@@ -91,11 +91,31 @@ func (i *ItemDef) Rune() rune {
 
 var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true, "food": true}
 
+// SpawnEntry is one weighted entry in a level's monster spawn table.
+type SpawnEntry struct {
+	Monster string `toml:"monster"`
+	Weight  int    `toml:"weight"`
+}
+
+// LevelDef defines a named dungeon level and its place in the graph.
+type LevelDef struct {
+	ID       string       `toml:"-"`
+	Name     string       `toml:"name"`
+	W        int          `toml:"width"`
+	H        int          `toml:"height"`
+	Start    bool         `toml:"start"` // the single entry level
+	Links    []string     `toml:"links"` // ids of connected levels
+	Monsters int          `toml:"monsters"`
+	Spawn    []SpawnEntry `toml:"spawn"`
+	Win      bool         `toml:"win"` // arriving here wins (temporary, pre-2c)
+}
+
 // Content is the fully-loaded, validated game content.
 type Content struct {
 	Tiles    map[string]*TileDef
 	Monsters map[string]*MonsterDef
 	Items    map[string]*ItemDef
+	Levels   map[string]*LevelDef
 }
 
 type tilesFile struct {
@@ -110,6 +130,10 @@ type itemsFile struct {
 	Item map[string]*ItemDef `toml:"item"`
 }
 
+type levelsFile struct {
+	Level map[string]*LevelDef `toml:"level"`
+}
+
 // Load reads and validates all content from fsys (tiles.toml is required;
 // monsters.toml and items.toml are optional).
 func Load(fsys fs.FS) (*Content, error) {
@@ -117,6 +141,7 @@ func Load(fsys fs.FS) (*Content, error) {
 		Tiles:    map[string]*TileDef{},
 		Monsters: map[string]*MonsterDef{},
 		Items:    map[string]*ItemDef{},
+		Levels:   map[string]*LevelDef{},
 	}
 
 	var tf tilesFile
@@ -160,7 +185,20 @@ func Load(fsys fs.FS) (*Content, error) {
 		}
 	}
 
+	var lf levelsFile
+	if ok, err := decodeOptionalTOML(fsys, "levels.toml", &lf); err != nil {
+		return nil, err
+	} else if ok {
+		for id, def := range lf.Level {
+			def.ID = id
+			c.Levels[id] = def
+		}
+	}
+
 	if err := validateCorpseRefs(c); err != nil {
+		return nil, err
+	}
+	if err := validateLevels(c); err != nil {
 		return nil, err
 	}
 	return c, nil
@@ -180,6 +218,47 @@ func validateCorpseRefs(c *Content) error {
 		if it.Kind != "food" {
 			return fmt.Errorf("monster %q: corpse %q must be a food item, got kind %q", id, m.Corpse, it.Kind)
 		}
+	}
+	return nil
+}
+
+// validateLevels checks the level graph: exactly one start level, links and
+// spawn references resolve, and sizes/weights are sane. A dungeon with no
+// levels defined is allowed (the file is optional).
+func validateLevels(c *Content) error {
+	if len(c.Levels) == 0 {
+		return nil
+	}
+	starts := 0
+	for id, l := range c.Levels {
+		if l.Start {
+			starts++
+		}
+		if l.W < 12 || l.H < 8 {
+			return fmt.Errorf("level %q: too small (%dx%d), need at least 12x8", id, l.W, l.H)
+		}
+		if l.Monsters < 0 {
+			return fmt.Errorf("level %q: monsters must be >= 0, got %d", id, l.Monsters)
+		}
+		for _, t := range l.Links {
+			if _, ok := c.Levels[t]; !ok {
+				return fmt.Errorf("level %q: link to unknown level %q", id, t)
+			}
+		}
+		for _, s := range l.Spawn {
+			if _, ok := c.Monsters[s.Monster]; !ok {
+				return fmt.Errorf("level %q: spawn references unknown monster %q", id, s.Monster)
+			}
+			if s.Weight < 1 {
+				return fmt.Errorf("level %q: spawn weight for %q must be >= 1, got %d", id, s.Monster, s.Weight)
+			}
+		}
+		if l.Monsters > 0 && len(l.Spawn) == 0 {
+			return fmt.Errorf("level %q: monsters > 0 but spawn table is empty", id)
+		}
+	}
+	if starts != 1 {
+		return fmt.Errorf("levels: need exactly one start level, found %d", starts)
 	}
 	return nil
 }
