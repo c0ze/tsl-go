@@ -96,10 +96,6 @@ func (g *Game) Travel() {
 	}
 	def := g.Dungeon.defs[g.Level.ID]
 	g.log("You enter %s.", def.Name)
-	if def.Win {
-		g.Won = true
-		g.log("You ascend to demigodhood. You win!")
-	}
 }
 
 // EnterStart places the player on the current (start) level's entry tile and

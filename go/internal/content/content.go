@@ -108,7 +108,6 @@ type LevelDef struct {
 	Links    []string     `toml:"links"` // ids of connected levels
 	Monsters int          `toml:"monsters"`
 	Spawn    []SpawnEntry `toml:"spawn"`
-	Win      bool         `toml:"win"`   // arriving here wins (temporary; removed in 2c)
 	Altar    bool         `toml:"altar"` // place an ascension altar (a win tile)
 	Boss     string       `toml:"boss"`  // a guaranteed monster placed once on the level
 }

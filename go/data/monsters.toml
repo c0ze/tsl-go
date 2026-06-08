@@ -91,3 +91,25 @@ dodge = 0
 damage = "1d4"
 speed = 80
 min_depth = 3
+
+# Bosses (#16 2c). Deadly guardians — but you win by reaching the altar, so you
+# needn't kill them. Stats are tunable; gear breadth (#14) will make this fairer.
+[monster.elder_mummylich]
+name = "elder mummylich"
+glyph = "E"
+color = "magenta"
+hp = 40
+attack = 6
+dodge = 3
+damage = "1d8"
+speed = 110
+
+[monster.dragon]
+name = "dragon"
+glyph = "D"
+color = "red"
+hp = 50
+attack = 7
+dodge = 3
+damage = "1d10"
+speed = 110
