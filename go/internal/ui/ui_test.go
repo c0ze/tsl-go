@@ -6,6 +6,7 @@ import (
 
 	"github.com/c0ze/tsl/internal/content"
 	"github.com/c0ze/tsl/internal/game"
+	"github.com/c0ze/tsl/internal/rng"
 )
 
 func testGame(t *testing.T, rows []string) *game.Game {
@@ -37,6 +38,8 @@ func (s *scriptPrompter) NextAction() (Action, error) {
 }
 
 func (s *scriptPrompter) Menu(MenuSpec) (int, bool) { return 0, false }
+
+func (s *scriptPrompter) Target(game.Pos) (game.Pos, bool) { return game.Pos{}, false }
 
 type nullRenderer struct{ frames int }
 
@@ -172,6 +175,41 @@ func (m *menuPrompter) NextAction() (Action, error) {
 	return a, nil
 }
 func (m *menuPrompter) Menu(MenuSpec) (int, bool) { return m.pick, true }
+
+func (m *menuPrompter) Target(game.Pos) (game.Pos, bool) { return game.Pos{}, false }
+
+// zapPrompter scripts actions, picks the first wand, and targets a fixed tile.
+type zapPrompter struct {
+	actions []Action
+	i       int
+	target  game.Pos
+}
+
+func (z *zapPrompter) NextAction() (Action, error) {
+	if z.i >= len(z.actions) {
+		return Action{Kind: ActQuit}, nil
+	}
+	a := z.actions[z.i]
+	z.i++
+	return a, nil
+}
+func (z *zapPrompter) Menu(MenuSpec) (int, bool)        { return 0, true }
+func (z *zapPrompter) Target(game.Pos) (game.Pos, bool) { return z.target, true }
+
+func TestRunZapWandDamagesCreature(t *testing.T) {
+	g := testGame(t, []string{".....", ".@...", "....."})
+	g.RNG = rng.NewWithSeed(1)
+	g.UpdateFOV()
+	g.Level.Creatures = append(g.Level.Creatures, &game.Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 3}, Pos: game.Pos{X: 3, Y: 1}, HP: 3})
+	g.Inventory = append(g.Inventory, &game.Item{Def: &content.ItemDef{Name: "wand", Kind: "wand", Damage: "5d1"}, Charges: 3})
+	p := &zapPrompter{actions: []Action{{Kind: ActZap}, {Kind: ActQuit}}, target: game.Pos{X: 3, Y: 1}}
+	if err := Run(g, p, &nullRenderer{}); err != nil {
+		t.Fatal(err)
+	}
+	if g.Level.CreatureAt(game.Pos{X: 3, Y: 1}) != nil {
+		t.Error("zapping the wand should have killed the rat")
+	}
+}
 
 func TestBuildViewShowsVisibleMonsterAndMessages(t *testing.T) {
 	g := testGame(t, []string{".....", ".@...", "....."})

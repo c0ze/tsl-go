@@ -46,7 +46,8 @@ func TestKeyToAction(t *testing.T) {
 		{tc.NewEventKey(tc.KeyLeft, 0, tc.ModNone), ui.Action{Kind: ui.ActMove, Dir: game.DirW}, true},
 		{tc.NewEventKey(tc.KeyRune, 'q', tc.ModNone), ui.Action{Kind: ui.ActQuit}, true},
 		{tc.NewEventKey(tc.KeyRune, 'e', tc.ModNone), ui.Action{Kind: ui.ActEat}, true},
-		{tc.NewEventKey(tc.KeyRune, 'z', tc.ModNone), ui.Action{}, false},
+		{tc.NewEventKey(tc.KeyRune, 'z', tc.ModNone), ui.Action{Kind: ui.ActZap}, true},
+		{tc.NewEventKey(tc.KeyRune, 'X', tc.ModNone), ui.Action{}, false},
 	}
 	for _, tt := range cases {
 		got, ok := keyToAction(tt.ev)
