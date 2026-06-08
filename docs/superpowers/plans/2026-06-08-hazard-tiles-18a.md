@@ -41,4 +41,4 @@
 `gofmt -l . && go vet ./... && go test ./... && go build -o /tmp/tsl ./cmd/tsl`. Commit plan. Push `hazard-tiles`; PR notes hidden/detection traps + doors/light are later #18 slices. CodeRabbit loop → merge → pull master.
 
 ## Done when
-Deeper floors hide `^` dart traps that poison you on contact (shown in the HUD). Suite green.
+Deeper floors show visible `^` dart traps that poison you on contact (shown in the HUD). Suite green.
