@@ -174,10 +174,17 @@ func (g *Game) monstersAct() {
 		if g.Level.CreatureAt(m.Pos) != m {
 			continue // already removed this turn
 		}
+		// Capture slow before ticking, so a 1-turn slow still applies this turn
+		// (symmetric with poison dealing its final tick before expiring).
+		slowed := m.HasEffect("slow")
 		if g.tickCreatureEffects(m) {
 			continue // succumbed to its afflictions before acting
 		}
-		m.Energy += speedOf(m)
+		gain := speedOf(m)
+		if slowed {
+			gain /= 2 // slowed creatures bank energy at half rate
+		}
+		m.Energy += gain
 		for m.Energy >= turnCost {
 			m.Energy -= turnCost
 			g.monsterAct(m)

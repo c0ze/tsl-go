@@ -12,11 +12,13 @@ type Effect struct {
 var effectLabels = map[string]string{
 	"poison": "Poisoned",
 	"regen":  "Regenerating",
+	"slow":   "Slowed",
 }
 
 // effectVerbs phrases how a source inflicts an effect, for the zap message.
 var effectVerbs = map[string]string{
 	"poison": "poisons",
+	"slow":   "slows",
 }
 
 // effectVerb returns the verb describing inflicting kind, with a generic
