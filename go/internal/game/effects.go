@@ -17,6 +17,9 @@ var effectLabels = map[string]string{
 // AddEffect applies a status effect for the given number of turns, refreshing an
 // already-active effect of the same kind to the longer duration.
 func (g *Game) AddEffect(kind string, turns int) {
+	if kind == "" || turns <= 0 {
+		return
+	}
 	for i := range g.Effects {
 		if g.Effects[i].Kind == kind {
 			if turns > g.Effects[i].Turns {
@@ -39,12 +42,6 @@ func (g *Game) tickEffects() {
 		switch e.Kind {
 		case "poison":
 			g.PlayerHP--
-			if g.PlayerHP <= 0 && !g.Dead {
-				g.PlayerHP = 0
-				g.Dead = true
-				g.DeathCause = "poison"
-				g.log("The poison overcomes you. You die.")
-			}
 		case "regen":
 			if g.PlayerHP < g.PlayerMax {
 				g.PlayerHP++
@@ -56,6 +53,14 @@ func (g *Game) tickEffects() {
 		}
 	}
 	g.Effects = kept
+	// Resolve death once, after the net HP change of this turn, so a regen can
+	// offset poison instead of leaving Dead set while HP is still positive.
+	if g.PlayerHP <= 0 && !g.Dead {
+		g.PlayerHP = 0
+		g.Dead = true
+		g.DeathCause = "poison"
+		g.log("The poison overcomes you. You die.")
+	}
 }
 
 // EffectsSummary is a comma-separated list of active effect labels for the HUD,

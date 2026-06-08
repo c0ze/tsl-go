@@ -52,3 +52,25 @@ func TestEffectsSummary(t *testing.T) {
 		t.Errorf("summary = %q, want \"Poisoned, Regenerating\"", got)
 	}
 }
+
+// Poison + regen must net out cleanly and never leave Dead set with HP > 0
+// (order-independent death resolution).
+func TestPoisonAndRegenNetOut(t *testing.T) {
+	g := &Game{PlayerHP: 1, PlayerMax: 20}
+	g.AddEffect("poison", 3)
+	g.AddEffect("regen", 3)
+	g.tickEffects() // -1 +1 = net 0
+	if g.Dead || g.PlayerHP != 1 {
+		t.Errorf("expected alive at HP 1, got dead=%v hp=%d", g.Dead, g.PlayerHP)
+	}
+}
+
+func TestAddEffectRejectsBadInput(t *testing.T) {
+	g := &Game{PlayerHP: 10, PlayerMax: 10}
+	g.AddEffect("", 5)        // empty kind
+	g.AddEffect("poison", 0)  // non-positive duration
+	g.AddEffect("poison", -3) // negative duration
+	if len(g.Effects) != 0 {
+		t.Errorf("bad inputs should add no effects, got %v", g.Effects)
+	}
+}
