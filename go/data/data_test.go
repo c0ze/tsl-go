@@ -42,3 +42,29 @@ func TestDepthGatedTanks(t *testing.T) {
 		t.Errorf("slime should be gated to depth 3, got %+v", s)
 	}
 }
+
+// TestEmbeddedDungeon validates the shipped level graph loads with exactly one
+// start and the expected starter levels.
+func TestEmbeddedDungeon(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	starts := 0
+	for _, l := range c.Levels {
+		if l.Start {
+			starts++
+		}
+	}
+	if starts != 1 {
+		t.Errorf("want exactly one start level, got %d", starts)
+	}
+	for _, id := range []string{"dungeon", "catacombs", "ominous_cave"} {
+		if _, ok := c.Levels[id]; !ok {
+			t.Errorf("missing level %q", id)
+		}
+	}
+	if d := c.Levels["dungeon"]; d == nil || !d.Start {
+		t.Error("the Dungeon should be the start level")
+	}
+}

@@ -44,10 +44,10 @@ func (n *nullRenderer) Render(View) { n.frames++ }
 
 func TestBuildViewStatusLine(t *testing.T) {
 	g := testGame(t, []string{".@."})
-	g.PlayerHP, g.PlayerMax, g.Depth = 14, 20, 2
+	g.PlayerHP, g.PlayerMax = 14, 20
 	g.Weapon = &game.Item{Def: &content.ItemDef{Name: "dagger"}}
 	v := BuildView(g)
-	for _, want := range []string{"HP 14/20", "Depth 2", "Wield: dagger", "Wear: none"} {
+	for _, want := range []string{"HP 14/20", "Wield: dagger", "Wear: none"} {
 		if !strings.Contains(v.Status, want) {
 			t.Errorf("status %q missing %q", v.Status, want)
 		}
@@ -179,16 +179,37 @@ func TestBuildViewShowsVisibleMonsterAndMessages(t *testing.T) {
 	}
 }
 
-func TestRunDescendToWin(t *testing.T) {
-	g := testGame(t, []string{"...", ".@.", "..."})
-	g.Depth = game.MaxDepth
-	g.Level.Set(g.Player, &content.TileDef{ID: "stairs_down", Glyph: ">", Passable: true, Transparent: true})
-	p := &scriptPrompter{actions: []Action{{Kind: ActDescend}}}
+func travelGame(t *testing.T) *game.Game {
+	t.Helper()
+	floor := &content.TileDef{ID: "floor", Glyph: ".", Color: content.ColorNormal, Passable: true, Transparent: true}
+	defs := map[string]*content.LevelDef{
+		"start": {ID: "start", Name: "the Start", W: 5, H: 3, Start: true, Links: []string{"end"}},
+		"end":   {ID: "end", Name: "the End", W: 5, H: 3, Links: []string{"start"}, Win: true},
+	}
+	build := func(def *content.LevelDef) (*game.Level, error) {
+		l := game.NewLevel(def.W, def.H, floor)
+		l.Start = game.Pos{X: 1, Y: 1}
+		l.Portals = []game.Portal{{Pos: game.Pos{X: 3, Y: 1}, Target: def.Links[0]}}
+		return l, nil
+	}
+	d, err := game.NewDungeon(defs, "start", build)
+	if err != nil {
+		t.Fatal(err)
+	}
+	g := &game.Game{Content: &content.Content{Levels: defs}, Dungeon: d, Level: d.Current(), PlayerHP: 10, PlayerMax: 10}
+	g.EnterStart()
+	return g
+}
+
+func TestRunTravelToWin(t *testing.T) {
+	g := travelGame(t)
+	g.Player = game.Pos{X: 3, Y: 1} // on the start portal to the win level
+	p := &scriptPrompter{actions: []Action{{Kind: ActTravel}}}
 	if err := Run(g, p, &nullRenderer{}); err != nil {
 		t.Fatal(err)
 	}
 	if !g.Won {
-		t.Error("descending at max depth should win and end the loop")
+		t.Error("traveling to the win level should win and end the loop")
 	}
 }
 

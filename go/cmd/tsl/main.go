@@ -16,11 +16,6 @@ import (
 	tcellui "github.com/c0ze/tsl/internal/ui/tcell"
 )
 
-const (
-	mapW = 60
-	mapH = 24
-)
-
 func main() {
 	outcome, err := run()
 	if err != nil {
@@ -62,31 +57,43 @@ func run() (string, error) {
 	}
 }
 
-// newGame builds a fresh, procedurally generated dungeon seeded by seed, and
-// wires a level generator so the player can descend.
+// newGame builds the dungeon graph from content, seeds the generator, and
+// places the player on the start level.
 func newGame(c *content.Content, seed uint32) (*game.Game, error) {
+	if err := game.ValidateItemUses(c, behaviors.Registry()); err != nil {
+		return nil, err
+	}
+	start, err := startLevelID(c)
+	if err != nil {
+		return nil, err
+	}
 	r := rng.NewWithSeed(seed)
-	lvl, start, _, err := gen.Rooms(r, c, mapW, mapH, 1)
+	dungeon, err := game.NewDungeon(c.Levels, start, func(def *content.LevelDef) (*game.Level, error) {
+		return gen.LevelFromDef(r, c, def)
+	})
 	if err != nil {
 		return nil, err
 	}
 	const startHP = 20
 	g := &game.Game{
 		Content:   c,
-		Level:     lvl,
-		Player:    start,
+		Dungeon:   dungeon,
+		Level:     dungeon.Current(),
 		RNG:       r,
 		PlayerHP:  startHP,
 		PlayerMax: startHP,
 		Behaviors: behaviors.Registry(),
-		Depth:     1,
 	}
-	if err := game.ValidateItemUses(c, g.Behaviors); err != nil {
-		return nil, err
-	}
-	g.NewLevelFn = func(depth int) (*game.Level, game.Pos, error) {
-		l, s, _, err := gen.Rooms(r, c, mapW, mapH, depth)
-		return l, s, err
-	}
+	g.EnterStart()
 	return g, nil
+}
+
+// startLevelID returns the id of the single level flagged start.
+func startLevelID(c *content.Content) (string, error) {
+	for id, l := range c.Levels {
+		if l.Start {
+			return id, nil
+		}
+	}
+	return "", fmt.Errorf("no start level defined in levels.toml")
 }

@@ -38,7 +38,7 @@ const (
 	ActQuit
 	ActPickup
 	ActInventory
-	ActDescend
+	ActTravel
 	ActEat
 )
 
@@ -116,8 +116,12 @@ func statusLine(g *game.Game) string {
 	if g.Armor != nil && g.Armor.Def != nil {
 		wear = g.Armor.Def.Name
 	}
-	return fmt.Sprintf("HP %d/%d   Depth %d   Wield: %s   Wear: %s",
-		g.PlayerHP, g.PlayerMax, g.Depth, wield, wear)
+	loc := g.LocationName()
+	if loc == "" {
+		loc = "the dungeon"
+	}
+	return fmt.Sprintf("HP %d/%d   %s   Wield: %s   Wear: %s",
+		g.PlayerHP, g.PlayerMax, loc, wield, wear)
 }
 
 // lastN returns up to the last n elements of s.
@@ -157,8 +161,8 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 					g.PlayerUse(g.Inventory[idx])
 				}
 			}
-		case ActDescend:
-			g.Descend()
+		case ActTravel:
+			g.Travel()
 		case ActEat:
 			food := g.EdibleInventory()
 			if len(food) == 0 {

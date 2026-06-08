@@ -123,7 +123,7 @@ func keyToAction(ev *tc.EventKey) (ui.Action, bool) {
 	case 'e':
 		return ui.Action{Kind: ui.ActEat}, true
 	case '>':
-		return ui.Action{Kind: ui.ActDescend}, true
+		return ui.Action{Kind: ui.ActTravel}, true
 	}
 	return ui.Action{}, false
 }

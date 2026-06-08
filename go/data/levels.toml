@@ -1,0 +1,64 @@
+# Level graph. [level.<id>] → LevelDef. Exactly one level has start = true.
+# Stairs (portals) connect linked levels; the player explores to find them and
+# levels persist once visited. `win = true` is a temporary goal until the
+# Chapel ascension altar (#16 increment 2c). This is the 3-level starter subset
+# of the full map (see the design spec); the rest land in 2b.
+
+[level.dungeon]
+name = "the Dungeon"
+width = 60
+height = 24
+start = true
+links = ["catacombs", "ominous_cave"]
+monsters = 8
+[[level.dungeon.spawn]]
+monster = "ratman"
+weight = 3
+[[level.dungeon.spawn]]
+monster = "graveling"
+weight = 2
+[[level.dungeon.spawn]]
+monster = "gnoblin"
+weight = 2
+[[level.dungeon.spawn]]
+monster = "crypt_vermin"
+weight = 1
+
+[level.catacombs]
+name = "the Catacombs"
+width = 60
+height = 24
+links = ["dungeon", "ominous_cave"]
+monsters = 10
+[[level.catacombs.spawn]]
+monster = "ghoul"
+weight = 3
+[[level.catacombs.spawn]]
+monster = "crypt_vermin"
+weight = 2
+[[level.catacombs.spawn]]
+monster = "gnoblin"
+weight = 2
+[[level.catacombs.spawn]]
+monster = "scarecrow"
+weight = 1
+
+[level.ominous_cave]
+name = "the Ominous Cave"
+width = 60
+height = 24
+links = ["dungeon", "catacombs"]
+monsters = 10
+win = true
+[[level.ominous_cave.spawn]]
+monster = "graveling"
+weight = 2
+[[level.ominous_cave.spawn]]
+monster = "merman"
+weight = 2
+[[level.ominous_cave.spawn]]
+monster = "crypt_vermin"
+weight = 2
+[[level.ominous_cave.spawn]]
+monster = "slime"
+weight = 1

@@ -3,16 +3,23 @@ package main
 import (
 	"testing"
 
+	"github.com/c0ze/tsl/data"
 	"github.com/c0ze/tsl/internal/content"
 	"github.com/c0ze/tsl/internal/game"
 )
 
 func testTiles() *content.Content {
-	return &content.Content{Tiles: map[string]*content.TileDef{
-		"floor":       {ID: "floor", Glyph: ".", Color: content.ColorNormal, Passable: true, Transparent: true},
-		"wall":        {ID: "wall", Glyph: "#", Color: content.ColorNormal, Passable: false, Transparent: false},
-		"stairs_down": {ID: "stairs_down", Glyph: ">", Color: content.ColorNormal, Passable: true, Transparent: true},
-	}}
+	return &content.Content{
+		Tiles: map[string]*content.TileDef{
+			"floor":       {ID: "floor", Glyph: ".", Color: content.ColorNormal, Passable: true, Transparent: true},
+			"wall":        {ID: "wall", Glyph: "#", Color: content.ColorNormal, Passable: false, Transparent: false},
+			"stairs_down": {ID: "stairs_down", Glyph: ">", Color: content.ColorNormal, Passable: true, Transparent: true},
+		},
+		Items: map[string]*content.ItemDef{},
+		Levels: map[string]*content.LevelDef{
+			"dungeon": {ID: "dungeon", Name: "the Dungeon", W: 60, H: 24, Start: true},
+		},
+	}
 }
 
 func TestNewGamePlayable(t *testing.T) {
@@ -76,15 +83,37 @@ func TestNewGameHasPlayerHPAndRNG(t *testing.T) {
 	}
 }
 
-func TestNewGameStartsAtDepthOne(t *testing.T) {
+// TestNewGameFromShippedData boots the game on the real embedded content,
+// proving the dungeon graph + generator wire up end-to-end.
+func TestNewGameFromShippedData(t *testing.T) {
+	c, err := content.Load(data.Files)
+	if err != nil {
+		t.Fatalf("load shipped content: %v", err)
+	}
+	g, err := newGame(c, 42)
+	if err != nil {
+		t.Fatalf("newGame on shipped data: %v", err)
+	}
+	if g.Dungeon == nil || g.Level == nil {
+		t.Fatal("dungeon/level not wired")
+	}
+	if !g.Level.Passable(g.Player) {
+		t.Errorf("player start %v not passable", g.Player)
+	}
+}
+
+func TestNewGameStartsOnStartLevel(t *testing.T) {
 	g, err := newGame(testTiles(), 1)
 	if err != nil {
 		t.Fatalf("newGame: %v", err)
 	}
-	if g.Depth != 1 {
-		t.Errorf("depth = %d, want 1", g.Depth)
+	if g.Dungeon == nil {
+		t.Fatal("dungeon should be wired")
 	}
-	if g.NewLevelFn == nil {
-		t.Error("NewLevelFn should be wired so the player can descend")
+	if g.LocationName() != "the Dungeon" {
+		t.Errorf("location = %q, want the Dungeon", g.LocationName())
+	}
+	if g.Player != g.Level.Start {
+		t.Errorf("player at %v, want start level's Start %v", g.Player, g.Level.Start)
 	}
 }

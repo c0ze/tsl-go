@@ -140,6 +140,64 @@ func TestPlaceMonstersRespectsMinDepth(t *testing.T) {
 	}
 }
 
+func levelDefContent() *content.Content {
+	c := testContent()
+	c.Monsters = map[string]*content.MonsterDef{
+		"ratman": {ID: "ratman", Name: "ratman", Glyph: "r", Color: content.ColorBrown, HP: 3, Attack: 2, Dodge: 1, Damage: "1d2"},
+	}
+	return c
+}
+
+func TestLevelFromDefPlacesPortals(t *testing.T) {
+	c := levelDefContent()
+	def := &content.LevelDef{ID: "dungeon", Name: "the Dungeon", W: 60, H: 24, Links: []string{"catacombs", "cave"}, Monsters: 5, Spawn: []content.SpawnEntry{{Monster: "ratman", Weight: 1}}}
+	lvl, err := LevelFromDef(rng.NewWithSeed(1), c, def)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(lvl.Portals) != 2 {
+		t.Fatalf("expected 2 portals, got %d", len(lvl.Portals))
+	}
+	targets := map[string]bool{}
+	for _, p := range lvl.Portals {
+		targets[p.Target] = true
+		if !lvl.Passable(p.Pos) {
+			t.Errorf("portal at %v should be on a passable tile", p.Pos)
+		}
+	}
+	if !targets["catacombs"] || !targets["cave"] {
+		t.Errorf("portals should target catacombs+cave, got %v", targets)
+	}
+}
+
+func TestLevelFromDefSpawnsOnlyFromTable(t *testing.T) {
+	c := levelDefContent()
+	c.Monsters["dragon"] = &content.MonsterDef{ID: "dragon", Name: "dragon", Glyph: "D", Color: content.ColorRed, HP: 99, Attack: 9, Dodge: 9, Damage: "1d1"}
+	def := &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Monsters: 20, Spawn: []content.SpawnEntry{{Monster: "ratman", Weight: 1}}}
+	lvl, err := LevelFromDef(rng.NewWithSeed(2), c, def)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(lvl.Creatures) == 0 {
+		t.Fatal("expected some monsters placed")
+	}
+	for _, m := range lvl.Creatures {
+		if m.Def.ID != "ratman" {
+			t.Errorf("spawned %q, but only ratman is in the spawn table", m.Def.ID)
+		}
+	}
+}
+
+func TestLevelFromDefDeterministic(t *testing.T) {
+	c := levelDefContent()
+	def := &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"}, Monsters: 5, Spawn: []content.SpawnEntry{{Monster: "ratman", Weight: 1}}}
+	a, _ := LevelFromDef(rng.NewWithSeed(7), c, def)
+	b, _ := LevelFromDef(rng.NewWithSeed(7), c, def)
+	if glyphGrid(a) != glyphGrid(b) {
+		t.Error("same seed should yield the same level layout")
+	}
+}
+
 func TestRoomsPlacesMonsters(t *testing.T) {
 	c := testContent()
 	c.Monsters = map[string]*content.MonsterDef{
