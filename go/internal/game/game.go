@@ -103,6 +103,7 @@ type Game struct {
 	Behaviors  map[string]Behavior
 	Won        bool
 	DeathCause string
+	Effects    []Effect
 }
 
 // Move attempts to move the player one step in d. It returns true if the player

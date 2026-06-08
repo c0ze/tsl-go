@@ -123,6 +123,10 @@ func (g *Game) monsterAttacks(m *Creature) {
 // holds, so faster monsters act more often (the C's move_counter / TURN_TIME
 // model). Leftover energy carries to the next turn.
 func (g *Game) monstersAct() {
+	g.tickEffects()
+	if g.Dead {
+		return // status effects (e.g. poison) killed the player
+	}
 	// snapshot to avoid mutation surprises when creatures are removed
 	snapshot := make([]*Creature, len(g.Level.Creatures))
 	copy(snapshot, g.Level.Creatures)
