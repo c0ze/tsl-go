@@ -12,7 +12,27 @@
 
 ## Task 1: `content.LevelDef` + `levels.toml` (content)
 **Files:** `internal/content/content.go`, `internal/content/content_test.go`
-- Types: `SpawnEntry{Monster string `toml:"monster"`; Weight int `toml:"weight"`}`, `LevelDef{ID string `toml:"-"`; Name string; W int `toml:"width"`; H int `toml:"height"`; Start bool `toml:"start"`; Links []string `toml:"links"`; Monsters int `toml:"monsters"`; Spawn []SpawnEntry `toml:"spawn"`; Win bool `toml:"win"`}`. `Content.Levels map[string]*LevelDef`. `levelsFile{Level map[string]*LevelDef `toml:"level"`}`.
+- Types (in `content.go`):
+
+  ```go
+  type SpawnEntry struct {
+      Monster string `toml:"monster"`
+      Weight  int    `toml:"weight"`
+  }
+  type LevelDef struct {
+      ID       string       `toml:"-"`
+      Name     string       `toml:"name"`
+      W        int          `toml:"width"`
+      H        int          `toml:"height"`
+      Start    bool         `toml:"start"`
+      Links    []string     `toml:"links"`
+      Monsters int          `toml:"monsters"`
+      Spawn    []SpawnEntry `toml:"spawn"`
+      Win      bool         `toml:"win"`
+  }
+  ```
+
+  Plus `Content.Levels map[string]*LevelDef` and a `levelsFile` wrapper (`Level map[string]*LevelDef`, tagged `level`).
 - `Load`: decode optional `levels.toml`; set IDs; then `validateLevels(c)`: exactly one `Start`; each `Links` target ∈ Levels; each `Spawn.Monster` ∈ Monsters; `Weight >= 1`; `W >= 12 && H >= 8`; `Monsters >= 0`.
 - **Tests:** loads a 2-level graph; rejects (a) no start, (b) two starts, (c) link to unknown level, (d) spawn referencing unknown monster, (e) weight 0.
 - **Red→green→commit:** `feat(content): LevelDef + levels.toml (graph, spawn tables)`
