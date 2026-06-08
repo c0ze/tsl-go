@@ -31,6 +31,7 @@ width = 60
 height = 24
 links = ["dungeon", "laboratory"]
 monsters = 10
+traps = 3
 [[level.catacombs.spawn]]
 monster = "ghoul"
 weight = 3
@@ -69,6 +70,7 @@ width = 60
 height = 24
 links = ["catacombs", "drowned_city"]
 monsters = 10
+traps = 4
 [[level.laboratory.spawn]]
 monster = "gnoblin"
 weight = 2
@@ -156,6 +158,7 @@ height = 24
 links = ["chapel", "drowned_city", "frozen_vault"]
 monsters = 14
 boss = "dragon"
+traps = 5
 [[level.dragons_lair.spawn]]
 monster = "ghoul"
 weight = 3

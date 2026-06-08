@@ -44,10 +44,15 @@ func (g *Game) PlayerStep(d Direction) {
 		acted = true
 	} else if g.Move(d) {
 		acted = true
-		if g.Level.At(g.Player).Def.Win {
+		tile := g.Level.At(g.Player).Def
+		if tile.Win {
 			g.Won = true
 			g.log("You ascend to demigodhood. You win!")
 			return // winning ends the turn immediately
+		}
+		if tile.Effect != "" {
+			g.AddEffect(tile.Effect, tile.EffectTurns)
+			g.log("You trigger a trap!")
 		}
 	}
 	if acted { // a blocked move into a wall doesn't pass the turn

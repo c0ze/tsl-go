@@ -113,6 +113,24 @@ func TestPlayerStepOntoAltarWins(t *testing.T) {
 	}
 }
 
+func TestPlayerStepTriggersTrap(t *testing.T) {
+	g := combatGame() // 10x3 floor, player at (1,1)
+	g.Level.Set(Pos{2, 1}, &content.TileDef{ID: "dart_trap", Glyph: "^", Passable: true, Transparent: true, Effect: "poison", EffectTurns: 5})
+	g.PlayerStep(DirE)
+	if g.Player != (Pos{2, 1}) {
+		t.Fatalf("player should have stepped onto the trap, at %v", g.Player)
+	}
+	poisoned := false
+	for _, e := range g.Effects {
+		if e.Kind == "poison" {
+			poisoned = true
+		}
+	}
+	if !poisoned {
+		t.Error("stepping on a dart trap should poison the player")
+	}
+}
+
 func TestKillCreatureNoCorpse(t *testing.T) {
 	g := combatGame()
 	ghost := &Creature{Def: &content.MonsterDef{ID: "ghost", Name: "ghost"}, Pos: Pos{2, 1}, HP: 1}

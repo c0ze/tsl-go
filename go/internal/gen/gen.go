@@ -214,7 +214,30 @@ func LevelFromDef(r *rng.MT, c *content.Content, def *content.LevelDef) (*game.L
 	}
 	placeSpawnMonsters(r, c, lvl, rooms, def)
 	placeItems(r, c, lvl, rooms, lvl.Start)
+	if def.Traps > 0 {
+		placeTraps(r, c, lvl, rooms, def.Traps)
+	}
 	return lvl, nil
+}
+
+// placeTraps scatters up to n dart_trap tiles onto plain floor tiles, avoiding
+// the start, portals, and other special tiles.
+func placeTraps(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, n int) {
+	trap := c.Tiles["dart_trap"]
+	if trap == nil {
+		return
+	}
+	for k := 0; k < n; k++ {
+		room := rooms[r.Intn(len(rooms))]
+		pos := game.Pos{X: room.x + r.Intn(room.w), Y: room.y + r.Intn(room.h)}
+		if pos == lvl.Start || !lvl.Passable(pos) || lvl.PortalAt(pos) != nil {
+			continue
+		}
+		if lvl.At(pos).Def.ID != "floor" {
+			continue // don't overwrite stairs, the altar, etc.
+		}
+		lvl.Set(pos, trap)
+	}
 }
 
 // placeSpawnMonsters scatters def.Monsters monsters drawn from def's weighted
