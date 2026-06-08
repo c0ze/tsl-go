@@ -101,6 +101,18 @@ func TestKillCreatureDropsCorpse(t *testing.T) {
 	}
 }
 
+func TestPlayerStepOntoAltarWins(t *testing.T) {
+	g := combatGame() // 10x3 floor, player at (1,1)
+	g.Level.Set(Pos{2, 1}, &content.TileDef{ID: "altar", Glyph: "_", Passable: true, Transparent: true, Win: true})
+	g.PlayerStep(DirE)
+	if !g.Won {
+		t.Error("stepping onto a win tile should win")
+	}
+	if g.Player != (Pos{2, 1}) {
+		t.Errorf("player should be on the altar at {2 1}, got %v", g.Player)
+	}
+}
+
 func TestKillCreatureNoCorpse(t *testing.T) {
 	g := combatGame()
 	ghost := &Creature{Def: &content.MonsterDef{ID: "ghost", Name: "ghost"}, Pos: Pos{2, 1}, HP: 1}
