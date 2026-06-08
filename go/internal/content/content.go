@@ -73,17 +73,19 @@ func (m *MonsterDef) Rune() rune {
 
 // ItemDef defines a kind of item.
 type ItemDef struct {
-	ID      string `toml:"-"`
-	Name    string `toml:"name"`
-	Glyph   string `toml:"glyph"`
-	Color   Color  `toml:"color"`
-	Kind    string `toml:"kind"`    // "potion", "weapon", "armor", or "food"
-	Use     string `toml:"use"`     // behavior name (potions/food)
-	Power   int    `toml:"power"`   // potion/food magnitude (heal amount)
-	Attack  int    `toml:"attack"`  // weapon attack bonus
-	Dodge   int    `toml:"dodge"`   // armor dodge bonus
-	Damage  string `toml:"damage"`  // weapon damage spec
-	NoSpawn bool   `toml:"nospawn"` // exclude from random floor loot (e.g. corpses)
+	ID          string `toml:"-"`
+	Name        string `toml:"name"`
+	Glyph       string `toml:"glyph"`
+	Color       Color  `toml:"color"`
+	Kind        string `toml:"kind"`         // "potion", "weapon", "armor", "food", or "wand"
+	Use         string `toml:"use"`          // behavior name (potions/food)
+	Power       int    `toml:"power"`        // potion/food heal magnitude, or wand charges
+	Attack      int    `toml:"attack"`       // weapon attack bonus
+	Dodge       int    `toml:"dodge"`        // armor dodge bonus
+	Damage      string `toml:"damage"`       // weapon/wand damage spec
+	Effect      string `toml:"effect"`       // status effect applied on use ("" = none); e.g. a venom wand
+	EffectTurns int    `toml:"effect_turns"` // duration of Effect
+	NoSpawn     bool   `toml:"nospawn"`      // exclude from random floor loot (e.g. corpses)
 }
 
 // Rune returns the item's glyph as a rune.
@@ -370,7 +372,10 @@ func validateItem(i *ItemDef) error {
 			return fmt.Errorf("weapon damage %q is not a valid dice spec", i.Damage)
 		}
 	case "wand":
-		if !validDamageSpec(i.Damage) {
+		if i.Damage == "" && i.Effect == "" {
+			return fmt.Errorf("wand must have a damage spec or an effect")
+		}
+		if i.Damage != "" && !validDamageSpec(i.Damage) {
 			return fmt.Errorf("wand damage %q is not a valid dice spec", i.Damage)
 		}
 	case "food":
@@ -380,6 +385,9 @@ func validateItem(i *ItemDef) error {
 		if i.Power < 0 {
 			return fmt.Errorf("food power must be >= 0, got %d", i.Power)
 		}
+	}
+	if i.Effect != "" && i.EffectTurns <= 0 {
+		return fmt.Errorf("item effect %q needs effect_turns > 0", i.Effect)
 	}
 	return nil
 }
