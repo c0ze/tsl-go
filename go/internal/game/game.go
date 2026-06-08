@@ -63,6 +63,12 @@ type Level struct {
 	tiles     []Tile
 	Creatures []*Creature
 	Items     []*Item
+
+	ID      string   // level id (set by the Dungeon on generation)
+	Start   Pos      // first-arrival spawn position
+	Return  Pos      // saved player position for re-entry (set on leaving)
+	entered bool     // whether the player has arrived here at least once
+	Portals []Portal // stairs leading to other levels
 }
 
 // InBounds reports whether p lies inside the level.
@@ -84,6 +90,7 @@ func (l *Level) Passable(p Pos) bool {
 type Game struct {
 	Content    *content.Content
 	Level      *Level
+	Dungeon    *Dungeon
 	Player     Pos
 	RNG        *rng.MT
 	PlayerHP   int
