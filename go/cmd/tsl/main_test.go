@@ -100,6 +100,9 @@ func TestNewGameFromShippedData(t *testing.T) {
 	if !g.Level.Passable(g.Player) {
 		t.Errorf("player start %v not passable", g.Player)
 	}
+	if g.Weapon == nil || g.Armor == nil {
+		t.Error("player should start with a dagger + leather armor equipped")
+	}
 }
 
 func TestNewGameStartsOnStartLevel(t *testing.T) {

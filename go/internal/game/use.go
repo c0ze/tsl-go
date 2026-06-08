@@ -13,7 +13,25 @@ func (g *Game) PlayerPickup() {
 	g.Level.RemoveItem(it)
 	g.Inventory = append(g.Inventory, it)
 	g.log("You pick up the %s.", it.Def.Name)
+	g.autoEquip(it)
 	g.monstersAct()
+}
+
+// autoEquip wields/wears a just-picked-up weapon or armor when its slot is empty
+// (the faithful 0.40 default; it never auto-downgrades an equipped item).
+func (g *Game) autoEquip(it *Item) {
+	switch it.Def.Kind {
+	case "weapon":
+		if g.Weapon == nil {
+			g.Weapon = it
+			g.log("You wield the %s.", it.Def.Name)
+		}
+	case "armor":
+		if g.Armor == nil {
+			g.Armor = it
+			g.log("You wear the %s.", it.Def.Name)
+		}
+	}
 }
 
 // PlayerUse equips a weapon/armor or invokes a consumable's behavior, then
