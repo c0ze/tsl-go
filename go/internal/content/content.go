@@ -94,7 +94,7 @@ func (i *ItemDef) Rune() rune {
 	return r
 }
 
-var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true, "food": true, "wand": true}
+var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true, "food": true, "wand": true, "scroll": true}
 
 // SpawnEntry is one weighted entry in a level's monster spawn table.
 type SpawnEntry struct {
@@ -366,6 +366,10 @@ func validateItem(i *ItemDef) error {
 	case "potion":
 		if strings.TrimSpace(i.Use) == "" {
 			return fmt.Errorf("potion must have a non-empty use")
+		}
+	case "scroll":
+		if strings.TrimSpace(i.Use) == "" {
+			return fmt.Errorf("scroll must have a non-empty use")
 		}
 	case "weapon":
 		if !validDamageSpec(i.Damage) {
