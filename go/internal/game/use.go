@@ -31,6 +31,16 @@ func (g *Game) autoEquip(it *Item) {
 			g.Armor = it
 			g.log("You wear the %s.", it.Def.Name)
 		}
+	case "ring":
+		if g.Ring == nil {
+			g.Ring = it
+			g.log("You put on the %s.", it.Def.Name)
+		}
+	case "amulet":
+		if g.Amulet == nil {
+			g.Amulet = it
+			g.log("You put on the %s.", it.Def.Name)
+		}
 	}
 }
 
@@ -51,6 +61,12 @@ func (g *Game) PlayerUse(it *Item) {
 	case "armor":
 		g.Armor = it
 		g.log("You wear the %s.", it.Def.Name)
+	case "ring":
+		g.Ring = it
+		g.log("You put on the %s.", it.Def.Name)
+	case "amulet":
+		g.Amulet = it
+		g.log("You put on the %s.", it.Def.Name)
 	case "potion", "food", "scroll":
 		g.identify(it) // using a consumable reveals what it was
 		if b, ok := g.Behaviors[it.Def.Use]; ok {

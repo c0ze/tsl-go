@@ -104,6 +104,8 @@ type Game struct {
 	Inventory   []*Item
 	Weapon      *Item
 	Armor       *Item
+	Ring        *Item // worn accessory: passive attack/dodge bonus
+	Amulet      *Item // worn accessory: passive attack/dodge bonus
 	Behaviors   map[string]Behavior
 	Won         bool
 	DeathCause  string

@@ -33,6 +33,12 @@ func (g *Game) MorgueText() string {
 		worn = g.DisplayName(g.Armor)
 	}
 	fmt.Fprintf(&b, "Wielding: %s\nWearing: %s\n", wield, worn)
+	if g.Ring != nil {
+		fmt.Fprintf(&b, "On hand: %s\n", g.DisplayName(g.Ring))
+	}
+	if g.Amulet != nil {
+		fmt.Fprintf(&b, "Around neck: %s\n", g.DisplayName(g.Amulet))
+	}
 	fmt.Fprintf(&b, "Inventory (%d):\n", len(g.Inventory))
 	for _, it := range g.Inventory {
 		fmt.Fprintf(&b, "  - %s\n", g.DisplayName(it))
