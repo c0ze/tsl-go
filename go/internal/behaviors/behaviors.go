@@ -12,12 +12,12 @@ import (
 // Registry returns the name→behavior map referenced by item `use` fields.
 func Registry() map[string]game.Behavior {
 	return map[string]game.Behavior{
-		"heal":         heal,
-		"eat":          eat,
-		"regenerate":   regenerate,
-		"eat_mushroom": eatMushroom,
-		"teleport":     teleport,
-		"reveal":       reveal,
+		"heal":            heal,
+		"eat":             eat,
+		"regenerate":      regenerate,
+		"eat_mushroom":    eatMushroom,
+		"teleport":        teleport,
+		"reveal":          reveal,
 		"instant_healing": instantHealing,
 		"pain":            pain,
 		"identify":        identifyScroll,
