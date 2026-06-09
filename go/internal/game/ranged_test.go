@@ -44,11 +44,15 @@ func TestRangedMonsterBlockedApproaches(t *testing.T) {
 	g.Level.Set(Pos{3, 1}, g.Content.Tiles["wall"]) // wall on the sightline
 	imp := &Creature{Def: &content.MonsterDef{ID: "imp", Name: "imp", HP: 6, Attack: 100, Dodge: 3, Damage: "1d4", Ranged: 6}, Pos: Pos{5, 1}, HP: 6}
 	g.Level.Creatures = append(g.Level.Creatures, imp)
+	beforeX := imp.Pos.X
 
 	g.monstersAct()
 
 	if g.PlayerHP != 20 {
 		t.Errorf("a monster with no line of sight should not shoot, HP=%d", g.PlayerHP)
+	}
+	if imp.Pos.X >= beforeX {
+		t.Error("a monster with no line of sight should approach instead of idling")
 	}
 }
 
