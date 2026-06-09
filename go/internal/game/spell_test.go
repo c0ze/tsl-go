@@ -109,6 +109,42 @@ func TestCastSpellAtRefusedConditions(t *testing.T) {
 	}
 }
 
+func TestFrostRayHitsLine(t *testing.T) {
+	g := combatGame() // 10x3 all floor, player at (1,1)
+	g.EP, g.EPMax = 10, 10
+	a := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 3}, Pos: Pos{3, 1}, HP: 3}
+	b := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 3}, Pos: Pos{5, 1}, HP: 3}
+	g.Level.Creatures = append(g.Level.Creatures, a, b)
+	book := &Item{Def: &content.ItemDef{Name: "spellbook of frost ray", Kind: "spellbook", Beam: true, Ranged: 8, Damage: "10d1", Cost: 6}}
+
+	g.CastSpellAt(book, Pos{5, 1}) // aim east, down the line of creatures
+
+	if len(g.Level.Creatures) != 0 {
+		t.Errorf("frost ray should strike every creature in the line, %d remain", len(g.Level.Creatures))
+	}
+	if g.EP != 4 {
+		t.Errorf("EP = %d, want 4 after a cost-6 cast", g.EP)
+	}
+}
+
+func TestFrostRayStoppedByWall(t *testing.T) {
+	g := combatGame()
+	g.EP, g.EPMax = 10, 10
+	g.Level.Set(Pos{4, 1}, g.Content.Tiles["wall"])
+	behind := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 3}, Pos: Pos{5, 1}, HP: 3}
+	g.Level.Creatures = append(g.Level.Creatures, behind)
+	book := &Item{Def: &content.ItemDef{Name: "ray", Kind: "spellbook", Beam: true, Ranged: 8, Damage: "10d1", Cost: 6}}
+
+	g.CastSpellAt(book, Pos{5, 1})
+
+	if len(g.Level.Creatures) != 1 {
+		t.Error("a wall should stop the beam; the creature behind it should survive")
+	}
+	if g.EP != 4 {
+		t.Errorf("a beam still costs EP even when blocked: EP = %d, want 4", g.EP)
+	}
+}
+
 func TestSpellInventoryFiltersSpellbooks(t *testing.T) {
 	g := combatGame()
 	g.Inventory = []*Item{

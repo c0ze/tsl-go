@@ -90,6 +90,7 @@ type ItemDef struct {
 	Ranged      int    `toml:"ranged"`       // weapon firing range in tiles (0 = melee only)
 	Light       int    `toml:"light"`        // vision radius provided while carried (0 = none)
 	Cost        int    `toml:"cost"`         // EP cost to cast (spellbooks)
+	Beam        bool   `toml:"beam"`         // a spell that strikes every creature in a line
 	NoSpawn     bool   `toml:"nospawn"`      // exclude from random floor loot (e.g. corpses)
 }
 
@@ -441,6 +442,14 @@ func validateItem(i *ItemDef) error {
 	}
 	if i.Light < 0 {
 		return fmt.Errorf("light must be >= 0, got %d", i.Light)
+	}
+	if i.Beam { // a beam is a spellbook line attack: it needs the attack fields
+		if i.Kind != "spellbook" {
+			return fmt.Errorf("only a spellbook may be a beam")
+		}
+		if i.Ranged <= 0 || !validDamageSpec(i.Damage) {
+			return fmt.Errorf("a beam spellbook needs ranged > 0 and a valid damage spec")
+		}
 	}
 	return nil
 }
