@@ -115,6 +115,24 @@ func TestEmbeddedGear(t *testing.T) {
 	}
 }
 
+// TestEmbeddedRangedWeapons checks the shortbow and the ranged bosses loaded.
+func TestEmbeddedRangedWeapons(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if w := c.Items["shortbow"]; w == nil || w.Kind != "weapon" || w.Ranged <= 0 {
+		t.Errorf("shortbow def unexpected: %+v", w)
+	}
+	// Bosses threaten from a distance (fire breath / dark bolts) via the 13c AI.
+	if d := c.Monsters["dragon"]; d == nil || d.Ranged <= 0 {
+		t.Errorf("dragon should have a ranged attack, got %+v", d)
+	}
+	if m := c.Monsters["elder_mummylich"]; m == nil || m.Ranged <= 0 {
+		t.Errorf("elder_mummylich should have a ranged attack, got %+v", m)
+	}
+}
+
 // TestEmbeddedConsumables checks the status-effect consumables loaded.
 func TestEmbeddedConsumables(t *testing.T) {
 	c, err := content.Load(Files)

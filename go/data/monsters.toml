@@ -188,6 +188,7 @@ attack = 6
 dodge = 3
 damage = "1d8"
 speed = 110
+ranged = 5
 
 [monster.dragon]
 name = "dragon"
@@ -198,3 +199,4 @@ attack = 7
 dodge = 3
 damage = "1d10"
 speed = 110
+ranged = 4

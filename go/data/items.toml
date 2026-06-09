@@ -63,6 +63,17 @@ kind = "weapon"
 attack = 5
 damage = "2d6"
 
+# Ranged weapon (#14) — wield it, then fire (f) at a target in line of sight.
+# Weak in melee; its strength is reach. power/ammo are infinite for now.
+[item.shortbow]
+name = "shortbow"
+glyph = "}"
+color = "brown"
+kind = "weapon"
+attack = 1
+damage = "1d6"
+ranged = 6
+
 # Body armor (dodge bonus).
 [item.filthy_rags]
 name = "filthy rags"
