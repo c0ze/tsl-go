@@ -218,6 +218,23 @@ func TestEmbeddedDoors(t *testing.T) {
 	}
 }
 
+// TestEmbeddedDarkLevels checks that some levels are unlit.
+func TestEmbeddedDarkLevels(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	dark := 0
+	for _, l := range c.Levels {
+		if l.Dark {
+			dark++
+		}
+	}
+	if dark == 0 {
+		t.Error("expected at least one dark level")
+	}
+}
+
 // TestEmbeddedScrolls checks the read-verb scrolls loaded.
 func TestEmbeddedScrolls(t *testing.T) {
 	c, err := content.Load(Files)

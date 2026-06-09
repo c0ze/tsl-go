@@ -63,6 +63,7 @@ width = 60
 height = 24
 links = ["dungeon", "comm_hub", "underpass"]
 monsters = 9
+dark = true
 [[level.ominous_cave.spawn]]
 monster = "graveling"
 weight = 3
@@ -132,6 +133,7 @@ width = 60
 height = 24
 links = ["ominous_cave", "drowned_city"]
 monsters = 10
+dark = true
 [[level.underpass.spawn]]
 monster = "ratman"
 weight = 2
@@ -177,6 +179,7 @@ height = 24
 links = ["comm_hub", "dragons_lair"]
 monsters = 10
 doors = true
+dark = true
 [[level.frozen_vault.spawn]]
 monster = "scarecrow"
 weight = 3
