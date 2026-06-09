@@ -23,6 +23,7 @@ func Registry() map[string]game.Behavior {
 		"identify":        identifyScroll,
 		"recharge":        recharge,
 		"first_aid":       firstAid,
+		"blindness":       blindness,
 	}
 }
 
@@ -99,6 +100,12 @@ func identifyScroll(g *game.Game, it *game.Item) []string {
 	was := g.DisplayName(pick)
 	g.IdentifyItem(pick)
 	return []string{fmt.Sprintf("Your %s is revealed to be a %s.", was, pick.Def.Name)}
+}
+
+// blindness blinds the drinker for Power turns — a faithful "bad" potion.
+func blindness(g *game.Game, it *game.Item) []string {
+	g.AddEffect("blind", it.Def.Power)
+	return []string{fmt.Sprintf("You drink the %s and the world goes dark!", it.Def.Name)}
 }
 
 // firstAid is the first-aid spell — it knits wounds over time (a regen effect),

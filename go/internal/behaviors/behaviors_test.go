@@ -142,6 +142,18 @@ func TestRechargeAddsCharges(t *testing.T) {
 	}
 }
 
+func TestBlindnessAddsEffect(t *testing.T) {
+	blind, ok := Registry()["blindness"]
+	if !ok {
+		t.Fatal("blindness not registered")
+	}
+	g := &game.Game{PlayerHP: 10, PlayerMax: 10}
+	blind(g, &game.Item{Def: &content.ItemDef{Name: "potion of blindness", Power: 8}})
+	if len(g.Effects) != 1 || g.Effects[0].Kind != "blind" || g.Effects[0].Turns != 8 {
+		t.Errorf("drinking blindness should blind the player for Power turns, got %v", g.Effects)
+	}
+}
+
 func TestFirstAidGrantsRegen(t *testing.T) {
 	firstAid, ok := Registry()["first_aid"]
 	if !ok {

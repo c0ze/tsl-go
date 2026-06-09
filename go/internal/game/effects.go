@@ -13,6 +13,18 @@ var effectLabels = map[string]string{
 	"poison": "Poisoned",
 	"regen":  "Regenerating",
 	"slow":   "Slowed",
+	"blind":  "Blinded",
+}
+
+// HasEffect reports whether a timed effect of the given kind is active on the
+// player.
+func (g *Game) HasEffect(kind string) bool {
+	for _, e := range g.Effects {
+		if e.Kind == kind {
+			return true
+		}
+	}
+	return false
 }
 
 // effectVerbs phrases how a source inflicts an effect, for the zap message.

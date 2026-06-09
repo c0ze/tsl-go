@@ -51,6 +51,30 @@ func TestCarriedTorchLightsTheDark(t *testing.T) {
 	}
 }
 
+func TestBlindnessOverridesVision(t *testing.T) {
+	g := combatGame()
+	g.Level.Dark = true
+	g.Inventory = append(g.Inventory, &Item{Def: &content.ItemDef{Name: "torch", Kind: "light", Light: 8}})
+	if r := g.visionRadius(); r != 8 { // sanity: a bright torch lights the dark
+		t.Fatalf("torch should give radius 8, got %d", r)
+	}
+	g.AddEffect("blind", 5)
+	if r := g.visionRadius(); r != BlindVisionRadius {
+		t.Errorf("a blind player should see only %d tiles, got %d", BlindVisionRadius, r)
+	}
+}
+
+func TestPlayerHasEffect(t *testing.T) {
+	g := &Game{}
+	if g.HasEffect("blind") {
+		t.Error("no effect should be present initially")
+	}
+	g.AddEffect("blind", 3)
+	if !g.HasEffect("blind") {
+		t.Error("HasEffect should report the active blind effect")
+	}
+}
+
 func TestTorchNoEffectWhenLit(t *testing.T) {
 	g := combatGame() // lit
 	g.Inventory = append(g.Inventory, &Item{Def: &content.ItemDef{Name: "torch", Kind: "light", Light: 99}})
