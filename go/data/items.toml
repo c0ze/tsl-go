@@ -166,6 +166,14 @@ kind = "potion"
 use = "pain"
 power = 8
 
+[item.potion_blindness]
+name = "potion of blindness"
+glyph = "!"
+color = "black"
+kind = "potion"
+use = "blindness"
+power = 12
+
 [item.scroll_identify]
 name = "scroll of identify"
 glyph = "?"
