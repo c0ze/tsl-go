@@ -87,6 +87,40 @@ func TestEmbeddedImp(t *testing.T) {
 	}
 }
 
+// TestEmbeddedRosterBatch3 checks the third monster batch loaded with canon glyphs
+// and that at least one appears in a spawn table.
+func TestEmbeddedRosterBatch3(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	want := map[string]rune{
+		"jackal": 'j', "cave_snake": 'S', "giant_spider": 'a',
+		"dire_wolf": 'd', "wisp": 'w', "troll": 'T',
+	}
+	for id, glyph := range want {
+		m := c.Monsters[id]
+		if m == nil {
+			t.Errorf("missing monster %q", id)
+			continue
+		}
+		if m.Rune() != glyph {
+			t.Errorf("%s glyph = %q, want %q", id, m.Rune(), glyph)
+		}
+	}
+	spawned := false
+	for _, l := range c.Levels {
+		for _, s := range l.Spawn {
+			if _, ok := want[s.Monster]; ok {
+				spawned = true
+			}
+		}
+	}
+	if !spawned {
+		t.Error("expected at least one batch-3 monster placed in a spawn table")
+	}
+}
+
 // TestDepthGatedTanks checks the tougher monsters only appear on deeper floors.
 func TestDepthGatedTanks(t *testing.T) {
 	c, err := content.Load(Files)

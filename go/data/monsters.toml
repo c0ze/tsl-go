@@ -177,6 +177,76 @@ speed = 110
 ranged = 5
 min_depth = 2
 
+# Roster batch 3 (#13) — more beasts across the tiers. Generic corpses where
+# edible; spiders and wisps leave none.
+[monster.jackal]
+name = "jackal"
+glyph = "j"
+color = "brown"
+hp = 4
+attack = 3
+dodge = 2
+damage = "1d3"
+speed = 140
+corpse = "carcass"
+
+[monster.cave_snake]
+name = "cave snake"
+glyph = "S"
+color = "green"
+hp = 6
+attack = 4
+dodge = 2
+damage = "1d4"
+speed = 100
+corpse = "carcass"
+
+[monster.giant_spider]
+name = "giant spider"
+glyph = "a"
+color = "magenta"
+hp = 7
+attack = 4
+dodge = 3
+damage = "1d4"
+speed = 110
+min_depth = 2
+
+[monster.dire_wolf]
+name = "dire wolf"
+glyph = "d"
+color = "brown"
+hp = 10
+attack = 5
+dodge = 2
+damage = "1d6"
+speed = 130
+corpse = "carcass"
+min_depth = 2
+
+[monster.wisp]
+name = "will-o-wisp"
+glyph = "w"
+color = "cyan"
+hp = 3
+attack = 3
+dodge = 4
+damage = "1d3"
+speed = 150
+min_depth = 2
+
+[monster.troll]
+name = "troll"
+glyph = "T"
+color = "green"
+hp = 24
+attack = 6
+dodge = 1
+damage = "2d4"
+speed = 90
+corpse = "carcass"
+min_depth = 3
+
 # Bosses (#16 2c). Deadly guardians — but you win by reaching the altar, so you
 # needn't kill them. Stats are tunable; gear breadth (#14) will make this fairer.
 [monster.elder_mummylich]
