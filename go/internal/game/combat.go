@@ -229,6 +229,9 @@ func (g *Game) monsterAct(m *Creature) {
 		g.monsterAttacks(m)
 		return
 	}
+	if m.HasEffect("blind") {
+		return // blinded: it can flail at an adjacent foe but can't track at range
+	}
 	if m.Def.Ranged > 0 && dist <= m.Def.Ranged && g.lineOfSight(m.Pos, g.Player) {
 		g.rangedAttack(m)
 		return
