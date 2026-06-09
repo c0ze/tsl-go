@@ -104,10 +104,12 @@ func TestNewGameFromShippedData(t *testing.T) {
 		t.Error("player should start with a dagger + leather armor equipped")
 	}
 	// Consumables start unidentified: a healing potion reads by its appearance.
-	if p := c.Items["healing_potion"]; p != nil {
-		if got := g.DisplayName(&game.Item{Def: p}); got == p.Name {
-			t.Errorf("healing potion should start unidentified, but reads as %q", got)
-		}
+	p := c.Items["healing_potion"]
+	if p == nil {
+		t.Fatal("shipped content should include healing_potion")
+	}
+	if got := g.DisplayName(&game.Item{Def: p}); got == p.Name {
+		t.Errorf("healing potion should start unidentified, but reads as %q", got)
 	}
 }
 
