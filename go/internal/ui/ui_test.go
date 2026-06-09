@@ -84,6 +84,25 @@ func TestRunCastSpell(t *testing.T) {
 	}
 }
 
+func TestRunCastForceBoltAtCreature(t *testing.T) {
+	g := testGame(t, []string{".....", ".@...", "....."})
+	g.RNG = rng.NewWithSeed(1)
+	g.EP, g.EPMax = 10, 10
+	g.Inventory = append(g.Inventory, &game.Item{Def: &content.ItemDef{Name: "spellbook of force bolt", Kind: "spellbook", Ranged: 6, Damage: "10d1", Cost: 5}})
+	g.Level.Creatures = append(g.Level.Creatures, &game.Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 3}, Pos: game.Pos{X: 3, Y: 1}, HP: 3})
+	g.UpdateFOV()
+	p := &zapPrompter{actions: []Action{{Kind: ActCast}, {Kind: ActQuit}}, target: game.Pos{X: 3, Y: 1}}
+	if err := Run(g, p, &nullRenderer{}); err != nil {
+		t.Fatal(err)
+	}
+	if len(g.Level.Creatures) != 0 {
+		t.Error("casting force bolt should have killed the rat")
+	}
+	if g.EP != 5 {
+		t.Errorf("EP = %d, want 5 after casting a cost-5 spell", g.EP)
+	}
+}
+
 func TestBuildViewShowsEffects(t *testing.T) {
 	g := testGame(t, []string{".@."})
 	g.PlayerHP, g.PlayerMax = 10, 20
