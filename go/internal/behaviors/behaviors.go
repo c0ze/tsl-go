@@ -22,6 +22,7 @@ func Registry() map[string]game.Behavior {
 		"pain":            pain,
 		"identify":        identifyScroll,
 		"recharge":        recharge,
+		"first_aid":       firstAid,
 	}
 }
 
@@ -98,6 +99,13 @@ func identifyScroll(g *game.Game, it *game.Item) []string {
 	was := g.DisplayName(pick)
 	g.IdentifyItem(pick)
 	return []string{fmt.Sprintf("Your %s is revealed to be a %s.", was, pick.Def.Name)}
+}
+
+// firstAid is the first-aid spell — it knits wounds over time (a regen effect),
+// the faithful "applies a healing effect" from magic.c.
+func firstAid(g *game.Game, it *game.Item) []string {
+	g.AddEffect("regen", it.Def.Power)
+	return []string{fmt.Sprintf("You weave %s; your wounds begin to knit shut.", it.Def.Name)}
 }
 
 // recharge tops up a random carried wand with a few fresh charges.
