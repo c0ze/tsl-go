@@ -30,6 +30,9 @@ weight = 2
 [[level.dungeon.spawn]]
 monster = "kobold"
 weight = 2
+[[level.dungeon.spawn]]
+monster = "jackal"
+weight = 2
 
 [level.catacombs]
 name = "the Catacombs"
@@ -56,6 +59,9 @@ weight = 2
 [[level.catacombs.spawn]]
 monster = "zombie"
 weight = 1
+[[level.catacombs.spawn]]
+monster = "giant_spider"
+weight = 2
 
 [level.ominous_cave]
 name = "the Ominous Cave"
@@ -78,6 +84,9 @@ monster = "merman"
 weight = 1
 [[level.ominous_cave.spawn]]
 monster = "bat"
+weight = 2
+[[level.ominous_cave.spawn]]
+monster = "cave_snake"
 weight = 2
 
 [level.laboratory]
@@ -126,6 +135,9 @@ weight = 2
 [[level.comm_hub.spawn]]
 monster = "skeleton"
 weight = 2
+[[level.comm_hub.spawn]]
+monster = "wisp"
+weight = 2
 
 [level.underpass]
 name = "the Underpass"
@@ -148,6 +160,9 @@ monster = "merman"
 weight = 1
 [[level.underpass.spawn]]
 monster = "zombie"
+weight = 2
+[[level.underpass.spawn]]
+monster = "dire_wolf"
 weight = 2
 
 [level.drowned_city]
@@ -215,6 +230,9 @@ monster = "ogre"
 weight = 2
 [[level.dragons_lair.spawn]]
 monster = "imp"
+weight = 2
+[[level.dragons_lair.spawn]]
+monster = "troll"
 weight = 2
 
 [level.chapel]
