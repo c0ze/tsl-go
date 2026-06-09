@@ -210,3 +210,11 @@ glyph = "?"
 color = "blue"
 kind = "scroll"
 use = "reveal"
+
+# Light source (#18) — carry it to see in the dark (light = sight radius there).
+[item.torch]
+name = "torch"
+glyph = "~"
+color = "red"
+kind = "light"
+light = 6
