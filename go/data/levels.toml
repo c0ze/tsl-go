@@ -24,6 +24,12 @@ weight = 2
 [[level.dungeon.spawn]]
 monster = "crypt_vermin"
 weight = 1
+[[level.dungeon.spawn]]
+monster = "bat"
+weight = 2
+[[level.dungeon.spawn]]
+monster = "kobold"
+weight = 2
 
 [level.catacombs]
 name = "the Catacombs"
@@ -44,6 +50,12 @@ weight = 2
 [[level.catacombs.spawn]]
 monster = "scarecrow"
 weight = 1
+[[level.catacombs.spawn]]
+monster = "kobold"
+weight = 2
+[[level.catacombs.spawn]]
+monster = "zombie"
+weight = 1
 
 [level.ominous_cave]
 name = "the Ominous Cave"
@@ -63,6 +75,9 @@ weight = 2
 [[level.ominous_cave.spawn]]
 monster = "merman"
 weight = 1
+[[level.ominous_cave.spawn]]
+monster = "bat"
+weight = 2
 
 [level.laboratory]
 name = "the Laboratory"
@@ -84,6 +99,9 @@ weight = 2
 [[level.laboratory.spawn]]
 monster = "slime"
 weight = 1
+[[level.laboratory.spawn]]
+monster = "skeleton"
+weight = 2
 
 [level.comm_hub]
 name = "the Communications Hub"
@@ -100,6 +118,9 @@ monster = "scarecrow"
 weight = 2
 [[level.comm_hub.spawn]]
 monster = "crypt_vermin"
+weight = 2
+[[level.comm_hub.spawn]]
+monster = "skeleton"
 weight = 2
 
 [level.underpass]
@@ -120,6 +141,9 @@ weight = 3
 [[level.underpass.spawn]]
 monster = "merman"
 weight = 1
+[[level.underpass.spawn]]
+monster = "zombie"
+weight = 2
 
 [level.drowned_city]
 name = "the Drowned City"
@@ -136,6 +160,9 @@ weight = 2
 [[level.drowned_city.spawn]]
 monster = "crypt_vermin"
 weight = 2
+[[level.drowned_city.spawn]]
+monster = "wraith"
+weight = 1
 
 [level.frozen_vault]
 name = "the Vault of the Frozen Saint"
@@ -152,6 +179,9 @@ monster = "ghoul"
 weight = 2
 [[level.frozen_vault.spawn]]
 monster = "slime"
+weight = 2
+[[level.frozen_vault.spawn]]
+monster = "ogre"
 weight = 2
 
 [level.dragons_lair]
@@ -171,6 +201,9 @@ weight = 3
 [[level.dragons_lair.spawn]]
 monster = "slime"
 weight = 3
+[[level.dragons_lair.spawn]]
+monster = "ogre"
+weight = 2
 
 [level.chapel]
 name = "the Chapel of Fallen Stars"
@@ -193,3 +226,6 @@ weight = 3
 [[level.chapel.spawn]]
 monster = "merman"
 weight = 1
+[[level.chapel.spawn]]
+monster = "wraith"
+weight = 2

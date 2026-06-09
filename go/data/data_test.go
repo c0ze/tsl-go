@@ -29,6 +29,41 @@ func TestEmbeddedRoster(t *testing.T) {
 	}
 }
 
+// TestEmbeddedRosterBatch2 checks the second monster batch loaded with the
+// expected glyphs and edible corpses, broadening the bestiary beyond rats/ghouls.
+func TestEmbeddedRosterBatch2(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	want := map[string]rune{
+		"bat": 'b', "kobold": 'k', "zombie": 'z',
+		"skeleton": 's', "wraith": 'W', "ogre": 'O',
+	}
+	for id, glyph := range want {
+		m := c.Monsters[id]
+		if m == nil {
+			t.Errorf("missing monster %q", id)
+			continue
+		}
+		if m.Rune() != glyph {
+			t.Errorf("%s glyph = %q, want %q", id, m.Rune(), glyph)
+		}
+	}
+	// At least one new monster appears in a spawn table, so it can actually show up.
+	spawned := false
+	for _, l := range c.Levels {
+		for _, s := range l.Spawn {
+			if _, ok := want[s.Monster]; ok {
+				spawned = true
+			}
+		}
+	}
+	if !spawned {
+		t.Error("expected at least one batch-2 monster placed in a spawn table")
+	}
+}
+
 // TestDepthGatedTanks checks the tougher monsters only appear on deeper floors.
 func TestDepthGatedTanks(t *testing.T) {
 	c, err := content.Load(Files)
