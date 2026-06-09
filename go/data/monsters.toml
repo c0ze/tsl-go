@@ -92,6 +92,77 @@ damage = "1d4"
 speed = 80
 min_depth = 3
 
+# Roster batch 2 (#13) — more standard foes across the tiers. Corpses reuse the
+# generic carcass/corpse food; the undead leave none. Depth is enforced by which
+# spawn tables list them (min_depth stays as canon documentation).
+[monster.bat]
+name = "giant bat"
+glyph = "b"
+color = "cyan"
+hp = 2
+attack = 3
+dodge = 3
+damage = "1d2"
+speed = 150
+corpse = "carcass"
+
+[monster.kobold]
+name = "kobold"
+glyph = "k"
+color = "green"
+hp = 4
+attack = 3
+dodge = 2
+damage = "1d3"
+speed = 100
+corpse = "corpse"
+
+[monster.zombie]
+name = "zombie"
+glyph = "z"
+color = "normal"
+hp = 12
+attack = 4
+dodge = 0
+damage = "1d5"
+speed = 55
+corpse = "corpse"
+min_depth = 2
+
+[monster.skeleton]
+name = "skeleton"
+glyph = "s"
+color = "normal"
+hp = 9
+attack = 5
+dodge = 2
+damage = "1d6"
+speed = 95
+min_depth = 2
+
+[monster.wraith]
+name = "wraith"
+glyph = "W"
+color = "magenta"
+hp = 14
+attack = 6
+dodge = 3
+damage = "1d6"
+speed = 110
+min_depth = 3
+
+[monster.ogre]
+name = "ogre"
+glyph = "O"
+color = "brown"
+hp = 22
+attack = 6
+dodge = 1
+damage = "2d4"
+speed = 90
+corpse = "carcass"
+min_depth = 3
+
 # Bosses (#16 2c). Deadly guardians — but you win by reaching the altar, so you
 # needn't kill them. Stats are tunable; gear breadth (#14) will make this fairer.
 [monster.elder_mummylich]
