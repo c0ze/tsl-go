@@ -218,6 +218,17 @@ func TestEmbeddedDoors(t *testing.T) {
 	}
 }
 
+// TestEmbeddedTorch checks the torch light source loaded.
+func TestEmbeddedTorch(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if w := c.Items["torch"]; w == nil || w.Kind != "light" || w.Light <= 0 {
+		t.Errorf("torch def unexpected: %+v", w)
+	}
+}
+
 // TestEmbeddedDarkLevels checks that some levels are unlit.
 func TestEmbeddedDarkLevels(t *testing.T) {
 	c, err := content.Load(Files)

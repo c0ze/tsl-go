@@ -1,6 +1,10 @@
 package game
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/c0ze/tsl/internal/content"
+)
 
 func TestDarkLevelShrinksVision(t *testing.T) {
 	g := combatGame() // 10x3 all floor, player at (1,1)
@@ -28,5 +32,29 @@ func TestVisionRadiusDarkVsLit(t *testing.T) {
 	g.Level.Dark = true
 	if r := g.visionRadius(); r != DarkVisionRadius {
 		t.Errorf("dark visionRadius = %d, want %d", r, DarkVisionRadius)
+	}
+}
+
+func TestCarriedTorchLightsTheDark(t *testing.T) {
+	g := combatGame() // 10x3 all floor, player at (1,1)
+	g.Level.Dark = true
+	g.UpdateFOV()
+	if g.Level.At(Pos{6, 1}).Visible {
+		t.Fatal("on a dark level a tile 5 away should be out of sight without a torch")
+	}
+
+	g.Inventory = append(g.Inventory, &Item{Def: &content.ItemDef{Name: "torch", Kind: "light", Light: 6}})
+	g.UpdateFOV()
+
+	if !g.Level.At(Pos{6, 1}).Visible {
+		t.Error("carrying a torch (light 6) should reveal a tile 5 away in the dark")
+	}
+}
+
+func TestTorchNoEffectWhenLit(t *testing.T) {
+	g := combatGame() // lit
+	g.Inventory = append(g.Inventory, &Item{Def: &content.ItemDef{Name: "torch", Kind: "light", Light: 99}})
+	if r := g.visionRadius(); r != VisionRadius {
+		t.Errorf("a torch should not extend sight on a lit level: got %d, want %d", r, VisionRadius)
 	}
 }

@@ -88,6 +88,7 @@ type ItemDef struct {
 	Effect      string `toml:"effect"`       // status effect applied on use ("" = none); e.g. a venom wand
 	EffectTurns int    `toml:"effect_turns"` // duration of Effect
 	Ranged      int    `toml:"ranged"`       // weapon firing range in tiles (0 = melee only)
+	Light       int    `toml:"light"`        // vision radius provided while carried (0 = none)
 	NoSpawn     bool   `toml:"nospawn"`      // exclude from random floor loot (e.g. corpses)
 }
 
@@ -97,7 +98,7 @@ func (i *ItemDef) Rune() rune {
 	return r
 }
 
-var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true, "food": true, "wand": true, "scroll": true}
+var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true, "food": true, "wand": true, "scroll": true, "light": true}
 
 // SpawnEntry is one weighted entry in a level's monster spawn table.
 type SpawnEntry struct {
@@ -396,6 +397,10 @@ func validateItem(i *ItemDef) error {
 		if strings.TrimSpace(i.Use) == "" {
 			return fmt.Errorf("scroll must have a non-empty use")
 		}
+	case "light":
+		if i.Light <= 0 {
+			return fmt.Errorf("light item must provide light > 0")
+		}
 	case "weapon":
 		if !validDamageSpec(i.Damage) {
 			return fmt.Errorf("weapon damage %q is not a valid dice spec", i.Damage)
@@ -420,6 +425,9 @@ func validateItem(i *ItemDef) error {
 	}
 	if i.Ranged < 0 {
 		return fmt.Errorf("ranged must be >= 0, got %d", i.Ranged)
+	}
+	if i.Light < 0 {
+		return fmt.Errorf("light must be >= 0, got %d", i.Light)
 	}
 	return nil
 }
