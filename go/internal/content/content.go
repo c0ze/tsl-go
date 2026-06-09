@@ -100,7 +100,7 @@ func (i *ItemDef) Rune() rune {
 	return r
 }
 
-var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true, "food": true, "wand": true, "scroll": true, "light": true, "spellbook": true}
+var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true, "food": true, "wand": true, "scroll": true, "light": true, "spellbook": true, "ring": true, "amulet": true}
 
 // SpawnEntry is one weighted entry in a level's monster spawn table.
 type SpawnEntry struct {
@@ -432,6 +432,10 @@ func validateItem(i *ItemDef) error {
 		}
 		if i.Power < 0 {
 			return fmt.Errorf("food power must be >= 0, got %d", i.Power)
+		}
+	case "ring", "amulet":
+		if i.Attack <= 0 && i.Dodge <= 0 {
+			return fmt.Errorf("%s must grant an attack or dodge bonus", i.Kind)
 		}
 	}
 	if i.Effect != "" && i.EffectTurns <= 0 {
