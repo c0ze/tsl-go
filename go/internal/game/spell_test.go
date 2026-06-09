@@ -145,6 +145,53 @@ func TestFrostRayStoppedByWall(t *testing.T) {
 	}
 }
 
+func TestFlashBlindBlindsNearby(t *testing.T) {
+	g := combatGame()                                                                             // player at (1,1)
+	near := &Creature{Def: &content.MonsterDef{ID: "a", Name: "a", HP: 3}, Pos: Pos{3, 1}, HP: 3} // dist 2
+	far := &Creature{Def: &content.MonsterDef{ID: "b", Name: "b", HP: 3}, Pos: Pos{9, 1}, HP: 3}  // dist 8
+	g.Level.Creatures = append(g.Level.Creatures, near, far)
+
+	n := g.FlashBlind(4, 6)
+
+	if n != 1 {
+		t.Errorf("FlashBlind radius 4 should blind 1 creature, got %d", n)
+	}
+	if !near.HasEffect("blind") {
+		t.Error("the near creature should be blinded")
+	}
+	if far.HasEffect("blind") {
+		t.Error("the far creature should be out of range")
+	}
+}
+
+func TestBlindMonsterHoldsAtRange(t *testing.T) {
+	g := combatGame()
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 9, Damage: "1d1"}, Pos: Pos{5, 1}, HP: 9}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	rat.AddEffect("blind", 10)
+	before := rat.Pos
+
+	g.monstersAct()
+
+	if rat.Pos != before {
+		t.Errorf("a blinded monster should hold position at range, moved to %v", rat.Pos)
+	}
+}
+
+func TestBlindMonsterStillMeleesAdjacent(t *testing.T) {
+	g := combatGame()
+	g.PlayerHP = 20
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 9, Attack: 100, Dodge: 0, Damage: "1d2"}, Pos: Pos{2, 1}, HP: 9}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	rat.AddEffect("blind", 10)
+
+	g.monstersAct()
+
+	if g.PlayerHP >= 20 {
+		t.Error("a blinded monster should still attack an adjacent player")
+	}
+}
+
 func TestSpellInventoryFiltersSpellbooks(t *testing.T) {
 	g := combatGame()
 	g.Inventory = []*Item{

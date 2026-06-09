@@ -24,6 +24,7 @@ func Registry() map[string]game.Behavior {
 		"recharge":        recharge,
 		"first_aid":       firstAid,
 		"blindness":       blindness,
+		"flash":           flash,
 	}
 }
 
@@ -106,6 +107,16 @@ func identifyScroll(g *game.Game, it *game.Item) []string {
 func blindness(g *game.Game, it *game.Item) []string {
 	g.AddEffect("blind", it.Def.Power)
 	return []string{fmt.Sprintf("You drink the %s and the world goes dark!", it.Def.Name)}
+}
+
+// flash is the flash spell — a burst of light that blinds the creatures around
+// the caster, breaking the pack's pursuit.
+func flash(g *game.Game, it *game.Item) []string {
+	n := g.FlashBlind(game.FlashRadius, it.Def.Power)
+	if n == 0 {
+		return []string{fmt.Sprintf("You cast %s, but no creatures are near.", it.Def.Name)}
+	}
+	return []string{fmt.Sprintf("Light erupts from %s, blinding %d nearby creature(s)!", it.Def.Name, n)}
 }
 
 // firstAid is the first-aid spell — it knits wounds over time (a regen effect),

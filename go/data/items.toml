@@ -261,6 +261,16 @@ use = "first_aid"
 cost = 4
 power = 8
 
+# Utility spell — flash blinds the creatures around you (power = blind turns).
+[item.spellbook_flash]
+name = "spellbook of flash"
+glyph = "+"
+color = "normal"
+kind = "spellbook"
+use = "flash"
+cost = 5
+power = 8
+
 [item.spellbook_force_bolt]
 name = "spellbook of force bolt"
 glyph = "+"

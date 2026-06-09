@@ -81,6 +81,22 @@ func (g *Game) CastSpellAt(book *Item, target Pos) {
 	g.monstersAct()
 }
 
+// FlashRadius is how far the flash spell's blinding light reaches.
+const FlashRadius = 4
+
+// FlashBlind blinds every creature within radius (Chebyshev) of the player for
+// turns and reports how many were blinded — the flash spell's area effect.
+func (g *Game) FlashBlind(radius, turns int) int {
+	n := 0
+	for _, m := range g.Level.Creatures {
+		if chebyshev(m.Pos, g.Player) <= radius {
+			m.AddEffect("blind", turns)
+			n++
+		}
+	}
+	return n
+}
+
 // fireBeam traces a straight 8-directional ray from the player toward target, up
 // to the spell's range, damaging every creature it crosses (killing at 0 HP) and
 // stopping at the first opaque tile — a wall or a closed door.
