@@ -96,6 +96,9 @@ type Game struct {
 	RNG         *rng.MT
 	PlayerHP    int
 	PlayerMax   int
+	EP          int // energy points: the spellcasting resource
+	EPMax       int
+	epTurn      int // counter for slow EP regeneration
 	Messages    []string
 	Dead        bool
 	Inventory   []*Item

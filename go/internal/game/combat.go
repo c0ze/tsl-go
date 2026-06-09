@@ -186,6 +186,7 @@ func (g *Game) monstersAct() {
 	if g.Dead {
 		return // status effects (e.g. poison) killed the player
 	}
+	g.regenEP()
 	// snapshot to avoid mutation surprises when creatures are removed
 	snapshot := make([]*Creature, len(g.Level.Creatures))
 	copy(snapshot, g.Level.Creatures)
