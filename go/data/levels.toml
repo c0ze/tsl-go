@@ -102,6 +102,9 @@ weight = 1
 [[level.laboratory.spawn]]
 monster = "skeleton"
 weight = 2
+[[level.laboratory.spawn]]
+monster = "imp"
+weight = 1
 
 [level.comm_hub]
 name = "the Communications Hub"
@@ -163,6 +166,9 @@ weight = 2
 [[level.drowned_city.spawn]]
 monster = "wraith"
 weight = 1
+[[level.drowned_city.spawn]]
+monster = "imp"
+weight = 2
 
 [level.frozen_vault]
 name = "the Vault of the Frozen Saint"
@@ -203,6 +209,9 @@ monster = "slime"
 weight = 3
 [[level.dragons_lair.spawn]]
 monster = "ogre"
+weight = 2
+[[level.dragons_lair.spawn]]
+monster = "imp"
 weight = 2
 
 [level.chapel]
