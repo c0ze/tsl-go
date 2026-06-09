@@ -89,22 +89,24 @@ func (l *Level) Passable(p Pos) bool {
 
 // Game is the whole game state.
 type Game struct {
-	Content    *content.Content
-	Level      *Level
-	Dungeon    *Dungeon
-	Player     Pos
-	RNG        *rng.MT
-	PlayerHP   int
-	PlayerMax  int
-	Messages   []string
-	Dead       bool
-	Inventory  []*Item
-	Weapon     *Item
-	Armor      *Item
-	Behaviors  map[string]Behavior
-	Won        bool
-	DeathCause string
-	Effects    []Effect
+	Content     *content.Content
+	Level       *Level
+	Dungeon     *Dungeon
+	Player      Pos
+	RNG         *rng.MT
+	PlayerHP    int
+	PlayerMax   int
+	Messages    []string
+	Dead        bool
+	Inventory   []*Item
+	Weapon      *Item
+	Armor       *Item
+	Behaviors   map[string]Behavior
+	Won         bool
+	DeathCause  string
+	Effects     []Effect
+	Identified  map[string]bool   // item ids whose type is globally known this game
+	appearances map[string]string // item id -> shuffled cosmetic name while unidentified
 }
 
 // Move attempts to move the player one step in d. It returns true if the player

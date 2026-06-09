@@ -124,6 +124,7 @@ func (g *Game) ZapWand(it *Item, target Pos) {
 		return
 	}
 	it.Charges--
+	g.identify(it) // zapping a wand reveals its type
 	if m := g.Level.CreatureAt(target); m != nil {
 		if it.Def.Damage != "" {
 			dmg := g.RNG.RollSpec(it.Def.Damage)

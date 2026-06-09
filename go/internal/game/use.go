@@ -52,6 +52,7 @@ func (g *Game) PlayerUse(it *Item) {
 		g.Armor = it
 		g.log("You wear the %s.", it.Def.Name)
 	case "potion", "food", "scroll":
+		g.identify(it) // using a consumable reveals what it was
 		if b, ok := g.Behaviors[it.Def.Use]; ok {
 			g.Messages = append(g.Messages, b(g, it)...)
 		} else {
