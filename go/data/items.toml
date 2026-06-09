@@ -270,6 +270,17 @@ ranged = 6
 damage = "2d6"
 cost = 5
 
+# Beam spell — frost ray tears through a whole line of creatures.
+[item.spellbook_frost_ray]
+name = "spellbook of frost ray"
+glyph = "+"
+color = "cyan"
+kind = "spellbook"
+beam = true
+ranged = 6
+damage = "2d4"
+cost = 6
+
 # Light source (#18) — carry it to see in the dark (light = sight radius there).
 [item.torch]
 name = "torch"

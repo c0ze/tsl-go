@@ -159,6 +159,11 @@ func TestEmbeddedSpellbook(t *testing.T) {
 	if fb == nil || fb.Kind != "spellbook" || fb.Ranged <= 0 || fb.Damage == "" || fb.Cost <= 0 {
 		t.Errorf("spellbook_force_bolt def unexpected: %+v", fb)
 	}
+	// The frost-ray spellbook is a beam attack (strikes a whole line).
+	fr := c.Items["spellbook_frost_ray"]
+	if fr == nil || fr.Kind != "spellbook" || !fr.Beam || fr.Ranged <= 0 || fr.Damage == "" || fr.Cost <= 0 {
+		t.Errorf("spellbook_frost_ray def unexpected: %+v", fr)
+	}
 }
 
 // TestEmbeddedConsumableBreadth checks the 15h consumables loaded with the right
