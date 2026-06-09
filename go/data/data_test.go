@@ -133,6 +133,30 @@ func TestEmbeddedRangedWeapons(t *testing.T) {
 	}
 }
 
+// TestEmbeddedConsumableBreadth checks the 15h consumables loaded with the right
+// use behaviors (instant healing / pain potions, identify / recharge scrolls).
+func TestEmbeddedConsumableBreadth(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	want := map[string]string{
+		"potion_instant_healing": "instant_healing",
+		"potion_pain":            "pain",
+		"scroll_identify":        "identify",
+		"scroll_recharge":        "recharge",
+	}
+	for id, use := range want {
+		it := c.Items[id]
+		if it == nil || it.Use != use {
+			t.Errorf("%s def unexpected: %+v (want use %q)", id, it, use)
+		}
+	}
+	if p := c.Items["potion_pain"]; p != nil && p.Power <= 0 {
+		t.Errorf("potion_pain needs Power for its damage, got %+v", p)
+	}
+}
+
 // TestEmbeddedConsumables checks the status-effect consumables loaded.
 func TestEmbeddedConsumables(t *testing.T) {
 	c, err := content.Load(Files)

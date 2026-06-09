@@ -150,7 +150,7 @@ func (g *Game) monsterAttacks(m *Creature) {
 	}
 	dmg := g.RNG.RollSpec(m.Def.Damage)
 	g.log("The %s hits you for %d.", m.Def.Name, dmg)
-	g.hurtPlayer(dmg, m.Def.Name)
+	g.HurtPlayer(dmg, m.Def.Name)
 }
 
 // rangedAttack fires a bolt at the player from a distance, using the same
@@ -162,12 +162,12 @@ func (g *Game) rangedAttack(m *Creature) {
 	}
 	dmg := g.RNG.RollSpec(m.Def.Damage)
 	g.log("The %s blasts you for %d.", m.Def.Name, dmg)
-	g.hurtPlayer(dmg, m.Def.Name)
+	g.HurtPlayer(dmg, m.Def.Name)
 }
 
-// hurtPlayer applies dmg to the player and resolves death once (clamped HP +
+// HurtPlayer applies dmg to the player and resolves death once (clamped HP +
 // recorded cause), so melee and ranged attacks share one death path.
-func (g *Game) hurtPlayer(dmg int, cause string) {
+func (g *Game) HurtPlayer(dmg int, cause string) {
 	g.PlayerHP -= dmg
 	if g.PlayerHP <= 0 {
 		g.PlayerHP = 0

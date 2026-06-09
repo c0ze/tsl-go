@@ -149,6 +149,37 @@ use = "eat"
 power = 1
 nospawn = true
 
+# Consumable breadth (#15h). Potions/scrolls hide behind a random appearance
+# until used or identified; a potion of pain gives quaffing-the-unknown real risk.
+[item.potion_instant_healing]
+name = "potion of instant healing"
+glyph = "!"
+color = "red"
+kind = "potion"
+use = "instant_healing"
+
+[item.potion_pain]
+name = "potion of pain"
+glyph = "!"
+color = "red"
+kind = "potion"
+use = "pain"
+power = 8
+
+[item.scroll_identify]
+name = "scroll of identify"
+glyph = "?"
+color = "normal"
+kind = "scroll"
+use = "identify"
+
+[item.scroll_recharge]
+name = "scroll of recharge"
+glyph = "?"
+color = "cyan"
+kind = "scroll"
+use = "recharge"
+
 # Status-effect consumables (#15).
 [item.potion_regeneration]
 name = "potion of regeneration"
