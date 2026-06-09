@@ -90,6 +90,7 @@ type ItemDef struct {
 	Ranged      int    `toml:"ranged"`       // weapon firing range in tiles (0 = melee only)
 	Light       int    `toml:"light"`        // vision radius provided while carried (0 = none)
 	Cost        int    `toml:"cost"`         // EP cost to cast (spellbooks)
+	Beam        bool   `toml:"beam"`         // a spell that strikes every creature in a line
 	NoSpawn     bool   `toml:"nospawn"`      // exclude from random floor loot (e.g. corpses)
 }
 

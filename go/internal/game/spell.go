@@ -53,6 +53,12 @@ func (g *Game) CastSpellAt(book *Item, target Pos) {
 		g.log("You lack the energy to cast %s.", book.Def.Name)
 		return
 	}
+	if book.Def.Beam { // a beam fires in the aimed direction, hitting all in its path
+		g.EP -= book.Def.Cost
+		g.fireBeam(book, target)
+		g.monstersAct()
+		return
+	}
 	if chebyshev(g.Player, target) > book.Def.Ranged {
 		g.log("That is out of range.")
 		return
@@ -73,6 +79,51 @@ func (g *Game) CastSpellAt(book *Item, target Pos) {
 		g.log("The spell dissipates against nothing.")
 	}
 	g.monstersAct()
+}
+
+// fireBeam traces a straight 8-directional ray from the player toward target, up
+// to the spell's range, damaging every creature it crosses (killing at 0 HP) and
+// stopping at the first opaque tile — a wall or a closed door.
+func (g *Game) fireBeam(book *Item, target Pos) {
+	dx, dy := signOf(target.X-g.Player.X), signOf(target.Y-g.Player.Y)
+	if dx == 0 && dy == 0 {
+		g.log("The %s fizzles.", book.Def.Name)
+		return
+	}
+	hits := 0
+	x, y := g.Player.X, g.Player.Y
+	for i := 0; i < book.Def.Ranged; i++ {
+		x += dx
+		y += dy
+		p := Pos{X: x, Y: y}
+		if !g.Level.InBounds(p) || !g.Level.At(p).Def.Transparent {
+			break // a wall (or the level edge) stops the ray
+		}
+		if m := g.Level.CreatureAt(p); m != nil {
+			dmg := g.RNG.RollSpec(book.Def.Damage)
+			m.HP -= dmg
+			g.log("Your %s rakes the %s for %d.", book.Def.Name, m.Def.Name, dmg)
+			if m.HP <= 0 {
+				g.killCreature(m)
+			}
+			hits++
+		}
+	}
+	if hits == 0 {
+		g.log("The ray strikes nothing.")
+	}
+}
+
+// signOf returns -1, 0, or +1 matching the sign of n.
+func signOf(n int) int {
+	switch {
+	case n > 0:
+		return 1
+	case n < 0:
+		return -1
+	default:
+		return 0
+	}
 }
 
 // regenEP restores one EP every epRegenInterval turns, clamped to EPMax. Called
