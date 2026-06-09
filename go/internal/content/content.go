@@ -87,6 +87,7 @@ type ItemDef struct {
 	Damage      string `toml:"damage"`       // weapon/wand damage spec
 	Effect      string `toml:"effect"`       // status effect applied on use ("" = none); e.g. a venom wand
 	EffectTurns int    `toml:"effect_turns"` // duration of Effect
+	Ranged      int    `toml:"ranged"`       // weapon firing range in tiles (0 = melee only)
 	NoSpawn     bool   `toml:"nospawn"`      // exclude from random floor loot (e.g. corpses)
 }
 
@@ -415,6 +416,9 @@ func validateItem(i *ItemDef) error {
 	}
 	if i.Effect != "" && i.EffectTurns <= 0 {
 		return fmt.Errorf("item effect %q needs effect_turns > 0", i.Effect)
+	}
+	if i.Ranged < 0 {
+		return fmt.Errorf("ranged must be >= 0, got %d", i.Ranged)
 	}
 	return nil
 }
