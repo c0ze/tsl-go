@@ -133,6 +133,17 @@ func TestEmbeddedRangedWeapons(t *testing.T) {
 	}
 }
 
+// TestEmbeddedFlash checks the flash spellbook loaded.
+func TestEmbeddedFlash(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if b := c.Items["spellbook_flash"]; b == nil || b.Kind != "spellbook" || b.Use != "flash" || b.Cost <= 0 {
+		t.Errorf("spellbook_flash def unexpected: %+v", b)
+	}
+}
+
 // TestEmbeddedPotionBlindness checks the blindness potion loaded.
 func TestEmbeddedPotionBlindness(t *testing.T) {
 	c, err := content.Load(Files)
