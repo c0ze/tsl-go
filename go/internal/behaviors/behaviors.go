@@ -25,6 +25,7 @@ func Registry() map[string]game.Behavior {
 		"first_aid":       firstAid,
 		"blindness":       blindness,
 		"flash":           flash,
+		"restore_energy":  restoreEnergy,
 	}
 }
 
@@ -37,6 +38,23 @@ func restoreHP(g *game.Game, amount int) int {
 		g.PlayerHP = g.PlayerMax
 	}
 	return g.PlayerHP - before
+}
+
+// restoreEP adds amount to the player's EP, clamped to EPMax, and reports how
+// much was actually recovered.
+func restoreEP(g *game.Game, amount int) int {
+	before := g.EP
+	g.EP += amount
+	if g.EP > g.EPMax {
+		g.EP = g.EPMax
+	}
+	return g.EP - before
+}
+
+// restoreEnergy refills spell energy (a potion of energy).
+func restoreEnergy(g *game.Game, it *game.Item) []string {
+	gained := restoreEP(g, it.Def.Power)
+	return []string{fmt.Sprintf("You quaff the %s and your mind sharpens (+%d EP).", it.Def.Name, gained)}
 }
 
 func heal(g *game.Game, it *game.Item) []string {
