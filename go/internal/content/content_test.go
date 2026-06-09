@@ -554,6 +554,31 @@ func TestLoadRejectsScrollWithoutUse(t *testing.T) {
 	}
 }
 
+func TestLoadTorchItem(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.torch]\nname=\"torch\"\nglyph=\"~\"\ncolor=\"red\"\nkind=\"light\"\nlight=6\n")
+	c, err := Load(os.DirFS(dir))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if w := c.Items["torch"]; w == nil || w.Kind != "light" || w.Light != 6 {
+		t.Errorf("torch def unexpected: %+v", w)
+	}
+}
+
+func TestLoadRejectsNegativeLight(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.bad]\nname=\"bad\"\nglyph=\"~\"\ncolor=\"red\"\nkind=\"weapon\"\ndamage=\"1d4\"\nlight=-1\n")
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error for negative light")
+	}
+}
+
+func TestLoadRejectsLightlessLight(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.dud]\nname=\"dud\"\nglyph=\"~\"\ncolor=\"red\"\nkind=\"light\"\n")
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error: a light item needs light > 0")
+	}
+}
+
 func TestLoadRangedWeapon(t *testing.T) {
 	dir := writeItemsFixture(t, "[item.shortbow]\nname=\"shortbow\"\nglyph=\"}\"\ncolor=\"brown\"\nkind=\"weapon\"\nattack=1\ndamage=\"1d6\"\nranged=6\n")
 	c, err := Load(os.DirFS(dir))
