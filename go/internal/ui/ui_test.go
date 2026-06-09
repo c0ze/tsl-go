@@ -57,6 +57,33 @@ func TestBuildViewStatusLine(t *testing.T) {
 	}
 }
 
+func TestBuildViewShowsEP(t *testing.T) {
+	g := testGame(t, []string{".@."})
+	g.EP, g.EPMax = 7, 10
+	v := BuildView(g)
+	if !strings.Contains(v.Status, "EP 7/10") {
+		t.Errorf("status %q should show EP", v.Status)
+	}
+}
+
+func TestRunCastSpell(t *testing.T) {
+	g := testGame(t, []string{".@."})
+	g.EP, g.EPMax = 10, 10
+	cast := false
+	g.Behaviors = map[string]game.Behavior{"first_aid": func(gg *game.Game, it *game.Item) []string { cast = true; return []string{"mend"} }}
+	g.Inventory = append(g.Inventory, &game.Item{Def: &content.ItemDef{Name: "spellbook of first aid", Kind: "spellbook", Use: "first_aid", Cost: 4}})
+	p := &menuPrompter{actions: []Action{{Kind: ActCast}, {Kind: ActQuit}}, pick: 0}
+	if err := Run(g, p, &nullRenderer{}); err != nil {
+		t.Fatal(err)
+	}
+	if !cast {
+		t.Error("casting should run the spell")
+	}
+	if g.EP != 6 {
+		t.Errorf("EP = %d, want 6 after casting a cost-4 spell", g.EP)
+	}
+}
+
 func TestBuildViewShowsEffects(t *testing.T) {
 	g := testGame(t, []string{".@."})
 	g.PlayerHP, g.PlayerMax = 10, 20

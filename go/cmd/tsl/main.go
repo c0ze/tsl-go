@@ -74,7 +74,7 @@ func newGame(c *content.Content, seed uint32) (*game.Game, error) {
 	if err != nil {
 		return nil, err
 	}
-	const startHP = 20
+	const startHP, startEP = 20, 10
 	g := &game.Game{
 		Content:   c,
 		Dungeon:   dungeon,
@@ -82,6 +82,8 @@ func newGame(c *content.Content, seed uint32) (*game.Game, error) {
 		RNG:       r,
 		PlayerHP:  startHP,
 		PlayerMax: startHP,
+		EP:        startEP,
+		EPMax:     startEP,
 		Behaviors: behaviors.Registry(),
 	}
 	g.EnterStart()

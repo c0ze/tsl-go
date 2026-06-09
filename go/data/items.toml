@@ -242,6 +242,16 @@ color = "blue"
 kind = "scroll"
 use = "reveal"
 
+# Spellbook (#15i) — carry it and press c to cast (costs EP). use = spell effect.
+[item.spellbook_first_aid]
+name = "spellbook of first aid"
+glyph = "+"
+color = "blue"
+kind = "spellbook"
+use = "first_aid"
+cost = 4
+power = 8
+
 # Light source (#18) — carry it to see in the dark (light = sight radius there).
 [item.torch]
 name = "torch"

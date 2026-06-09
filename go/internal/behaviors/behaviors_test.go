@@ -142,6 +142,18 @@ func TestRechargeAddsCharges(t *testing.T) {
 	}
 }
 
+func TestFirstAidGrantsRegen(t *testing.T) {
+	firstAid, ok := Registry()["first_aid"]
+	if !ok {
+		t.Fatal("first_aid not registered")
+	}
+	g := &game.Game{PlayerHP: 10, PlayerMax: 20}
+	firstAid(g, &game.Item{Def: &content.ItemDef{Name: "spellbook of first aid", Power: 6}})
+	if len(g.Effects) != 1 || g.Effects[0].Kind != "regen" || g.Effects[0].Turns != 6 {
+		t.Errorf("first aid should grant regen for Power (6) turns, got %v", g.Effects)
+	}
+}
+
 func TestEatMushroomHealsAndPoisons(t *testing.T) {
 	eat, ok := Registry()["eat_mushroom"]
 	if !ok {

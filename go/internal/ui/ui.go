@@ -43,6 +43,7 @@ const (
 	ActZap
 	ActRead
 	ActFire
+	ActCast
 )
 
 // Action is a decoded player intent. Dir is meaningful only when Kind==ActMove.
@@ -124,8 +125,11 @@ func statusLine(g *game.Game) string {
 	if loc == "" {
 		loc = "the dungeon"
 	}
-	s := fmt.Sprintf("HP %d/%d   %s   Wield: %s   Wear: %s",
-		g.PlayerHP, g.PlayerMax, loc, wield, wear)
+	s := fmt.Sprintf("HP %d/%d", g.PlayerHP, g.PlayerMax)
+	if g.EPMax > 0 {
+		s += fmt.Sprintf("   EP %d/%d", g.EP, g.EPMax)
+	}
+	s += fmt.Sprintf("   %s   Wield: %s   Wear: %s", loc, wield, wear)
 	if eff := g.EffectsSummary(); eff != "" {
 		s += "   [" + eff + "]"
 	}
@@ -221,6 +225,19 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			}
 			if target, ok := p.Target(g.Player); ok {
 				g.FireWeapon(target)
+			}
+		case ActCast:
+			spells := g.SpellInventory()
+			if len(spells) == 0 {
+				g.Messages = append(g.Messages, "You know no spells to cast.")
+				break
+			}
+			names := make([]string, len(spells))
+			for i, it := range spells {
+				names[i] = fmt.Sprintf("%s (%d EP)", g.DisplayName(it), it.Def.Cost)
+			}
+			if idx, ok := p.Menu(MenuSpec{Title: "Cast which spell?", Items: names}); ok && idx >= 0 && idx < len(spells) {
+				g.CastSpell(spells[idx])
 			}
 		}
 	}
