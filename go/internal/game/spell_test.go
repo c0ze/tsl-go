@@ -140,6 +140,9 @@ func TestFrostRayStoppedByWall(t *testing.T) {
 	if len(g.Level.Creatures) != 1 {
 		t.Error("a wall should stop the beam; the creature behind it should survive")
 	}
+	if g.EP != 4 {
+		t.Errorf("a beam still costs EP even when blocked: EP = %d, want 4", g.EP)
+	}
 }
 
 func TestSpellInventoryFiltersSpellbooks(t *testing.T) {

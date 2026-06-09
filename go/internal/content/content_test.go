@@ -615,6 +615,13 @@ func TestLoadBeamSpellbook(t *testing.T) {
 	}
 }
 
+func TestLoadRejectsBeamWithoutAttack(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.ray]\nname=\"bad ray\"\nglyph=\"+\"\ncolor=\"cyan\"\nkind=\"spellbook\"\nbeam=true\nuse=\"first_aid\"\ncost=6\n")
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error: a beam spellbook needs ranged + damage")
+	}
+}
+
 func TestLoadDamageSpellbook(t *testing.T) {
 	dir := writeItemsFixture(t, "[item.bolt]\nname=\"spellbook of force bolt\"\nglyph=\"+\"\ncolor=\"red\"\nkind=\"spellbook\"\nranged=6\ndamage=\"2d6\"\ncost=5\n")
 	c, err := Load(os.DirFS(dir))

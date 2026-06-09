@@ -443,6 +443,14 @@ func validateItem(i *ItemDef) error {
 	if i.Light < 0 {
 		return fmt.Errorf("light must be >= 0, got %d", i.Light)
 	}
+	if i.Beam { // a beam is a spellbook line attack: it needs the attack fields
+		if i.Kind != "spellbook" {
+			return fmt.Errorf("only a spellbook may be a beam")
+		}
+		if i.Ranged <= 0 || !validDamageSpec(i.Damage) {
+			return fmt.Errorf("a beam spellbook needs ranged > 0 and a valid damage spec")
+		}
+	}
 	return nil
 }
 
