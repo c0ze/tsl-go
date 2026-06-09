@@ -69,6 +69,7 @@ type Level struct {
 	Return  Pos      // saved player position for re-entry (set on leaving)
 	entered bool     // whether the player has arrived here at least once
 	Portals []Portal // stairs leading to other levels
+	Dark    bool     // unlit: the player sees only a small radius
 }
 
 // InBounds reports whether p lies inside the level.

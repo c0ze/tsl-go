@@ -119,6 +119,7 @@ type LevelDef struct {
 	Boss     string       `toml:"boss"`  // a guaranteed monster placed once on the level
 	Traps    int          `toml:"traps"` // number of dart_trap tiles to scatter
 	Doors    bool         `toml:"doors"` // place closed doors in room doorways
+	Dark     bool         `toml:"dark"`  // unlit level: the player sees only a small radius
 }
 
 // Content is the fully-loaded, validated game content.

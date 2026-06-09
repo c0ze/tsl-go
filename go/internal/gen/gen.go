@@ -190,6 +190,7 @@ func LevelFromDef(r *rng.MT, c *content.Content, def *content.LevelDef) (*game.L
 		return nil, fmt.Errorf("gen: tiles floor/wall/stairs_down must all be defined")
 	}
 	lvl := game.NewLevel(def.W, def.H, wall)
+	lvl.Dark = def.Dark
 	rooms := carveRooms(r, lvl, floor)
 	if len(rooms) == 0 {
 		return nil, fmt.Errorf("gen: level %q too small for any rooms", def.ID)

@@ -2,9 +2,20 @@ package game
 
 import "github.com/c0ze/tsl/internal/fov"
 
-// VisionRadius is how far the player can see, in tiles. It becomes
-// attribute-driven once creatures land in a later plan.
-const VisionRadius = 8
+// VisionRadius is how far the player can see on a normally-lit level, in tiles.
+// DarkVisionRadius is the reduced reach on an unlit (dark) level.
+const (
+	VisionRadius     = 8
+	DarkVisionRadius = 3
+)
+
+// visionRadius is the player's current sight radius: reduced on a dark level.
+func (g *Game) visionRadius() int {
+	if g.Level != nil && g.Level.Dark {
+		return DarkVisionRadius
+	}
+	return VisionRadius
+}
 
 // fovGrid adapts a Level to fov.Grid.
 type fovGrid struct{ l *Level }
@@ -23,7 +34,7 @@ func (g *Game) UpdateFOV() {
 	for i := range g.Level.tiles {
 		g.Level.tiles[i].Visible = false
 	}
-	fov.Compute(fovGrid{g.Level}, g.Player.X, g.Player.Y, VisionRadius, func(x, y int) {
+	fov.Compute(fovGrid{g.Level}, g.Player.X, g.Player.Y, g.visionRadius(), func(x, y int) {
 		t := g.Level.At(Pos{X: x, Y: y})
 		t.Visible = true
 		t.Seen = true
