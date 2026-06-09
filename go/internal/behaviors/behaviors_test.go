@@ -142,6 +142,23 @@ func TestRechargeAddsCharges(t *testing.T) {
 	}
 }
 
+func TestRestoreEnergyRefillsEP(t *testing.T) {
+	re, ok := Registry()["restore_energy"]
+	if !ok {
+		t.Fatal("restore_energy not registered")
+	}
+	g := &game.Game{EP: 2, EPMax: 10}
+	re(g, &game.Item{Def: &content.ItemDef{Name: "potion of energy", Power: 5}})
+	if g.EP != 7 {
+		t.Errorf("EP = %d, want 7 after restoring 5", g.EP)
+	}
+	g.EP = 8
+	re(g, &game.Item{Def: &content.ItemDef{Name: "potion of energy", Power: 5}})
+	if g.EP != 10 {
+		t.Errorf("EP should clamp at max, got %d", g.EP)
+	}
+}
+
 func TestFlashBlindsNearby(t *testing.T) {
 	flash, ok := Registry()["flash"]
 	if !ok {
