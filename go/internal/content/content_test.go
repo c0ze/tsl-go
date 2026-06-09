@@ -650,3 +650,39 @@ func TestLoadRejectsNegativeItemRanged(t *testing.T) {
 		t.Fatal("expected error for negative item ranged")
 	}
 }
+
+func TestLoadRingItem(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.ring]\nname=\"ring of protection\"\nglyph=\"=\"\ncolor=\"magenta\"\nkind=\"ring\"\ndodge=2\n")
+	c, err := Load(os.DirFS(dir))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if r := c.Items["ring"]; r == nil || r.Kind != "ring" || r.Dodge != 2 {
+		t.Errorf("ring def unexpected: %+v", r)
+	}
+}
+
+func TestLoadAmuletItem(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.amulet]\nname=\"amulet of warding\"\nglyph=\"\\\"\"\ncolor=\"magenta\"\nkind=\"amulet\"\ndodge=3\n")
+	c, err := Load(os.DirFS(dir))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if a := c.Items["amulet"]; a == nil || a.Kind != "amulet" || a.Dodge != 3 {
+		t.Errorf("amulet def unexpected: %+v", a)
+	}
+}
+
+func TestLoadRejectsBonuslessRing(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.dud]\nname=\"dud ring\"\nglyph=\"=\"\ncolor=\"magenta\"\nkind=\"ring\"\n")
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error: an accessory needs an attack or dodge bonus")
+	}
+}
+
+func TestLoadRejectsBonuslessAmulet(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.dud]\nname=\"dud amulet\"\nglyph=\"\\\"\"\ncolor=\"magenta\"\nkind=\"amulet\"\n")
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error: an accessory needs an attack or dodge bonus")
+	}
+}

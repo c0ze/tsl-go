@@ -63,11 +63,25 @@ func (g *Game) PlayerStep(d Direction) {
 	}
 }
 
-func (g *Game) playerAttackStat() int {
-	if g.Weapon != nil {
-		return playerAttack + g.Weapon.Def.Attack
+// equippedGear returns the items the player has worn or wielded, in slot order.
+// Accessories (ring, amulet) sit alongside weapon and armor so their bonuses
+// stack into the combat stats below.
+func (g *Game) equippedGear() []*Item {
+	var worn []*Item
+	for _, it := range []*Item{g.Weapon, g.Armor, g.Ring, g.Amulet} {
+		if it != nil && it.Def != nil {
+			worn = append(worn, it)
+		}
 	}
-	return playerAttack
+	return worn
+}
+
+func (g *Game) playerAttackStat() int {
+	atk := playerAttack
+	for _, it := range g.equippedGear() {
+		atk += it.Def.Attack
+	}
+	return atk
 }
 
 func (g *Game) playerDamageSpec() string {
@@ -78,10 +92,11 @@ func (g *Game) playerDamageSpec() string {
 }
 
 func (g *Game) playerDodgeStat() int {
-	if g.Armor != nil {
-		return playerDodge + g.Armor.Def.Dodge
+	dodge := playerDodge
+	for _, it := range g.equippedGear() {
+		dodge += it.Def.Dodge
 	}
-	return playerDodge
+	return dodge
 }
 
 func (g *Game) playerAttacks(m *Creature) {

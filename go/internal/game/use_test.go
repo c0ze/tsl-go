@@ -128,6 +128,85 @@ func TestPickupAutoEquipsWhenSlotEmpty(t *testing.T) {
 	}
 }
 
+func TestUseRingEquipsIntoSlot(t *testing.T) {
+	g := useGame()
+	ring := &Item{Def: &content.ItemDef{ID: "ring_protect", Name: "ring of protection", Kind: "ring", Dodge: 2}}
+	g.Inventory = append(g.Inventory, ring)
+	g.PlayerUse(ring)
+	if g.Ring != ring {
+		t.Fatal("ring should be worn in the ring slot")
+	}
+	if got := g.playerDodgeStat(); got != playerDodge+2 {
+		t.Errorf("dodge = %d, want %d (base + ring)", got, playerDodge+2)
+	}
+}
+
+func TestUseAmuletEquipsIntoSlot(t *testing.T) {
+	g := useGame()
+	amulet := &Item{Def: &content.ItemDef{ID: "amulet_ward", Name: "amulet of warding", Kind: "amulet", Dodge: 3}}
+	g.Inventory = append(g.Inventory, amulet)
+	g.PlayerUse(amulet)
+	if g.Amulet != amulet {
+		t.Fatal("amulet should be worn in the amulet slot")
+	}
+	if got := g.playerDodgeStat(); got != playerDodge+3 {
+		t.Errorf("dodge = %d, want %d (base + amulet)", got, playerDodge+3)
+	}
+}
+
+// Accessory bonuses stack with armor (dodge) and weapon (attack) — the point of
+// separate equip slots.
+func TestAccessoryBonusesStack(t *testing.T) {
+	g := useGame()
+	g.Armor = &Item{Def: &content.ItemDef{Kind: "armor", Dodge: 4}}
+	g.Ring = &Item{Def: &content.ItemDef{Kind: "ring", Dodge: 2}}
+	g.Amulet = &Item{Def: &content.ItemDef{Kind: "amulet", Dodge: 3}}
+	if got, want := g.playerDodgeStat(), playerDodge+4+2+3; got != want {
+		t.Errorf("dodge = %d, want %d (base + armor + ring + amulet)", got, want)
+	}
+	g.Weapon = &Item{Def: &content.ItemDef{Kind: "weapon", Attack: 4, Damage: "1d4"}}
+	g.Ring = &Item{Def: &content.ItemDef{Kind: "ring", Attack: 2}}
+	if got, want := g.playerAttackStat(), playerAttack+4+2; got != want {
+		t.Errorf("attack = %d, want %d (base + weapon + ring)", got, want)
+	}
+}
+
+func TestPickupAutoEquipsAccessories(t *testing.T) {
+	g := useGame()
+	ring := &Item{Def: &content.ItemDef{ID: "r", Name: "ring", Kind: "ring", Dodge: 2}, Pos: g.Player}
+	g.Level.Items = append(g.Level.Items, ring)
+	g.PlayerPickup()
+	if g.Ring != ring {
+		t.Fatal("ring should auto-equip into the empty ring slot")
+	}
+	amulet := &Item{Def: &content.ItemDef{ID: "a", Name: "amulet", Kind: "amulet", Dodge: 3}, Pos: g.Player}
+	g.Level.Items = append(g.Level.Items, amulet)
+	g.PlayerPickup()
+	if g.Amulet != amulet {
+		t.Fatal("amulet should auto-equip into the empty amulet slot")
+	}
+	// a second ring must NOT auto-replace the worn one
+	ring2 := &Item{Def: &content.ItemDef{ID: "r2", Name: "ring of accuracy", Kind: "ring", Attack: 2}, Pos: g.Player}
+	g.Level.Items = append(g.Level.Items, ring2)
+	g.PlayerPickup()
+	if g.Ring != ring {
+		t.Error("second ring should not auto-replace the worn one")
+	}
+}
+
+// Re-using a ring while one is worn swaps the slot (a deliberate change).
+func TestUseRingSwapsSlot(t *testing.T) {
+	g := useGame()
+	r1 := &Item{Def: &content.ItemDef{ID: "r1", Name: "ring of protection", Kind: "ring", Dodge: 2}}
+	r2 := &Item{Def: &content.ItemDef{ID: "r2", Name: "ring of accuracy", Kind: "ring", Attack: 2}}
+	g.Inventory = append(g.Inventory, r1, r2)
+	g.PlayerUse(r1)
+	g.PlayerUse(r2)
+	if g.Ring != r2 {
+		t.Errorf("ring slot should hold the most recently worn ring")
+	}
+}
+
 func TestWandInventoryFilters(t *testing.T) {
 	g := useGame()
 	g.Inventory = append(g.Inventory,
