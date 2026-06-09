@@ -211,6 +211,32 @@ func TestRunZapWandDamagesCreature(t *testing.T) {
 	}
 }
 
+func TestRunFireWeaponAtCreature(t *testing.T) {
+	g := testGame(t, []string{".....", ".@...", "....."})
+	g.RNG = rng.NewWithSeed(1)
+	g.Weapon = &game.Item{Def: &content.ItemDef{Name: "shortbow", Kind: "weapon", Damage: "10d1", Ranged: 6}}
+	g.Level.Creatures = append(g.Level.Creatures, &game.Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 3}, Pos: game.Pos{X: 3, Y: 1}, HP: 3})
+	g.UpdateFOV()
+	p := &zapPrompter{actions: []Action{{Kind: ActFire}, {Kind: ActQuit}}, target: game.Pos{X: 3, Y: 1}}
+	if err := Run(g, p, &nullRenderer{}); err != nil {
+		t.Fatal(err)
+	}
+	if g.Level.CreatureAt(game.Pos{X: 3, Y: 1}) != nil {
+		t.Error("firing the shortbow should have killed the rat")
+	}
+}
+
+func TestRunFireWithNoRangedWeaponReports(t *testing.T) {
+	g := testGame(t, []string{".@."})
+	p := &scriptPrompter{actions: []Action{{Kind: ActFire}, {Kind: ActQuit}}}
+	if err := Run(g, p, &nullRenderer{}); err != nil {
+		t.Fatal(err)
+	}
+	if len(g.Messages) == 0 || !strings.Contains(g.Messages[len(g.Messages)-1], "no ranged weapon") {
+		t.Errorf("expected a 'no ranged weapon' message, got %v", g.Messages)
+	}
+}
+
 func TestBuildViewShowsVisibleMonsterAndMessages(t *testing.T) {
 	g := testGame(t, []string{".....", ".@...", "....."})
 	g.UpdateFOV()

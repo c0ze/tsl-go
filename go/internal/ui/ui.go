@@ -42,6 +42,7 @@ const (
 	ActEat
 	ActZap
 	ActRead
+	ActFire
 )
 
 // Action is a decoded player intent. Dir is meaningful only when Kind==ActMove.
@@ -212,6 +213,14 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			}
 			if target, ok := p.Target(g.Player); ok {
 				g.ZapWand(wands[idx], target)
+			}
+		case ActFire:
+			if !g.WieldedRanged() {
+				g.Messages = append(g.Messages, "You have no ranged weapon to fire.")
+				break
+			}
+			if target, ok := p.Target(g.Player); ok {
+				g.FireWeapon(target)
 			}
 		}
 	}
