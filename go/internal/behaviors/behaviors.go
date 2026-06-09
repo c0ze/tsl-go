@@ -18,6 +18,10 @@ func Registry() map[string]game.Behavior {
 		"eat_mushroom": eatMushroom,
 		"teleport":     teleport,
 		"reveal":       reveal,
+		"instant_healing": instantHealing,
+		"pain":            pain,
+		"identify":        identifyScroll,
+		"recharge":        recharge,
 	}
 }
 
@@ -70,4 +74,40 @@ func teleport(g *game.Game, it *game.Item) []string {
 func reveal(g *game.Game, it *game.Item) []string {
 	g.RevealMap()
 	return []string{fmt.Sprintf("You read the %s; the layout floods into your mind.", it.Def.Name)}
+}
+
+// instantHealing restores a big chunk of HP at once (the faithful 10 + rnd%15).
+func instantHealing(g *game.Game, it *game.Item) []string {
+	recovered := restoreHP(g, 10+g.RNG.Intn(15))
+	return []string{fmt.Sprintf("You quaff the %s and surge with vitality (+%d HP).", it.Def.Name, recovered)}
+}
+
+// pain damages the drinker — the reason you don't quaff unknown potions blindly.
+func pain(g *game.Game, it *game.Item) []string {
+	g.HurtPlayer(it.Def.Power, "a potion of pain")
+	return []string{fmt.Sprintf("The %s wracks you with agony!", it.Def.Name)}
+}
+
+// identifyScroll reveals one still-unidentified item in the pack.
+func identifyScroll(g *game.Game, it *game.Item) []string {
+	unknown := g.UnidentifiedInventory()
+	if len(unknown) == 0 {
+		return []string{"You sense nothing new about your possessions."}
+	}
+	pick := unknown[g.RNG.Intn(len(unknown))]
+	was := g.DisplayName(pick)
+	g.IdentifyItem(pick)
+	return []string{fmt.Sprintf("Your %s is revealed to be a %s.", was, pick.Def.Name)}
+}
+
+// recharge tops up a random carried wand with a few fresh charges.
+func recharge(g *game.Game, it *game.Item) []string {
+	wands := g.WandInventory()
+	if len(wands) == 0 {
+		return []string{"You feel a surge of magic with nowhere to go."}
+	}
+	w := wands[g.RNG.Intn(len(wands))]
+	add := 3 + g.RNG.Intn(3)
+	w.Charges += add
+	return []string{fmt.Sprintf("Your %s crackles with %d fresh charges.", g.DisplayName(w), add)}
 }

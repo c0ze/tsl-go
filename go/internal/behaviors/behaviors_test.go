@@ -85,6 +85,63 @@ func TestRevealBehaviorMarksSeen(t *testing.T) {
 	}
 }
 
+func TestInstantHealingRestores(t *testing.T) {
+	heal, ok := Registry()["instant_healing"]
+	if !ok {
+		t.Fatal("instant_healing not registered")
+	}
+	g := &game.Game{PlayerHP: 5, PlayerMax: 40, RNG: rng.NewWithSeed(1)}
+	heal(g, &game.Item{Def: &content.ItemDef{Name: "potion of instant healing"}})
+	if g.PlayerHP <= 5 {
+		t.Errorf("instant healing should restore HP, got %d", g.PlayerHP)
+	}
+}
+
+func TestPainDamages(t *testing.T) {
+	pain, ok := Registry()["pain"]
+	if !ok {
+		t.Fatal("pain not registered")
+	}
+	g := &game.Game{PlayerHP: 20, PlayerMax: 20}
+	pain(g, &game.Item{Def: &content.ItemDef{Name: "potion of pain", Power: 6}})
+	if g.PlayerHP != 14 {
+		t.Errorf("pain should cost Power HP, got %d", g.PlayerHP)
+	}
+}
+
+func TestIdentifyScrollReveals(t *testing.T) {
+	idScroll, ok := Registry()["identify"]
+	if !ok {
+		t.Fatal("identify not registered")
+	}
+	c := &content.Content{Items: map[string]*content.ItemDef{
+		"healing":  {ID: "healing", Name: "potion of healing", Kind: "potion", Use: "heal"},
+		"idscroll": {ID: "idscroll", Name: "scroll of identify", Kind: "scroll", Use: "identify"},
+	}}
+	g := &game.Game{Content: c, RNG: rng.NewWithSeed(1)}
+	g.AssignAppearances()
+	pot := &game.Item{Def: c.Items["healing"]}
+	g.Inventory = append(g.Inventory, pot)
+	idScroll(g, &game.Item{Def: c.Items["idscroll"]})
+	if !g.IsIdentified(pot) {
+		t.Error("scroll of identify should reveal an unidentified carried item")
+	}
+}
+
+func TestRechargeAddsCharges(t *testing.T) {
+	recharge, ok := Registry()["recharge"]
+	if !ok {
+		t.Fatal("recharge not registered")
+	}
+	g := &game.Game{RNG: rng.NewWithSeed(1)}
+	wand := &game.Item{Def: &content.ItemDef{Name: "wand", Kind: "wand", Damage: "1d4"}, Charges: 1}
+	g.Inventory = append(g.Inventory, wand)
+	recharge(g, &game.Item{Def: &content.ItemDef{Name: "scroll of recharge"}})
+	if wand.Charges <= 1 {
+		t.Errorf("recharge should add charges, got %d", wand.Charges)
+	}
+}
+
 func TestEatMushroomHealsAndPoisons(t *testing.T) {
 	eat, ok := Registry()["eat_mushroom"]
 	if !ok {
