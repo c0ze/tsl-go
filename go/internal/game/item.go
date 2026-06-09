@@ -43,6 +43,9 @@ func (l *Level) RemoveItem(it *Item) {
 // doing nothing at runtime.
 func ValidateItemUses(c *content.Content, reg map[string]Behavior) error {
 	for id, it := range c.Items {
+		if it.Use == "" {
+			continue // e.g. a targeted (damage) spellbook has no use behavior
+		}
 		if it.Kind == "potion" || it.Kind == "food" || it.Kind == "scroll" || it.Kind == "spellbook" {
 			if _, ok := reg[it.Use]; !ok {
 				return fmt.Errorf("item %q references unknown behavior %q", id, it.Use)

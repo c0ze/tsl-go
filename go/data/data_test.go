@@ -143,6 +143,11 @@ func TestEmbeddedSpellbook(t *testing.T) {
 	if b == nil || b.Kind != "spellbook" || b.Use != "first_aid" || b.Cost <= 0 {
 		t.Errorf("spellbook_first_aid def unexpected: %+v", b)
 	}
+	// The force-bolt spellbook is a targeted attack spell (ranged + damage, no use).
+	fb := c.Items["spellbook_force_bolt"]
+	if fb == nil || fb.Kind != "spellbook" || fb.Ranged <= 0 || fb.Damage == "" || fb.Cost <= 0 {
+		t.Errorf("spellbook_force_bolt def unexpected: %+v", fb)
+	}
 }
 
 // TestEmbeddedConsumableBreadth checks the 15h consumables loaded with the right

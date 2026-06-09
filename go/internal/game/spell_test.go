@@ -60,6 +60,55 @@ func TestEPRegensOverTurnsAndClamps(t *testing.T) {
 	}
 }
 
+func TestCastSpellAtDamages(t *testing.T) {
+	g := combatGame() // player at (1,1), all floor
+	g.EP, g.EPMax = 10, 10
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 3}, Pos: Pos{4, 1}, HP: 3}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	book := &Item{Def: &content.ItemDef{Name: "spellbook of force bolt", Kind: "spellbook", Ranged: 6, Damage: "10d1", Cost: 5}}
+
+	g.CastSpellAt(book, Pos{4, 1})
+
+	if g.Level.CreatureAt(Pos{4, 1}) != nil {
+		t.Error("force bolt should kill the rat (10 dmg vs 3 HP)")
+	}
+	if g.EP != 5 {
+		t.Errorf("EP = %d, want 5 after a cost-5 cast", g.EP)
+	}
+}
+
+func TestCastSpellAtRefusedConditions(t *testing.T) {
+	mk := func() (*Game, *Item, Pos) {
+		g := combatGame()
+		g.EP, g.EPMax = 10, 10
+		rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 3}, Pos: Pos{4, 1}, HP: 3}
+		g.Level.Creatures = append(g.Level.Creatures, rat)
+		book := &Item{Def: &content.ItemDef{Name: "bolt", Kind: "spellbook", Ranged: 6, Damage: "10d1", Cost: 5}}
+		return g, book, rat.Pos
+	}
+
+	g, book, pos := mk()
+	g.EP = 2
+	g.CastSpellAt(book, pos)
+	if g.EP != 2 || g.Level.CreatureAt(pos) == nil {
+		t.Error("a spell you can't afford should not fire or spend EP")
+	}
+
+	g, book, pos = mk()
+	book.Def.Ranged = 1 // out of range (distance 3)
+	g.CastSpellAt(book, pos)
+	if g.EP != 10 || g.Level.CreatureAt(pos) == nil {
+		t.Error("an out-of-range cast should be refused (no EP spent)")
+	}
+
+	g, book, pos = mk()
+	g.Level.Set(Pos{3, 1}, g.Content.Tiles["wall"]) // block the line
+	g.CastSpellAt(book, pos)
+	if g.EP != 10 || g.Level.CreatureAt(pos) == nil {
+		t.Error("a cast with no line of sight should be refused (no EP spent)")
+	}
+}
+
 func TestSpellInventoryFiltersSpellbooks(t *testing.T) {
 	g := combatGame()
 	g.Inventory = []*Item{

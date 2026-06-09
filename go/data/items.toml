@@ -242,7 +242,8 @@ color = "blue"
 kind = "scroll"
 use = "reveal"
 
-# Spellbook (#15i) — carry it and press c to cast (costs EP). use = spell effect.
+# Spellbooks (#15i/j) — carry one and press c to cast (costs EP). A book is either
+# a utility spell (use = effect) or a targeted attack (ranged + damage).
 [item.spellbook_first_aid]
 name = "spellbook of first aid"
 glyph = "+"
@@ -251,6 +252,15 @@ kind = "spellbook"
 use = "first_aid"
 cost = 4
 power = 8
+
+[item.spellbook_force_bolt]
+name = "spellbook of force bolt"
+glyph = "+"
+color = "red"
+kind = "spellbook"
+ranged = 6
+damage = "2d6"
+cost = 5
 
 # Light source (#18) — carry it to see in the dark (light = sight radius there).
 [item.torch]

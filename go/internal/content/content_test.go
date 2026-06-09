@@ -600,7 +600,18 @@ func TestLoadRejectsCostlessSpellbook(t *testing.T) {
 func TestLoadRejectsUselessSpellbook(t *testing.T) {
 	dir := writeItemsFixture(t, "[item.book]\nname=\"book\"\nglyph=\"+\"\ncolor=\"blue\"\nkind=\"spellbook\"\ncost=4\n")
 	if _, err := Load(os.DirFS(dir)); err == nil {
-		t.Fatal("expected error: a spellbook needs a use")
+		t.Fatal("expected error: a spellbook needs a use or a ranged damage spec")
+	}
+}
+
+func TestLoadDamageSpellbook(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.bolt]\nname=\"spellbook of force bolt\"\nglyph=\"+\"\ncolor=\"red\"\nkind=\"spellbook\"\nranged=6\ndamage=\"2d6\"\ncost=5\n")
+	c, err := Load(os.DirFS(dir))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if b := c.Items["bolt"]; b == nil || b.Ranged != 6 || b.Damage != "2d6" || b.Use != "" {
+		t.Errorf("force-bolt spellbook unexpected: %+v", b)
 	}
 }
 

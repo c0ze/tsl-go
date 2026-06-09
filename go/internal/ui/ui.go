@@ -236,8 +236,17 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			for i, it := range spells {
 				names[i] = fmt.Sprintf("%s (%d EP)", g.DisplayName(it), it.Def.Cost)
 			}
-			if idx, ok := p.Menu(MenuSpec{Title: "Cast which spell?", Items: names}); ok && idx >= 0 && idx < len(spells) {
-				g.CastSpell(spells[idx])
+			idx, ok := p.Menu(MenuSpec{Title: "Cast which spell?", Items: names})
+			if !ok || idx < 0 || idx >= len(spells) {
+				break
+			}
+			spell := spells[idx]
+			if spell.Def != nil && spell.Def.Ranged > 0 { // a targeted attack spell
+				if target, ok := p.Target(g.Player); ok {
+					g.CastSpellAt(spell, target)
+				}
+			} else {
+				g.CastSpell(spell)
 			}
 		}
 	}

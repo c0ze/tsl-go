@@ -403,8 +403,13 @@ func validateItem(i *ItemDef) error {
 			return fmt.Errorf("light item must provide light > 0")
 		}
 	case "spellbook":
-		if strings.TrimSpace(i.Use) == "" {
-			return fmt.Errorf("spellbook must have a non-empty use")
+		hasUse := strings.TrimSpace(i.Use) != ""
+		hasAttack := i.Ranged > 0 && i.Damage != ""
+		if !hasUse && !hasAttack {
+			return fmt.Errorf("spellbook needs a use behavior or a ranged damage spec")
+		}
+		if hasAttack && !validDamageSpec(i.Damage) {
+			return fmt.Errorf("spellbook damage %q is not a valid dice spec", i.Damage)
 		}
 		if i.Cost <= 0 {
 			return fmt.Errorf("spellbook must have an EP cost > 0")
