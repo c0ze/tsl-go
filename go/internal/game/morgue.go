@@ -27,15 +27,15 @@ func (g *Game) MorgueText() string {
 	}
 	wield, worn := "nothing", "nothing"
 	if g.Weapon != nil {
-		wield = g.Weapon.Def.Name
+		wield = g.DisplayName(g.Weapon)
 	}
 	if g.Armor != nil {
-		worn = g.Armor.Def.Name
+		worn = g.DisplayName(g.Armor)
 	}
 	fmt.Fprintf(&b, "Wielding: %s\nWearing: %s\n", wield, worn)
 	fmt.Fprintf(&b, "Inventory (%d):\n", len(g.Inventory))
 	for _, it := range g.Inventory {
-		fmt.Fprintf(&b, "  - %s\n", it.Def.Name)
+		fmt.Fprintf(&b, "  - %s\n", g.DisplayName(it))
 	}
 	return b.String()
 }

@@ -86,6 +86,7 @@ func newGame(c *content.Content, seed uint32) (*game.Game, error) {
 	}
 	g.EnterStart()
 	equipStartingKit(g, c)
+	g.AssignAppearances() // shuffle which appearance hides each potion/scroll/wand type
 	return g, nil
 }
 
