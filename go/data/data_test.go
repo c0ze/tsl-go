@@ -133,6 +133,18 @@ func TestEmbeddedRangedWeapons(t *testing.T) {
 	}
 }
 
+// TestEmbeddedSpellbook checks the first-aid spellbook loaded.
+func TestEmbeddedSpellbook(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	b := c.Items["spellbook_first_aid"]
+	if b == nil || b.Kind != "spellbook" || b.Use != "first_aid" || b.Cost <= 0 {
+		t.Errorf("spellbook_first_aid def unexpected: %+v", b)
+	}
+}
+
 // TestEmbeddedConsumableBreadth checks the 15h consumables loaded with the right
 // use behaviors (instant healing / pain potions, identify / recharge scrolls).
 func TestEmbeddedConsumableBreadth(t *testing.T) {
