@@ -679,3 +679,10 @@ func TestLoadRejectsBonuslessRing(t *testing.T) {
 		t.Fatal("expected error: an accessory needs an attack or dodge bonus")
 	}
 }
+
+func TestLoadRejectsBonuslessAmulet(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.dud]\nname=\"dud amulet\"\nglyph=\"\\\"\"\ncolor=\"magenta\"\nkind=\"amulet\"\n")
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error: an accessory needs an attack or dodge bonus")
+	}
+}

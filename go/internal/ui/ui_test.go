@@ -62,6 +62,9 @@ func TestBuildViewShowsWornAccessories(t *testing.T) {
 	g.Ring = &game.Item{Def: &content.ItemDef{Name: "ring of protection", Kind: "ring", Dodge: 2}}
 	g.Amulet = &game.Item{Def: &content.ItemDef{Name: "amulet of warding", Kind: "amulet", Dodge: 3}}
 	v := BuildView(g)
+	if !strings.Contains(v.Status, "Worn:") {
+		t.Fatalf("status %q should include the Worn segment", v.Status)
+	}
 	for _, want := range []string{"ring of protection", "amulet of warding"} {
 		if !strings.Contains(v.Status, want) {
 			t.Errorf("status %q should show worn accessory %q", v.Status, want)
