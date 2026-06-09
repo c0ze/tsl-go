@@ -148,12 +148,30 @@ func (g *Game) monsterAttacks(m *Creature) {
 		return
 	}
 	dmg := g.RNG.RollSpec(m.Def.Damage)
-	g.PlayerHP -= dmg
 	g.log("The %s hits you for %d.", m.Def.Name, dmg)
+	g.hurtPlayer(dmg, m.Def.Name)
+}
+
+// rangedAttack fires a bolt at the player from a distance, using the same
+// to-hit (attack vs dodge) and damage model as a melee swing.
+func (g *Game) rangedAttack(m *Creature) {
+	if !g.RNG.Chance(m.Def.Attack, g.playerDodgeStat()) {
+		g.log("The %s's bolt misses you.", m.Def.Name)
+		return
+	}
+	dmg := g.RNG.RollSpec(m.Def.Damage)
+	g.log("The %s blasts you for %d.", m.Def.Name, dmg)
+	g.hurtPlayer(dmg, m.Def.Name)
+}
+
+// hurtPlayer applies dmg to the player and resolves death once (clamped HP +
+// recorded cause), so melee and ranged attacks share one death path.
+func (g *Game) hurtPlayer(dmg int, cause string) {
+	g.PlayerHP -= dmg
 	if g.PlayerHP <= 0 {
 		g.PlayerHP = 0
 		g.Dead = true
-		g.DeathCause = m.Def.Name
+		g.DeathCause = cause
 		g.log("You die.")
 	}
 }
@@ -204,11 +222,16 @@ func (g *Game) monstersAct() {
 // monsterAct is a single monster action: attack the player if adjacent, else
 // step toward the player if within sense range.
 func (g *Game) monsterAct(m *Creature) {
-	if chebyshev(m.Pos, g.Player) == 1 {
+	dist := chebyshev(m.Pos, g.Player)
+	if dist == 1 {
 		g.monsterAttacks(m)
 		return
 	}
-	if chebyshev(m.Pos, g.Player) <= senseRange {
+	if m.Def.Ranged > 0 && dist <= m.Def.Ranged && g.lineOfSight(m.Pos, g.Player) {
+		g.rangedAttack(m)
+		return
+	}
+	if dist <= senseRange {
 		g.stepToward(m, g.Player)
 	}
 }
