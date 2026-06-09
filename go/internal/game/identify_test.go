@@ -97,11 +97,51 @@ func TestUsePotionIdentifiesType(t *testing.T) {
 	}
 }
 
+func TestMorgueShowsUnidentifiedByAppearance(t *testing.T) {
+	g := identifyGame()
+	g.Inventory = append(g.Inventory, &Item{Def: g.Content.Items["healing"]})
+	txt := g.MorgueText()
+	if !strings.Contains(txt, g.appearances["healing"]) {
+		t.Errorf("morgue should list the unidentified potion by appearance, got:\n%s", txt)
+	}
+	if strings.Contains(txt, "potion of healing") {
+		t.Error("morgue should not reveal an unidentified potion's real name")
+	}
+}
+
 func TestZapWandIdentifies(t *testing.T) {
 	g := identifyGame()
 	wand := &Item{Def: g.Content.Items["force"], Charges: 2}
 	g.ZapWand(wand, Pos{2, 1}) // empty tile: fizzles, but still reveals the wand
 	if !g.Identified["force"] {
 		t.Error("zapping should identify the wand type")
+	}
+}
+
+func TestHurtPlayerResolvesDeath(t *testing.T) {
+	g := combatGame()
+	g.PlayerHP = 3
+	g.HurtPlayer(10, "a potion of pain")
+	if !g.Dead || g.PlayerHP != 0 || g.DeathCause != "a potion of pain" {
+		t.Errorf("HurtPlayer should kill at 0 HP with the cause, got dead=%v hp=%d cause=%q", g.Dead, g.PlayerHP, g.DeathCause)
+	}
+}
+
+func TestUnidentifiedInventoryFiltersAndDrops(t *testing.T) {
+	g := identifyGame()
+	p := &Item{Def: g.Content.Items["healing"]}
+	weapon := &Item{Def: g.Content.Items["dagger"]} // weapons are always identified
+	g.Inventory = append(g.Inventory, p, weapon)
+
+	un := g.UnidentifiedInventory()
+	if len(un) != 1 || un[0] != p {
+		t.Errorf("UnidentifiedInventory should list only the hidden potion, got %v", un)
+	}
+	g.IdentifyItem(p)
+	if len(g.UnidentifiedInventory()) != 0 {
+		t.Error("identifying the potion should drop it from the unidentified list")
+	}
+	if !g.IsIdentified(p) {
+		t.Error("IsIdentified should report the potion identified")
 	}
 }

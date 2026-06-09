@@ -88,6 +88,37 @@ func (g *Game) DisplayName(it *Item) string {
 	return it.Def.Name
 }
 
+// IdentifyItem marks an item's type as globally known without announcing it —
+// for sources that print their own message (a scroll of identify). A no-op for
+// kinds that are never hidden.
+func (g *Game) IdentifyItem(it *Item) {
+	if it == nil || it.Def == nil || !unidentifiable(it.Def.Kind) {
+		return
+	}
+	if g.Identified == nil {
+		g.Identified = map[string]bool{}
+	}
+	g.Identified[it.Def.ID] = true
+}
+
+// IsIdentified reports whether the player knows what an item is — always true for
+// kinds that never hide (weapons, armor, food, lights).
+func (g *Game) IsIdentified(it *Item) bool {
+	return it == nil || it.Def == nil || !unidentifiable(it.Def.Kind) || g.Identified[it.Def.ID]
+}
+
+// UnidentifiedInventory returns the carried items whose type is still hidden, in
+// inventory order — what a scroll of identify can reveal.
+func (g *Game) UnidentifiedInventory() []*Item {
+	var out []*Item
+	for _, it := range g.Inventory {
+		if !g.IsIdentified(it) {
+			out = append(out, it)
+		}
+	}
+	return out
+}
+
 // identify marks an item's type as globally known (use-identify), announcing the
 // reveal the first time it happens. A no-op for kinds that are never hidden.
 func (g *Game) identify(it *Item) {
