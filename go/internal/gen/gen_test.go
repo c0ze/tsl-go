@@ -295,6 +295,18 @@ func TestLevelFromDefPlacesDoors(t *testing.T) {
 	}
 }
 
+func TestLevelFromDefCarriesDarkFlag(t *testing.T) {
+	c := levelDefContent()
+	def := &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"}, Dark: true}
+	lvl, err := LevelFromDef(rng.NewWithSeed(1), c, def)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !lvl.Dark {
+		t.Error("a dark level def should produce a dark level")
+	}
+}
+
 func TestLevelFromDefDeterministic(t *testing.T) {
 	c := levelDefContent()
 	def := &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"}, Monsters: 5, Spawn: []content.SpawnEntry{{Monster: "ratman", Weight: 1}}}
