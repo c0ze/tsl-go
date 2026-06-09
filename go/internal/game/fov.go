@@ -5,13 +5,18 @@ import "github.com/c0ze/tsl/internal/fov"
 // VisionRadius is how far the player can see on a normally-lit level, in tiles.
 // DarkVisionRadius is the reduced reach on an unlit (dark) level.
 const (
-	VisionRadius     = 8
-	DarkVisionRadius = 3
+	VisionRadius      = 8
+	DarkVisionRadius  = 3
+	BlindVisionRadius = 1
 )
 
-// visionRadius is the player's current sight radius. On a dark level it shrinks
-// to DarkVisionRadius, but a carried light source (a torch) pushes it back out.
+// visionRadius is the player's current sight radius. Blindness collapses it to a
+// single tile (overriding any light); otherwise a dark level shrinks it to
+// DarkVisionRadius, which a carried light source (a torch) pushes back out.
 func (g *Game) visionRadius() int {
+	if g.HasEffect("blind") {
+		return BlindVisionRadius
+	}
 	if g.Level == nil || !g.Level.Dark {
 		return VisionRadius
 	}
