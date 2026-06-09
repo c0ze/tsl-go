@@ -484,6 +484,28 @@ func TestLoadRejectsItemEffectWithoutTurns(t *testing.T) {
 	}
 }
 
+func TestLoadDoorTile(t *testing.T) {
+	dir := writeTiles(t, "[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n"+
+		"[tile.door_open]\nglyph=\"'\"\ncolor=\"brown\"\npassable=true\ntransparent=true\n"+
+		"[tile.door_closed]\nglyph=\"+\"\ncolor=\"brown\"\nopens_to=\"door_open\"\n")
+	c, err := Load(os.DirFS(dir))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	d := c.Tiles["door_closed"]
+	if d == nil || d.OpensTo != "door_open" || d.Passable || d.Transparent {
+		t.Errorf("door_closed def unexpected: %+v", d)
+	}
+}
+
+func TestLoadRejectsBadOpensTo(t *testing.T) {
+	dir := writeTiles(t, "[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n"+
+		"[tile.door_closed]\nglyph=\"+\"\ncolor=\"brown\"\nopens_to=\"nope\"\n")
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error: opens_to references an unknown tile")
+	}
+}
+
 func TestLoadScrollItem(t *testing.T) {
 	dir := writeItemsFixture(t, "[item.tele]\nname=\"scroll of teleportation\"\nglyph=\"?\"\ncolor=\"normal\"\nkind=\"scroll\"\nuse=\"teleport\"\n")
 	c, err := Load(os.DirFS(dir))

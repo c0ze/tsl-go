@@ -263,6 +263,38 @@ func TestLevelFromDefScattersTraps(t *testing.T) {
 	}
 }
 
+func TestLevelFromDefPlacesDoors(t *testing.T) {
+	c := levelDefContent()
+	c.Tiles["door_open"] = &content.TileDef{ID: "door_open", Glyph: "'", Color: content.ColorBrown, Passable: true, Transparent: true}
+	c.Tiles["door_closed"] = &content.TileDef{ID: "door_closed", Glyph: "+", Color: content.ColorBrown, OpensTo: "door_open"}
+	def := &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"}, Doors: true}
+	lvl, err := LevelFromDef(rng.NewWithSeed(1), c, def)
+	if err != nil {
+		t.Fatal(err)
+	}
+	doors := 0
+	for y := 0; y < lvl.H; y++ {
+		for x := 0; x < lvl.W; x++ {
+			p := game.Pos{X: x, Y: y}
+			if lvl.At(p).Def.ID != "door_closed" {
+				continue
+			}
+			doors++
+			// A door sits on a 1-wide passage: exactly one opposite axis open.
+			up := lvl.Passable(game.Pos{X: x, Y: y - 1})
+			down := lvl.Passable(game.Pos{X: x, Y: y + 1})
+			left := lvl.Passable(game.Pos{X: x - 1, Y: y})
+			right := lvl.Passable(game.Pos{X: x + 1, Y: y})
+			if !((up && down && !left && !right) || (left && right && !up && !down)) {
+				t.Errorf("door at %v is not on a clean doorway (u%v d%v l%v r%v)", p, up, down, left, right)
+			}
+		}
+	}
+	if doors == 0 {
+		t.Error("expected at least one door placed at a doorway")
+	}
+}
+
 func TestLevelFromDefDeterministic(t *testing.T) {
 	c := levelDefContent()
 	def := &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"}, Monsters: 5, Spawn: []content.SpawnEntry{{Monster: "ratman", Weight: 1}}}

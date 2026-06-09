@@ -216,12 +216,69 @@ func LevelFromDef(r *rng.MT, c *content.Content, def *content.LevelDef) (*game.L
 			lvl.Creatures = append(lvl.Creatures, &game.Creature{Def: bdef, Pos: pos, HP: bdef.HP})
 		}
 	}
+	if def.Doors {
+		placeDoors(c, lvl, rooms)
+	}
 	placeSpawnMonsters(r, c, lvl, rooms, def)
 	placeItems(r, c, lvl, rooms, lvl.Start)
 	if def.Traps > 0 {
 		placeTraps(r, c, lvl, rooms, def.Traps)
 	}
 	return lvl, nil
+}
+
+// placeDoors converts each room's doorways — single-tile passages where a
+// corridor punched through the room's wall ring — into closed doors. Doorways
+// are detected on the original (door-free) layout so placement order can't
+// affect the result; stairs, the altar, traps, portals, and the start tile are
+// never overwritten.
+func placeDoors(c *content.Content, lvl *game.Level, rooms []rect) {
+	closed := c.Tiles["door_closed"]
+	if closed == nil {
+		return
+	}
+	doorways := map[game.Pos]bool{}
+	for _, room := range rooms {
+		for _, p := range boundaryRing(room) {
+			if !lvl.InBounds(p) || lvl.At(p).Def.ID != "floor" {
+				continue // only plain corridor floor becomes a door
+			}
+			if p == lvl.Start || lvl.PortalAt(p) != nil {
+				continue
+			}
+			if isDoorway(lvl, p) {
+				doorways[p] = true
+			}
+		}
+	}
+	for p := range doorways {
+		lvl.Set(p, closed)
+	}
+}
+
+// boundaryRing returns the tiles one step outside a room's interior (the wall
+// ring), where corridors break through to form doorways.
+func boundaryRing(r rect) []game.Pos {
+	ps := make([]game.Pos, 0, 2*(r.w+r.h)+4)
+	for x := r.x - 1; x <= r.x+r.w; x++ {
+		ps = append(ps, game.Pos{X: x, Y: r.y - 1}, game.Pos{X: x, Y: r.y + r.h})
+	}
+	for y := r.y; y < r.y+r.h; y++ {
+		ps = append(ps, game.Pos{X: r.x - 1, Y: y}, game.Pos{X: r.x + r.w, Y: y})
+	}
+	return ps
+}
+
+// isDoorway reports whether p is a clean single-tile passage: passable on
+// exactly one axis (the corridor through the wall) with walls flanking it.
+func isDoorway(lvl *game.Level, p game.Pos) bool {
+	up := lvl.Passable(game.Pos{X: p.X, Y: p.Y - 1})
+	down := lvl.Passable(game.Pos{X: p.X, Y: p.Y + 1})
+	left := lvl.Passable(game.Pos{X: p.X - 1, Y: p.Y})
+	right := lvl.Passable(game.Pos{X: p.X + 1, Y: p.Y})
+	horizontal := left && right && !up && !down
+	vertical := up && down && !left && !right
+	return horizontal || vertical
 }
 
 // placeTraps scatters up to n dart_trap tiles onto plain floor tiles, avoiding

@@ -41,6 +41,7 @@ type TileDef struct {
 	Win         bool   `toml:"win"`          // stepping onto this tile wins (the ascension altar)
 	Effect      string `toml:"effect"`       // status effect applied when stepped on ("" = none)
 	EffectTurns int    `toml:"effect_turns"` // duration of Effect
+	OpensTo     string `toml:"opens_to"`     // tile id this becomes when opened ("" = not a door)
 }
 
 // Rune returns the tile's glyph as a rune. Glyph is guaranteed by validateTile
@@ -115,6 +116,7 @@ type LevelDef struct {
 	Altar    bool         `toml:"altar"` // place an ascension altar (a win tile)
 	Boss     string       `toml:"boss"`  // a guaranteed monster placed once on the level
 	Traps    int          `toml:"traps"` // number of dart_trap tiles to scatter
+	Doors    bool         `toml:"doors"` // place closed doors in room doorways
 }
 
 // Content is the fully-loaded, validated game content.
@@ -165,6 +167,9 @@ func Load(fsys fs.FS) (*Content, error) {
 	if len(c.Tiles) == 0 {
 		return nil, fmt.Errorf("tiles.toml: no tiles defined")
 	}
+	if err := validateTileRefs(c); err != nil {
+		return nil, err
+	}
 
 	var mf monstersFile
 	if ok, err := decodeOptionalTOML(fsys, "monsters.toml", &mf); err != nil {
@@ -209,6 +214,20 @@ func Load(fsys fs.FS) (*Content, error) {
 		return nil, err
 	}
 	return c, nil
+}
+
+// validateTileRefs checks that every tile's opens_to (when set) names a defined
+// tile, so a door always has an open state to become.
+func validateTileRefs(c *Content) error {
+	for id, t := range c.Tiles {
+		if t.OpensTo == "" {
+			continue
+		}
+		if _, ok := c.Tiles[t.OpensTo]; !ok {
+			return fmt.Errorf("tile %q: opens_to %q is not a defined tile", id, t.OpensTo)
+		}
+	}
+	return nil
 }
 
 // validateCorpseRefs checks that every monster's corpse (when set) names a

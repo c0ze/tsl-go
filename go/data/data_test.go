@@ -118,6 +118,30 @@ func TestEmbeddedVenomWand(t *testing.T) {
 	}
 }
 
+// TestEmbeddedDoors checks the door tiles loaded and that some levels use them.
+func TestEmbeddedDoors(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	dc := c.Tiles["door_closed"]
+	if dc == nil || dc.Passable || dc.Transparent || dc.OpensTo != "door_open" {
+		t.Errorf("door_closed tile unexpected: %+v", dc)
+	}
+	if do := c.Tiles["door_open"]; do == nil || !do.Passable || !do.Transparent {
+		t.Errorf("door_open tile unexpected: %+v", do)
+	}
+	doored := false
+	for _, l := range c.Levels {
+		if l.Doors {
+			doored = true
+		}
+	}
+	if !doored {
+		t.Error("expected at least one level with doors enabled")
+	}
+}
+
 // TestEmbeddedScrolls checks the read-verb scrolls loaded.
 func TestEmbeddedScrolls(t *testing.T) {
 	c, err := content.Load(Files)
