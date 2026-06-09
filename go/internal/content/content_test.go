@@ -553,3 +553,21 @@ func TestLoadRejectsScrollWithoutUse(t *testing.T) {
 		t.Fatal("expected error: scroll needs a non-empty use")
 	}
 }
+
+func TestLoadRangedWeapon(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.shortbow]\nname=\"shortbow\"\nglyph=\"}\"\ncolor=\"brown\"\nkind=\"weapon\"\nattack=1\ndamage=\"1d6\"\nranged=6\n")
+	c, err := Load(os.DirFS(dir))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if w := c.Items["shortbow"]; w == nil || w.Ranged != 6 {
+		t.Errorf("shortbow def unexpected: %+v", w)
+	}
+}
+
+func TestLoadRejectsNegativeItemRanged(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.bow]\nname=\"bow\"\nglyph=\"}\"\ncolor=\"brown\"\nkind=\"weapon\"\ndamage=\"1d6\"\nranged=-1\n")
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error for negative item ranged")
+	}
+}
