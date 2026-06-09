@@ -159,6 +159,48 @@ func TestRunInventoryUsesSelectedItem(t *testing.T) {
 	}
 }
 
+// capturePrompter records the last menu it was shown, then cancels it.
+type capturePrompter struct {
+	actions  []Action
+	i        int
+	lastMenu MenuSpec
+}
+
+func (c *capturePrompter) NextAction() (Action, error) {
+	if c.i >= len(c.actions) {
+		return Action{Kind: ActQuit}, nil
+	}
+	a := c.actions[c.i]
+	c.i++
+	return a, nil
+}
+func (c *capturePrompter) Menu(m MenuSpec) (int, bool)      { c.lastMenu = m; return 0, false }
+func (c *capturePrompter) Target(game.Pos) (game.Pos, bool) { return game.Pos{}, false }
+
+func TestInventoryMenuShowsAppearance(t *testing.T) {
+	g := testGame(t, []string{".@."})
+	g.Content.Items = map[string]*content.ItemDef{
+		"healing": {ID: "healing", Name: "potion of healing", Kind: "potion", Use: "heal"},
+	}
+	g.RNG = rng.NewWithSeed(1)
+	g.AssignAppearances()
+	it := &game.Item{Def: g.Content.Items["healing"]}
+	g.Inventory = append(g.Inventory, it)
+	want := g.DisplayName(it)
+	if want == "potion of healing" {
+		t.Fatal("expected the potion to start unidentified")
+	}
+
+	p := &capturePrompter{actions: []Action{{Kind: ActInventory}}}
+	if err := Run(g, p, &nullRenderer{}); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(p.lastMenu.Items) == 0 || p.lastMenu.Items[0] != want {
+		t.Errorf("inventory menu should show the appearance %q, got %v", want, p.lastMenu.Items)
+	}
+}
+
 // menuPrompter scripts actions and always picks index `pick` from any menu.
 type menuPrompter struct {
 	actions []Action

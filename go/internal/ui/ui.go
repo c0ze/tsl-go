@@ -115,10 +115,10 @@ func BuildView(g *game.Game) View {
 func statusLine(g *game.Game) string {
 	wield, wear := "none", "none"
 	if g.Weapon != nil && g.Weapon.Def != nil {
-		wield = g.Weapon.Def.Name
+		wield = g.DisplayName(g.Weapon)
 	}
 	if g.Armor != nil && g.Armor.Def != nil {
-		wear = g.Armor.Def.Name
+		wear = g.DisplayName(g.Armor)
 	}
 	loc := g.LocationName()
 	if loc == "" {
@@ -163,7 +163,7 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			if len(g.Inventory) > 0 {
 				names := make([]string, len(g.Inventory))
 				for i, it := range g.Inventory {
-					names[i] = it.Def.Name
+					names[i] = g.DisplayName(it)
 				}
 				if idx, ok := p.Menu(MenuSpec{Title: "Inventory", Items: names}); ok && idx >= 0 && idx < len(g.Inventory) {
 					g.PlayerUse(g.Inventory[idx])
@@ -179,7 +179,7 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			}
 			names := make([]string, len(food))
 			for i, it := range food {
-				names[i] = it.Def.Name
+				names[i] = g.DisplayName(it)
 			}
 			if idx, ok := p.Menu(MenuSpec{Title: "Eat what?", Items: names}); ok && idx >= 0 && idx < len(food) {
 				g.PlayerUse(food[idx])
@@ -192,7 +192,7 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			}
 			names := make([]string, len(scrolls))
 			for i, it := range scrolls {
-				names[i] = it.Def.Name
+				names[i] = g.DisplayName(it)
 			}
 			if idx, ok := p.Menu(MenuSpec{Title: "Read what?", Items: names}); ok && idx >= 0 && idx < len(scrolls) {
 				g.PlayerUse(scrolls[idx])
@@ -205,7 +205,7 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			}
 			names := make([]string, len(wands))
 			for i, it := range wands {
-				names[i] = fmt.Sprintf("%s (%d charges)", it.Def.Name, it.Charges)
+				names[i] = fmt.Sprintf("%s (%d charges)", g.DisplayName(it), it.Charges)
 			}
 			idx, ok := p.Menu(MenuSpec{Title: "Zap which wand?", Items: names})
 			if !ok || idx < 0 || idx >= len(wands) {

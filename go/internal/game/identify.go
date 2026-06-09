@@ -55,7 +55,13 @@ func (g *Game) AssignAppearances() {
 			byKind[def.Kind] = append(byKind[def.Kind], id)
 		}
 	}
-	for kind, ids := range byKind {
+	kinds := make([]string, 0, len(byKind))
+	for kind := range byKind {
+		kinds = append(kinds, kind)
+	}
+	sort.Strings(kinds) // process kinds in a fixed order so RNG use is deterministic
+	for _, kind := range kinds {
+		ids := byKind[kind]
 		sort.Strings(ids)
 		pool := append([]string(nil), appearancePools[kind]...)
 		for i := len(pool) - 1; i > 0; i-- { // Fisher-Yates with the game RNG
