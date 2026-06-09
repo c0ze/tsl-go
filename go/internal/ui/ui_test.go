@@ -57,6 +57,18 @@ func TestBuildViewStatusLine(t *testing.T) {
 	}
 }
 
+func TestBuildViewShowsWornAccessories(t *testing.T) {
+	g := testGame(t, []string{".@."})
+	g.Ring = &game.Item{Def: &content.ItemDef{Name: "ring of protection", Kind: "ring", Dodge: 2}}
+	g.Amulet = &game.Item{Def: &content.ItemDef{Name: "amulet of warding", Kind: "amulet", Dodge: 3}}
+	v := BuildView(g)
+	for _, want := range []string{"ring of protection", "amulet of warding"} {
+		if !strings.Contains(v.Status, want) {
+			t.Errorf("status %q should show worn accessory %q", v.Status, want)
+		}
+	}
+}
+
 func TestBuildViewShowsEP(t *testing.T) {
 	g := testGame(t, []string{".@."})
 	g.EP, g.EPMax = 7, 10

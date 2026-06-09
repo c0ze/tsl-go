@@ -307,3 +307,27 @@ glyph = "~"
 color = "red"
 kind = "light"
 light = 6
+
+# Accessories (#14) — rings and amulets are passive equip slots, separate from
+# weapon and armor, whose attack/dodge bonuses stack onto your hit and defense.
+# Faithful to 0.40's worn item_type/equipped model (common/item.h, gent_amulet).
+[item.ring_of_accuracy]
+name = "ring of accuracy"
+glyph = "="
+color = "magenta"
+kind = "ring"
+attack = 2
+
+[item.ring_of_protection]
+name = "ring of protection"
+glyph = "="
+color = "magenta"
+kind = "ring"
+dodge = 2
+
+[item.amulet_of_warding]
+name = "amulet of warding"
+glyph = "\""
+color = "magenta"
+kind = "amulet"
+dodge = 3

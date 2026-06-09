@@ -5,6 +5,7 @@ package ui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/c0ze/tsl/internal/content"
 	"github.com/c0ze/tsl/internal/game"
@@ -130,10 +131,25 @@ func statusLine(g *game.Game) string {
 		s += fmt.Sprintf("   EP %d/%d", g.EP, g.EPMax)
 	}
 	s += fmt.Sprintf("   %s   Wield: %s   Wear: %s", loc, wield, wear)
+	if worn := wornAccessories(g); worn != "" {
+		s += "   Worn: " + worn
+	}
 	if eff := g.EffectsSummary(); eff != "" {
 		s += "   [" + eff + "]"
 	}
 	return s
+}
+
+// wornAccessories joins the display names of the worn ring and amulet, returning
+// "" when neither slot is filled (so the HUD omits the segment entirely).
+func wornAccessories(g *game.Game) string {
+	var names []string
+	for _, it := range []*game.Item{g.Ring, g.Amulet} {
+		if it != nil && it.Def != nil {
+			names = append(names, g.DisplayName(it))
+		}
+	}
+	return strings.Join(names, ", ")
 }
 
 // lastN returns up to the last n elements of s.

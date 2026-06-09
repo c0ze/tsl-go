@@ -149,6 +149,23 @@ func TestEmbeddedGear(t *testing.T) {
 	}
 }
 
+// TestEmbeddedAccessories checks the rings and amulet loaded with their bonuses.
+func TestEmbeddedAccessories(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if r := c.Items["ring_of_accuracy"]; r == nil || r.Kind != "ring" || r.Attack <= 0 {
+		t.Errorf("ring_of_accuracy def unexpected: %+v", r)
+	}
+	if r := c.Items["ring_of_protection"]; r == nil || r.Kind != "ring" || r.Dodge <= 0 {
+		t.Errorf("ring_of_protection def unexpected: %+v", r)
+	}
+	if a := c.Items["amulet_of_warding"]; a == nil || a.Kind != "amulet" || a.Dodge <= 0 {
+		t.Errorf("amulet_of_warding def unexpected: %+v", a)
+	}
+}
+
 // TestEmbeddedRangedWeapons checks the shortbow and the ranged bosses loaded.
 func TestEmbeddedRangedWeapons(t *testing.T) {
 	c, err := content.Load(Files)
