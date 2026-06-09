@@ -64,6 +64,29 @@ func TestEmbeddedRosterBatch2(t *testing.T) {
 	}
 }
 
+// TestEmbeddedImp checks the ranged caster loaded and appears in a spawn table.
+func TestEmbeddedImp(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	imp := c.Monsters["imp"]
+	if imp == nil || imp.Rune() != 'i' || imp.Ranged <= 0 {
+		t.Errorf("imp def unexpected: %+v", imp)
+	}
+	spawned := false
+	for _, l := range c.Levels {
+		for _, s := range l.Spawn {
+			if s.Monster == "imp" {
+				spawned = true
+			}
+		}
+	}
+	if !spawned {
+		t.Error("expected the imp placed in a spawn table")
+	}
+}
+
 // TestDepthGatedTanks checks the tougher monsters only appear on deeper floors.
 func TestDepthGatedTanks(t *testing.T) {
 	c, err := content.Load(Files)

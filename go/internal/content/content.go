@@ -64,6 +64,7 @@ type MonsterDef struct {
 	Speed    int    `toml:"speed"`     // energy gained per turn; <= 0 defaults to 100
 	Corpse   string `toml:"corpse"`    // item id dropped on death ("" = none); must be a food item
 	MinDepth int    `toml:"min_depth"` // earliest depth this monster spawns (0/1 = from depth 1)
+	Ranged   int    `toml:"ranged"`    // ranged attack distance in tiles (0 = melee only)
 }
 
 // Rune returns the monster's glyph as a rune.
@@ -367,6 +368,9 @@ func validateMonster(m *MonsterDef) error {
 	}
 	if m.MinDepth < 0 {
 		return fmt.Errorf("min_depth must be >= 0, got %d", m.MinDepth)
+	}
+	if m.Ranged < 0 {
+		return fmt.Errorf("ranged must be >= 0, got %d", m.Ranged)
 	}
 	return nil
 }

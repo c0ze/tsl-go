@@ -163,6 +163,20 @@ speed = 90
 corpse = "carcass"
 min_depth = 3
 
+# Ranged caster (#13c) — pelts you with bolts across a lit room (ranged = 5);
+# break line of sight (a wall or closed door) to make it close in.
+[monster.imp]
+name = "imp"
+glyph = "i"
+color = "red"
+hp = 6
+attack = 4
+dodge = 3
+damage = "1d4"
+speed = 110
+ranged = 5
+min_depth = 2
+
 # Bosses (#16 2c). Deadly guardians — but you win by reaching the altar, so you
 # needn't kill them. Stats are tunable; gear breadth (#14) will make this fairer.
 [monster.elder_mummylich]

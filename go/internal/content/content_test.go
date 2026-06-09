@@ -196,6 +196,36 @@ func TestLoadRejectsBadMonsterDamage(t *testing.T) {
 	}
 }
 
+func TestLoadRangedMonster(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "tiles.toml"), []byte("[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "monsters.toml"), []byte("[monster.imp]\nname=\"imp\"\nglyph=\"i\"\ncolor=\"red\"\nhp=6\nattack=4\ndodge=3\ndamage=\"1d4\"\nranged=5\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	c, err := Load(os.DirFS(dir))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if m := c.Monsters["imp"]; m == nil || m.Ranged != 5 {
+		t.Errorf("imp def unexpected: %+v", m)
+	}
+}
+
+func TestLoadRejectsNegativeRanged(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "tiles.toml"), []byte("[tile.floor]\nglyph=\".\"\ncolor=\"normal\"\npassable=true\ntransparent=true\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "monsters.toml"), []byte("[monster.bad]\nname=\"bad\"\nglyph=\"b\"\ncolor=\"normal\"\nhp=3\nattack=1\ndodge=1\ndamage=\"1d2\"\nranged=-1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error for negative ranged")
+	}
+}
+
 func TestLoadFoodItem(t *testing.T) {
 	dir := t.TempDir()
 	must := func(name, body string) {
