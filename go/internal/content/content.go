@@ -89,6 +89,7 @@ type ItemDef struct {
 	EffectTurns int    `toml:"effect_turns"` // duration of Effect
 	Ranged      int    `toml:"ranged"`       // weapon firing range in tiles (0 = melee only)
 	Light       int    `toml:"light"`        // vision radius provided while carried (0 = none)
+	Cost        int    `toml:"cost"`         // EP cost to cast (spellbooks)
 	NoSpawn     bool   `toml:"nospawn"`      // exclude from random floor loot (e.g. corpses)
 }
 
@@ -98,7 +99,7 @@ func (i *ItemDef) Rune() rune {
 	return r
 }
 
-var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true, "food": true, "wand": true, "scroll": true, "light": true}
+var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true, "food": true, "wand": true, "scroll": true, "light": true, "spellbook": true}
 
 // SpawnEntry is one weighted entry in a level's monster spawn table.
 type SpawnEntry struct {
@@ -400,6 +401,13 @@ func validateItem(i *ItemDef) error {
 	case "light":
 		if i.Light <= 0 {
 			return fmt.Errorf("light item must provide light > 0")
+		}
+	case "spellbook":
+		if strings.TrimSpace(i.Use) == "" {
+			return fmt.Errorf("spellbook must have a non-empty use")
+		}
+		if i.Cost <= 0 {
+			return fmt.Errorf("spellbook must have an EP cost > 0")
 		}
 	case "weapon":
 		if !validDamageSpec(i.Damage) {

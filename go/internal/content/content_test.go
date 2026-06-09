@@ -579,6 +579,31 @@ func TestLoadRejectsLightlessLight(t *testing.T) {
 	}
 }
 
+func TestLoadSpellbook(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.book]\nname=\"spellbook of first aid\"\nglyph=\"+\"\ncolor=\"blue\"\nkind=\"spellbook\"\nuse=\"first_aid\"\ncost=4\npower=6\n")
+	c, err := Load(os.DirFS(dir))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if b := c.Items["book"]; b == nil || b.Kind != "spellbook" || b.Use != "first_aid" || b.Cost != 4 {
+		t.Errorf("spellbook def unexpected: %+v", b)
+	}
+}
+
+func TestLoadRejectsCostlessSpellbook(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.book]\nname=\"book\"\nglyph=\"+\"\ncolor=\"blue\"\nkind=\"spellbook\"\nuse=\"first_aid\"\n")
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error: a spellbook needs cost > 0")
+	}
+}
+
+func TestLoadRejectsUselessSpellbook(t *testing.T) {
+	dir := writeItemsFixture(t, "[item.book]\nname=\"book\"\nglyph=\"+\"\ncolor=\"blue\"\nkind=\"spellbook\"\ncost=4\n")
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("expected error: a spellbook needs a use")
+	}
+}
+
 func TestLoadRangedWeapon(t *testing.T) {
 	dir := writeItemsFixture(t, "[item.shortbow]\nname=\"shortbow\"\nglyph=\"}\"\ncolor=\"brown\"\nkind=\"weapon\"\nattack=1\ndamage=\"1d6\"\nranged=6\n")
 	c, err := Load(os.DirFS(dir))
