@@ -9,12 +9,29 @@ const (
 	DarkVisionRadius = 3
 )
 
-// visionRadius is the player's current sight radius: reduced on a dark level.
+// visionRadius is the player's current sight radius. On a dark level it shrinks
+// to DarkVisionRadius, but a carried light source (a torch) pushes it back out.
 func (g *Game) visionRadius() int {
-	if g.Level != nil && g.Level.Dark {
-		return DarkVisionRadius
+	if g.Level == nil || !g.Level.Dark {
+		return VisionRadius
 	}
-	return VisionRadius
+	r := DarkVisionRadius
+	if light := g.carriedLight(); light > r {
+		r = light
+	}
+	return r
+}
+
+// carriedLight returns the largest light radius among the items the player is
+// carrying — a torch glows passively while held.
+func (g *Game) carriedLight() int {
+	best := 0
+	for _, it := range g.Inventory {
+		if it.Def != nil && it.Def.Light > best {
+			best = it.Def.Light
+		}
+	}
+	return best
 }
 
 // fovGrid adapts a Level to fov.Grid.
