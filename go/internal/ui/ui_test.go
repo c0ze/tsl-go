@@ -318,6 +318,7 @@ func TestRunFireWeaponAtCreature(t *testing.T) {
 	g := testGame(t, []string{".....", ".@...", "....."})
 	g.RNG = rng.NewWithSeed(1)
 	g.Weapon = &game.Item{Def: &content.ItemDef{Name: "shortbow", Kind: "weapon", Damage: "10d1", Ranged: 6}}
+	g.Inventory = append(g.Inventory, &game.Item{Def: &content.ItemDef{ID: "arrow", Name: "crude arrow", Kind: "ammo"}, Charges: 3})
 	g.Level.Creatures = append(g.Level.Creatures, &game.Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 3}, Pos: game.Pos{X: 3, Y: 1}, HP: 3})
 	g.UpdateFOV()
 	p := &zapPrompter{actions: []Action{{Kind: ActFire}, {Kind: ActQuit}}, target: game.Pos{X: 3, Y: 1}}

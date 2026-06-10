@@ -68,7 +68,7 @@ damage = "2d6"
 weight = 28
 
 # Ranged weapon (#14) — wield it, then fire (f) at a target in line of sight.
-# Weak in melee; its strength is reach. power/ammo are infinite for now.
+# Weak in melee; its strength is reach. Each shot spends a crude arrow (14a).
 [item.shortbow]
 name = "shortbow"
 glyph = "}"
@@ -515,3 +515,12 @@ color = "brown"
 kind = "spellbook"
 use = "pharmacy"
 cost = 2
+
+# Ammunition (14a, C treasure.c crude arrows): the shortbow stops firing for
+# free. Bundles merge into one quiver; power = arrows per found bundle.
+[item.arrow]
+name = "crude arrow"
+glyph = ":"
+color = "brown"
+kind = "ammo"
+power = 8

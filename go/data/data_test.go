@@ -866,3 +866,15 @@ func TestEmbeddedDeathspellAndPharmacy(t *testing.T) {
 		t.Error("camouflage is commented out in 0.40 and should stay absent")
 	}
 }
+
+// TestEmbeddedArrows checks the quiver loaded (14a): C crude arrows, glyph ':',
+// weight 1 (WEIGHT_MISSILE) via the ammo kind default.
+func TestEmbeddedArrows(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if a := c.Items["arrow"]; a == nil || a.Kind != "ammo" || a.Glyph != ":" || a.Power != 8 || a.Weight != 1 {
+		t.Errorf("arrow def unexpected: %+v", a)
+	}
+}

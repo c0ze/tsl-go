@@ -19,6 +19,11 @@ func (g *Game) FireWeapon(target Pos) {
 		g.log("You have no ranged weapon to fire.")
 		return
 	}
+	arrows := g.ammoStack()
+	if arrows == nil {
+		g.log("Out of ammo!") // the C's empty-quiver refusal: free, no turn
+		return
+	}
 	if chebyshev(g.Player, target) > g.Weapon.Def.Ranged {
 		g.log("That is out of range.")
 		return
@@ -26,6 +31,11 @@ func (g *Game) FireWeapon(target Pos) {
 	if !g.lineOfSight(g.Player, target) {
 		g.log("You don't have a clear shot.")
 		return
+	}
+	// The arrow flies whether it finds flesh or floor (C: missiles are spent).
+	arrows.Charges--
+	if arrows.Charges <= 0 {
+		g.removeInventory(arrows)
 	}
 	if m := g.Level.CreatureAt(target); m != nil {
 		dmg := g.RNG.RollSpec(g.Weapon.Def.Damage)
@@ -38,4 +48,14 @@ func (g *Game) FireWeapon(target Pos) {
 		g.log("Your shot flies into empty space.")
 	}
 	g.advanceWorld()
+}
+
+// ammoStack returns the player's arrow bundle, or nil when the quiver is empty.
+func (g *Game) ammoStack() *Item {
+	for _, it := range g.Inventory {
+		if it.Def != nil && it.Def.Kind == "ammo" && it.Charges > 0 {
+			return it
+		}
+	}
+	return nil
 }
