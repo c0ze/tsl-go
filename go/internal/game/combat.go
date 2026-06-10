@@ -146,6 +146,10 @@ func (g *Game) playerAttackStat() int {
 const flameHandsDamage = "1d2+3"
 
 func (g *Game) playerDamageSpec() string {
+	if g.HasEffect("hungry_book") {
+		// The cursed temp weapon also supersedes the wielded one.
+		return hungryBookDamage
+	}
 	if g.HasEffect("flame_hands") {
 		// A temp weapon supersedes the wielded one (C set_temp_weapon).
 		return flameHandsDamage

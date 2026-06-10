@@ -86,7 +86,8 @@ func TestRunCastSpell(t *testing.T) {
 	g.EP, g.EPMax = 10, 10
 	cast := false
 	g.Behaviors = map[string]game.Behavior{"first_aid": func(gg *game.Game, it *game.Item) []string { cast = true; return []string{"mend"} }}
-	g.Inventory = append(g.Inventory, &game.Item{Def: &content.ItemDef{Name: "spellbook of first aid", Kind: "spellbook", Use: "first_aid", Cost: 4}})
+	g.Content.Items = map[string]*content.ItemDef{"book_aid": {ID: "book_aid", Name: "spellbook of first aid", Kind: "spellbook", Use: "first_aid", Cost: 4}}
+	g.Known = map[string]bool{"book_aid": true} // learned, not carried (C read_book)
 	p := &menuPrompter{actions: []Action{{Kind: ActCast}, {Kind: ActQuit}}, pick: 0}
 	if err := Run(g, p, &nullRenderer{}); err != nil {
 		t.Fatal(err)
@@ -103,7 +104,8 @@ func TestRunCastForceBoltAtCreature(t *testing.T) {
 	g := testGame(t, []string{".....", ".@...", "....."})
 	g.RNG = rng.NewWithSeed(1)
 	g.EP, g.EPMax = 10, 10
-	g.Inventory = append(g.Inventory, &game.Item{Def: &content.ItemDef{Name: "spellbook of force bolt", Kind: "spellbook", Ranged: 6, Damage: "10d1", Cost: 5}})
+	g.Content.Items = map[string]*content.ItemDef{"book_force": {ID: "book_force", Name: "spellbook of force bolt", Kind: "spellbook", Ranged: 6, Damage: "10d1", Cost: 5}}
+	g.Known = map[string]bool{"book_force": true}
 	g.Level.Creatures = append(g.Level.Creatures, &game.Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 3}, Pos: game.Pos{X: 3, Y: 1}, HP: 3})
 	g.UpdateFOV()
 	p := &zapPrompter{actions: []Action{{Kind: ActCast}, {Kind: ActQuit}}, target: game.Pos{X: 3, Y: 1}}

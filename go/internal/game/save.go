@@ -80,6 +80,7 @@ type savedGame struct {
 	Messages     []string          `json:"msgs,omitempty"`
 	Effects      []savedEffect     `json:"fx,omitempty"`
 	Identified   map[string]bool   `json:"identified,omitempty"`
+	Known        map[string]bool   `json:"known,omitempty"`
 	Appearances  map[string]string `json:"appearances,omitempty"`
 	Inventory    []savedItem       `json:"inventory,omitempty"`
 	Weapon       int               `json:"weapon"` // inventory indices; -1 = empty slot
@@ -128,7 +129,7 @@ func (g *Game) Save(w io.Writer) error {
 		RecallLevel: g.recallLevel, RecallPos: g.recallPos, RecallSet: g.recallSet,
 		Dead: g.Dead, Won: g.Won, DeathCause: g.DeathCause,
 		Messages: g.Messages, Effects: saveEffects(g.Effects),
-		Identified: g.Identified, Appearances: g.appearances,
+		Identified: g.Identified, Known: g.Known, Appearances: g.appearances,
 		Weapon: slotIndex(g.Inventory, g.Weapon), Armor: slotIndex(g.Inventory, g.Armor),
 		Ring: slotIndex(g.Inventory, g.Ring), Amulet: slotIndex(g.Inventory, g.Amulet),
 	}
@@ -203,7 +204,7 @@ func LoadGame(r io.Reader, c *content.Content, behaviors map[string]Behavior,
 		recallLevel: sg.RecallLevel, recallPos: sg.RecallPos, recallSet: sg.RecallSet,
 		Dead: sg.Dead, Won: sg.Won, DeathCause: sg.DeathCause,
 		Messages: sg.Messages, Effects: loadEffects(sg.Effects),
-		Identified: sg.Identified, appearances: sg.Appearances,
+		Identified: sg.Identified, Known: sg.Known, appearances: sg.Appearances,
 	}
 	if sg.RNG != nil {
 		if g.RNG = rng.Restore(sg.RNG); g.RNG == nil {

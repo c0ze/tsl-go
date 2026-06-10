@@ -131,6 +131,7 @@ type Game struct {
 	DeathCause   string
 	Effects      []Effect
 	Identified   map[string]bool   // item ids whose type is globally known this game
+	Known        map[string]bool   // spellbook ids learned by reading (C reading.c)
 	appearances  map[string]string // item id -> shuffled cosmetic name while unidentified
 }
 

@@ -54,6 +54,7 @@ func savedWorld(t *testing.T) *Game {
 
 	// Salt the world: clocks, effects, gear, allies, glamours, hidden traps.
 	g.AddEffect("poison", 4)
+	g.Known = map[string]bool{"potion": true} // a learned "book" (any item id works for the round-trip)
 	g.swimFatigue = 2
 	g.epTurn = 1
 	dagger := &Item{Def: c.Items["dagger"]}
