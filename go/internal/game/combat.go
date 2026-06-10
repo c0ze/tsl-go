@@ -26,15 +26,40 @@ func speedOf(m *Creature) int {
 	return defaultSpeed
 }
 
+// carryCapacity is how much the player can haul comfortably
+// (C rules.h DEFAULT_CARRYING_CAPACITY).
+const carryCapacity = 400
+
+// carriedWeight sums the pack, equipped gear included — worn items stay in
+// the inventory list, as in the C.
+func (g *Game) carriedWeight() int {
+	total := 0
+	for _, it := range g.Inventory {
+		if it != nil && it.Def != nil {
+			total += it.Def.Weight
+		}
+	}
+	return total
+}
+
+// burdened reports whether the player carries more than the allowance
+// (C burdened.c is_burdened).
+func (g *Game) burdened() bool { return g.carriedWeight() > carryCapacity }
+
 // playerSpeed is the player's energy gain per world tick (the C's attr_speed,
 // base BASE_SPEED): haste adds a flat bonus, slow halves — the same rule
-// monsters use (the C's literal -1 for slow is vestigial on a 100 scale).
+// monsters use (the C's literal -1 for slow is vestigial on a 100 scale) —
+// and a heavy pack halves what's left (C BURDENED_FACTOR, applied after the
+// effect mods as in increment_counters).
 func (g *Game) playerSpeed() int {
 	speed := defaultSpeed
 	if g.HasEffect("haste") {
 		speed += hasteBonus
 	}
 	if g.HasEffect("slow") {
+		speed /= 2
+	}
+	if g.burdened() {
 		speed /= 2
 	}
 	if speed < 1 {

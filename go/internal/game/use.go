@@ -10,9 +10,13 @@ func (g *Game) PlayerPickup() {
 		g.log("There is nothing here to pick up.")
 		return
 	}
+	wasBurdened := g.burdened()
 	g.Level.RemoveItem(it)
 	g.Inventory = append(g.Inventory, it)
 	g.log("You pick up the %s.", it.Def.Name)
+	if !wasBurdened && g.burdened() {
+		g.log("You stagger under your load!")
+	}
 	g.autoEquip(it)
 	g.advanceWorld()
 }
@@ -89,11 +93,15 @@ func (g *Game) hasInventoryItem(it *Item) bool {
 }
 
 func (g *Game) removeInventory(it *Item) {
+	wasBurdened := g.burdened()
 	for i, x := range g.Inventory {
 		if x == it {
 			g.Inventory = append(g.Inventory[:i], g.Inventory[i+1:]...)
-			return
+			break
 		}
+	}
+	if wasBurdened && !g.burdened() {
+		g.log("You are no longer burdened.")
 	}
 }
 
