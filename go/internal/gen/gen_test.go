@@ -338,3 +338,73 @@ func TestRoomsPlacesMonsters(t *testing.T) {
 		}
 	}
 }
+
+// reachable floods passable tiles from start and reports whether goal is reached
+// (orthogonal+diagonal, matching player movement).
+func reachable(lvl *game.Level, start, goal game.Pos) bool {
+	seen := map[game.Pos]bool{start: true}
+	frontier := []game.Pos{start}
+	for len(frontier) > 0 {
+		p := frontier[len(frontier)-1]
+		frontier = frontier[:len(frontier)-1]
+		if p == goal {
+			return true
+		}
+		for dy := -1; dy <= 1; dy++ {
+			for dx := -1; dx <= 1; dx++ {
+				n := game.Pos{X: p.X + dx, Y: p.Y + dy}
+				if !seen[n] && lvl.Passable(n) {
+					seen[n] = true
+					frontier = append(frontier, n)
+				}
+			}
+		}
+	}
+	return false
+}
+
+func TestLevelFromDefCarvesWaterPools(t *testing.T) {
+	c := levelDefContent()
+	c.Tiles["water"] = &content.TileDef{ID: "water", Glyph: "_", Color: content.ColorBlue, Transparent: true, Water: true}
+	def := &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"}, Water: 3}
+	for seed := uint32(1); seed <= 8; seed++ {
+		lvl, err := LevelFromDef(rng.NewWithSeed(seed), c, def)
+		if err != nil {
+			t.Fatal(err)
+		}
+		water := 0
+		for y := 0; y < lvl.H; y++ {
+			for x := 0; x < lvl.W; x++ {
+				if lvl.At(game.Pos{X: x, Y: y}).Def.Water {
+					water++
+				}
+			}
+		}
+		if water < 5 {
+			t.Errorf("seed %d: 3 pools of >=5 tiles each should leave some water, got %d tiles", seed, water)
+		}
+		// Pools must never wall off the stairs (the C validates solvability).
+		for _, p := range lvl.Portals {
+			if !reachable(lvl, lvl.Start, p.Pos) {
+				t.Errorf("seed %d: portal at %v unreachable after pool carving", seed, p.Pos)
+			}
+		}
+	}
+}
+
+func TestLevelFromDefNoWaterByDefault(t *testing.T) {
+	c := levelDefContent()
+	c.Tiles["water"] = &content.TileDef{ID: "water", Glyph: "_", Color: content.ColorBlue, Transparent: true, Water: true}
+	def := &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"}}
+	lvl, err := LevelFromDef(rng.NewWithSeed(3), c, def)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for y := 0; y < lvl.H; y++ {
+		for x := 0; x < lvl.W; x++ {
+			if lvl.At(game.Pos{X: x, Y: y}).Def.Water {
+				t.Fatal("water=0 level must stay dry")
+			}
+		}
+	}
+}

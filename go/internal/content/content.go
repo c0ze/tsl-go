@@ -122,6 +122,7 @@ type LevelDef struct {
 	Altar    bool         `toml:"altar"` // place an ascension altar (a win tile)
 	Boss     string       `toml:"boss"`  // a guaranteed monster placed once on the level
 	Traps    int          `toml:"traps"` // number of dart_trap tiles to scatter
+	Water    int          `toml:"water"` // number of water pools to carve (C level->water)
 	Doors    bool         `toml:"doors"` // place closed doors in room doorways
 	Dark     bool         `toml:"dark"`  // unlit level: the player sees only a small radius
 }
