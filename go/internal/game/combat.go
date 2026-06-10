@@ -68,16 +68,19 @@ func (g *Game) PlayerStep(d Direction) {
 			g.log("You ascend to demigodhood. You win!")
 			return // winning ends the turn immediately
 		}
-		if tile.Effect != "" {
+		if tile.Effect != "" && !g.HasEffect("levitate") {
+			// A floater glides over floor traps (C activate_trap); Win above
+			// already fired regardless, the C's trap_win exception.
 			g.AddEffect(tile.Effect, tile.EffectTurns)
 			g.log("You trigger a trap!")
 		}
 	} else if g.openDoor(dst) { // blocked by a closed door: open it (costs the turn)
 		g.log("You open the door.")
 		acted = true
-	} else if g.Level.InBounds(dst) && g.Level.At(dst).Def.Water && g.HasEffect("blind") {
-		// Deep water turns away a sighted walker, but the blinded blunder
-		// straight in (C move_creature).
+	} else if g.Level.InBounds(dst) && g.Level.At(dst).Def.Water &&
+		(g.HasEffect("blind") || g.HasEffect("levitate")) {
+		// Deep water turns away a sighted walker; the blinded blunder in and
+		// floaters drift across (C move_creature).
 		g.Player = dst
 		acted = true
 	}
@@ -269,6 +272,9 @@ const playerSwimming = 0
 // action: a turn spent in deep water adds fatigue, and past the swimming skill
 // each turn costs 1 HP until the swimmer drowns; dry land resets the count.
 func (g *Game) swimCheck() {
+	if g.HasEffect("levitate") {
+		return // airborne: the fatigue counter freezes (C swim() skips floaters)
+	}
 	if !g.Level.At(g.Player).Def.Water {
 		g.swimFatigue = 0
 		return

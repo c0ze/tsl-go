@@ -10,14 +10,15 @@ type Effect struct {
 
 // effectLabels maps effect kinds to their HUD labels.
 var effectLabels = map[string]string{
-	"poison":  "Poisoned",
-	"regen":   "Regenerating",
-	"slow":    "Slowed",
-	"haste":   "Hastened",
-	"blind":   "Blinded",
-	"confuse": "Confused",
-	"fear":    "Afraid",
-	"sleep":   "Asleep",
+	"poison":   "Poisoned",
+	"regen":    "Regenerating",
+	"slow":     "Slowed",
+	"haste":    "Hastened",
+	"blind":    "Blinded",
+	"confuse":  "Confused",
+	"fear":     "Afraid",
+	"sleep":    "Asleep",
+	"levitate": "Floating",
 }
 
 // HasEffect reports whether a timed effect of the given kind is active on the
@@ -115,6 +116,7 @@ func (g *Game) tickEffects() {
 	if len(g.Effects) == 0 {
 		return
 	}
+	landed := false
 	kept := g.Effects[:0]
 	for _, e := range g.Effects {
 		switch e.Kind {
@@ -130,9 +132,14 @@ func (g *Game) tickEffects() {
 			kept = append(kept, e)
 		} else if e.Kind == "sleep" {
 			g.log("You wake up!") // sleep ran its course (C creature_sleep)
+		} else if e.Kind == "levitate" {
+			landed = true // resolved below, once the effects slice is settled
 		}
 	}
 	g.Effects = kept
+	if landed {
+		g.land()
+	}
 	// Resolve death once, after the net HP change of this turn, so a regen can
 	// offset poison instead of leaving Dead set while HP is still positive.
 	if g.PlayerHP <= 0 && !g.Dead {
@@ -140,6 +147,22 @@ func (g *Game) tickEffects() {
 		g.Dead = true
 		g.DeathCause = "poison"
 		g.log("The poison overcomes you. You die.")
+	}
+}
+
+// land resolves the end of levitation (C change_altitude): into deep water the
+// swim clock takes over; a trap below springs on touchdown; otherwise it's
+// just solid ground.
+func (g *Game) land() {
+	tile := g.Level.At(g.Player).Def
+	if tile.Water {
+		g.log("You plunge into water!")
+		return
+	}
+	g.log("You land on the ground.")
+	if tile.Effect != "" {
+		g.AddEffect(tile.Effect, tile.EffectTurns)
+		g.log("You trigger a trap!")
 	}
 }
 
