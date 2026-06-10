@@ -176,19 +176,20 @@ func (g *Game) DispelLevitation() {
 	g.land()
 }
 
-// EffectsSummary is a comma-separated list of active effect labels for the HUD,
-// or "" when there are none.
+// EffectsSummary is a comma-separated list of active effect labels for the HUD
+// — plus the burden flag, which is carried state rather than a timed effect —
+// or "" when there is nothing to show.
 func (g *Game) EffectsSummary() string {
-	if len(g.Effects) == 0 {
-		return ""
-	}
-	labels := make([]string, 0, len(g.Effects))
+	labels := make([]string, 0, len(g.Effects)+1)
 	for _, e := range g.Effects {
 		if l := effectLabels[e.Kind]; l != "" {
 			labels = append(labels, l)
 		} else {
 			labels = append(labels, e.Kind)
 		}
+	}
+	if g.burdened() {
+		labels = append(labels, "Burdened")
 	}
 	return strings.Join(labels, ", ")
 }

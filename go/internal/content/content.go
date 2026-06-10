@@ -97,6 +97,14 @@ type ItemDef struct {
 	Cost        int    `toml:"cost"`         // EP cost to cast (spellbooks)
 	Beam        bool   `toml:"beam"`         // a spell that strikes every creature in a line
 	NoSpawn     bool   `toml:"nospawn"`      // exclude from random floor loot (e.g. corpses)
+	Weight      int    `toml:"weight"`       // carry weight (0 = kind default, C rules.h WEIGHT_*)
+}
+
+// kindWeights are the C's per-kind WEIGHT_* defaults (rules.h); an item with
+// no explicit weight inherits its kind's.
+var kindWeights = map[string]int{
+	"potion": 7, "scroll": 4, "wand": 21, "food": 8, "light": 12,
+	"spellbook": 12, "ring": 5, "amulet": 5, "weapon": 22, "armor": 40,
 }
 
 // Rune returns the item's glyph as a rune.
@@ -206,6 +214,9 @@ func Load(fsys fs.FS) (*Content, error) {
 			def.ID = id
 			if err := validateItem(def); err != nil {
 				return nil, fmt.Errorf("item %q: %w", id, err)
+			}
+			if def.Weight == 0 {
+				def.Weight = kindWeights[def.Kind]
 			}
 			c.Items[id] = def
 		}
@@ -479,6 +490,9 @@ func validateItem(i *ItemDef) error {
 	}
 	if i.Ranged < 0 {
 		return fmt.Errorf("ranged must be >= 0, got %d", i.Ranged)
+	}
+	if i.Weight < 0 {
+		return fmt.Errorf("weight must be >= 0, got %d", i.Weight)
 	}
 	if i.Light < 0 {
 		return fmt.Errorf("light must be >= 0, got %d", i.Light)
