@@ -4,6 +4,7 @@
 package ui
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -46,6 +47,7 @@ const (
 	ActFire
 	ActCast
 	ActTalk
+	ActSave
 )
 
 // Action is a decoded player intent. Dir is meaningful only when Kind==ActMove.
@@ -71,6 +73,11 @@ type Prompter interface {
 type Renderer interface {
 	Render(View)
 }
+
+// ErrSaveRequested is returned by Run when the player asks to save: the ui
+// layer never touches files, so the front-end's owner (cmd) saves and quits
+// — the C's save-is-quitting (saveload.c try_to_save_game).
+var ErrSaveRequested = errors.New("save requested")
 
 // Player avatar rendering (Plan 1; later the player becomes a creature def).
 const PlayerGlyph = '@'
@@ -200,6 +207,8 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			g.Travel()
 		case ActTalk:
 			g.Talk()
+		case ActSave:
+			return ErrSaveRequested
 		case ActEat:
 			food := g.EdibleInventory()
 			if len(food) == 0 {

@@ -51,6 +51,7 @@ func TestKeyToAction(t *testing.T) {
 		{tc.NewEventKey(tc.KeyRune, 'f', tc.ModNone), ui.Action{Kind: ui.ActFire}, true},
 		{tc.NewEventKey(tc.KeyRune, 'c', tc.ModNone), ui.Action{Kind: ui.ActCast}, true},
 		{tc.NewEventKey(tc.KeyRune, 't', tc.ModNone), ui.Action{Kind: ui.ActTalk}, true},
+		{tc.NewEventKey(tc.KeyRune, 'S', tc.ModNone), ui.Action{Kind: ui.ActSave}, true},
 		{tc.NewEventKey(tc.KeyRune, 'X', tc.ModNone), ui.Action{}, false},
 	}
 	for _, tt := range cases {

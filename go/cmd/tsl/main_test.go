@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/c0ze/tsl/data"
@@ -126,5 +128,62 @@ func TestNewGameStartsOnStartLevel(t *testing.T) {
 	}
 	if g.Player != g.Level.Start {
 		t.Errorf("player at %v, want start level's Start %v", g.Player, g.Level.Start)
+	}
+}
+
+func TestSaveFileRoundTripAndNoScumming(t *testing.T) {
+	c, err := content.Load(data.Files)
+	if err != nil {
+		t.Fatal(err)
+	}
+	g, err := newGame(c, 7)
+	if err != nil {
+		t.Fatal(err)
+	}
+	g.PlayerHP = 11 // salt something recognisable
+	path := filepath.Join(t.TempDir(), "save.json")
+	if err := saveTo(path, g); err != nil {
+		t.Fatal(err)
+	}
+	g2, err := loadFrom(path, c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g2 == nil || g2.PlayerHP != 11 {
+		t.Fatalf("the resumed game should carry the saved state, got %+v", g2)
+	}
+	if g2.LocationName() == "" {
+		t.Error("the resumed game should have its dungeon wired")
+	}
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Error("a successful load deletes the savefile (C delete_savefile - no scumming)")
+	}
+}
+
+func TestMissingSaveMeansFreshStart(t *testing.T) {
+	c, err := content.Load(data.Files)
+	if err != nil {
+		t.Fatal(err)
+	}
+	g, err := loadFrom(filepath.Join(t.TempDir(), "absent.json"), c)
+	if err != nil || g != nil {
+		t.Errorf("no savefile is not an error: got g=%v err=%v", g, err)
+	}
+}
+
+func TestCorruptSaveErrorsWithoutDeleting(t *testing.T) {
+	c, err := content.Load(data.Files)
+	if err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(t.TempDir(), "save.json")
+	if err := os.WriteFile(path, []byte("{not json"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := loadFrom(path, c); err == nil {
+		t.Fatal("a corrupt savefile must error")
+	}
+	if _, err := os.Stat(path); err != nil {
+		t.Error("a failed load must not delete the savefile (C saveload_abort)")
 	}
 }

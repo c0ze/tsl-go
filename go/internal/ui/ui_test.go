@@ -490,3 +490,11 @@ func TestBuildViewShowsMimicGlamour(t *testing.T) {
 		t.Errorf("a revealed mimic shows itself, got %q", got)
 	}
 }
+
+func TestRunSurfacesSaveRequest(t *testing.T) {
+	g := testGame(t, []string{".@."})
+	p := &zapPrompter{actions: []Action{{Kind: ActSave}}}
+	if err := Run(g, p, &nullRenderer{}); err != ErrSaveRequested {
+		t.Errorf("Run should surface the save sentinel, got %v", err)
+	}
+}
