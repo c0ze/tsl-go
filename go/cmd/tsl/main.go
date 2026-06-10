@@ -111,12 +111,12 @@ func loadFrom(path string, c *content.Content) (*game.Game, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
 	var g *game.Game
 	build := func(def *content.LevelDef) (*game.Level, error) {
 		return gen.LevelFromDef(g.RNG, c, def) // bound after load; called lazily on first entry
 	}
 	g, err = game.LoadGame(f, c, behaviors.Registry(), build)
+	f.Close() // before the delete: Windows refuses to remove an open file
 	if err != nil {
 		return nil, fmt.Errorf("savefile %s: %w", path, err)
 	}

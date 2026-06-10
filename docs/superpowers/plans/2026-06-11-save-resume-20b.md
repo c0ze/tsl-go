@@ -20,7 +20,8 @@ startup and is **deleted on load** (no save-scumming). Completes the arc.
 - ui: `ActSave` on `S` (shift-s); `Run` returns the sentinel
   `ErrSaveRequested` — the ui layer never touches files; cmd owns the path.
 - cmd: `savePath()` (home dotfile), `saveTo(path, g)`,
-  `loadFrom(path, content, behaviors, build)` — load success deletes the
+  `loadFrom(path, content)` (behaviors and the lazy level builder are
+  constructed inside) — load success deletes the
   file, load failure reports and exits without deleting. main: resume if a
   savefile exists, else new game; on `ErrSaveRequested` save, print
   "Game saved.", exit 0; a failed save logs "Couldn't save game!" and
