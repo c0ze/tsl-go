@@ -54,18 +54,22 @@ func (t *TileDef) Rune() rune {
 
 // MonsterDef defines a kind of monster.
 type MonsterDef struct {
-	ID       string `toml:"-"`
-	Name     string `toml:"name"`
-	Glyph    string `toml:"glyph"`
-	Color    Color  `toml:"color"`
-	HP       int    `toml:"hp"`
-	Attack   int    `toml:"attack"`
-	Dodge    int    `toml:"dodge"`
-	Damage   string `toml:"damage"`    // dice spec, e.g. "1d4"
-	Speed    int    `toml:"speed"`     // energy gained per turn; <= 0 defaults to 100
-	Corpse   string `toml:"corpse"`    // item id dropped on death ("" = none); must be a food item
-	MinDepth int    `toml:"min_depth"` // earliest depth this monster spawns (0/1 = from depth 1)
-	Ranged   int    `toml:"ranged"`    // ranged attack distance in tiles (0 = melee only)
+	ID          string `toml:"-"`
+	Name        string `toml:"name"`
+	Glyph       string `toml:"glyph"`
+	Color       Color  `toml:"color"`
+	HP          int    `toml:"hp"`
+	Attack      int    `toml:"attack"`
+	Dodge       int    `toml:"dodge"`
+	Damage      string `toml:"damage"`       // dice spec, e.g. "1d4"
+	Speed       int    `toml:"speed"`        // energy gained per turn; <= 0 defaults to 100
+	Corpse      string `toml:"corpse"`       // item id dropped on death ("" = none); must be a food item
+	MinDepth    int    `toml:"min_depth"`    // earliest depth this monster spawns (0/1 = from depth 1)
+	Ranged      int    `toml:"ranged"`       // ranged attack distance in tiles (0 = melee only)
+	Swim        bool   `toml:"swim"`         // free_swim: may enter deep water (#18)
+	Permaswim   bool   `toml:"permaswim"`    // water only — it won't leave its pool (implies swim)
+	Effect      string `toml:"effect"`       // status effect a landed melee hit applies ("" = none)
+	EffectTurns int    `toml:"effect_turns"` // duration of Effect
 }
 
 // Rune returns the monster's glyph as a rune.
@@ -111,20 +115,22 @@ type SpawnEntry struct {
 
 // LevelDef defines a named dungeon level and its place in the graph.
 type LevelDef struct {
-	ID       string       `toml:"-"`
-	Name     string       `toml:"name"`
-	W        int          `toml:"width"`
-	H        int          `toml:"height"`
-	Start    bool         `toml:"start"` // the single entry level
-	Links    []string     `toml:"links"` // ids of connected levels
-	Monsters int          `toml:"monsters"`
-	Spawn    []SpawnEntry `toml:"spawn"`
-	Altar    bool         `toml:"altar"` // place an ascension altar (a win tile)
-	Boss     string       `toml:"boss"`  // a guaranteed monster placed once on the level
-	Traps    int          `toml:"traps"` // number of dart_trap tiles to scatter
-	Water    int          `toml:"water"` // number of water pools to carve (C level->water)
-	Doors    bool         `toml:"doors"` // place closed doors in room doorways
-	Dark     bool         `toml:"dark"`  // unlit level: the player sees only a small radius
+	ID           string       `toml:"-"`
+	Name         string       `toml:"name"`
+	W            int          `toml:"width"`
+	H            int          `toml:"height"`
+	Start        bool         `toml:"start"` // the single entry level
+	Links        []string     `toml:"links"` // ids of connected levels
+	Monsters     int          `toml:"monsters"`
+	Spawn        []SpawnEntry `toml:"spawn"`
+	Altar        bool         `toml:"altar"`         // place an ascension altar (a win tile)
+	Boss         string       `toml:"boss"`          // a guaranteed monster placed once on the level
+	Retinue      string       `toml:"retinue"`       // escort monster spawned around the boss ("" = none)
+	RetinueCount int          `toml:"retinue_count"` // how many escorts (C encounter_lurker spawns 8)
+	Traps        int          `toml:"traps"`         // number of dart_trap tiles to scatter
+	Water        int          `toml:"water"`         // number of water pools to carve (C level->water)
+	Doors        bool         `toml:"doors"`         // place closed doors in room doorways
+	Dark         bool         `toml:"dark"`          // unlit level: the player sees only a small radius
 }
 
 // Content is the fully-loaded, validated game content.
@@ -295,6 +301,20 @@ func validateLevels(c *Content) error {
 				return fmt.Errorf("level %q: boss %q is not a defined monster", id, l.Boss)
 			}
 		}
+		if l.RetinueCount < 0 {
+			return fmt.Errorf("level %q: retinue_count must be >= 0, got %d", id, l.RetinueCount)
+		}
+		if l.Retinue != "" {
+			if _, ok := c.Monsters[l.Retinue]; !ok {
+				return fmt.Errorf("level %q: retinue %q is not a defined monster", id, l.Retinue)
+			}
+			if l.Boss == "" {
+				return fmt.Errorf("level %q: retinue set without a boss to escort", id)
+			}
+		}
+		if l.RetinueCount > 0 && l.Retinue == "" {
+			return fmt.Errorf("level %q: retinue_count > 0 without a retinue monster", id)
+		}
 		if l.Altar {
 			if t, ok := c.Tiles["altar"]; !ok || !t.Win {
 				return fmt.Errorf("level %q: altar set but no win tile %q is defined", id, "altar")
@@ -386,6 +406,12 @@ func validateMonster(m *MonsterDef) error {
 	}
 	if m.Ranged < 0 {
 		return fmt.Errorf("ranged must be >= 0, got %d", m.Ranged)
+	}
+	if m.Permaswim && !m.Swim {
+		return fmt.Errorf("permaswim requires swim")
+	}
+	if m.Effect != "" && m.EffectTurns <= 0 {
+		return fmt.Errorf("melee effect %q needs effect_turns > 0", m.Effect)
 	}
 	return nil
 }

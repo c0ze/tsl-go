@@ -135,3 +135,51 @@ func TestLandingOnTrapSpringsIt(t *testing.T) {
 		t.Error("landing on a trap springs it (C change_altitude)")
 	}
 }
+
+func TestSwimmerPursuesThroughWater(t *testing.T) {
+	g := waterGame() // water at (2,1); player at (1,1)
+	merman := &Creature{Def: &content.MonsterDef{ID: "merman", Name: "merman", Glyph: "m", HP: 8, Attack: 0, Dodge: 1, Damage: "1d4", Swim: true}, Pos: Pos{3, 1}, HP: 8}
+	g.Level.Creatures = append(g.Level.Creatures, merman)
+	g.worldTick()
+	if merman.Pos != (Pos{2, 1}) {
+		t.Errorf("a free-swimmer crosses the pool toward the player (C move_creature), at %v", merman.Pos)
+	}
+}
+
+func TestWalkerStallsAtTheBank(t *testing.T) {
+	g := combatGame()
+	// A pool wall straight across the corridor: x=2, all three rows.
+	water := &content.TileDef{ID: "water", Glyph: "_", Transparent: true, Water: true}
+	for y := 0; y < 3; y++ {
+		g.Level.Set(Pos{2, y}, water)
+	}
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Glyph: "r", HP: 3, Attack: 0, Dodge: 1, Damage: "1d1"}, Pos: Pos{3, 1}, HP: 3}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	g.worldTick()
+	if g.Level.At(rat.Pos).Def.Water {
+		t.Errorf("a walker must not step into deep water, at %v", rat.Pos)
+	}
+}
+
+func TestPermaswimmerStaysInTheWater(t *testing.T) {
+	g := waterGame() // single water tile at (2,1), player adjacent at (1,1)
+	tentacle := &Creature{Def: &content.MonsterDef{ID: "tentacle", Name: "tentacle", Glyph: "l", HP: 12, Attack: 0, Dodge: 0, Damage: "1d6", Swim: true, Permaswim: true}, Pos: Pos{2, 1}, HP: 12}
+	g.Level.Creatures = append(g.Level.Creatures, tentacle)
+	g.Player = Pos{5, 1} // out of melee range: it would pursue if it could
+	for i := 0; i < 5; i++ {
+		g.worldTick()
+	}
+	if tentacle.Pos != (Pos{2, 1}) {
+		t.Errorf("a permaswimmer never leaves its pool (C move_creature), at %v", tentacle.Pos)
+	}
+}
+
+func TestPoisonFangsEnvenomOnHit(t *testing.T) {
+	g := combatGame()
+	lurker := &Creature{Def: &content.MonsterDef{ID: "lurker", Name: "the Lurker", Glyph: "L", HP: 22, Attack: 1000, Dodge: 0, Damage: "1d2", Effect: "poison", EffectTurns: 5}, Pos: Pos{2, 1}, HP: 22}
+	g.Level.Creatures = append(g.Level.Creatures, lurker)
+	g.worldTick()
+	if !g.HasEffect("poison") {
+		t.Error("a landed bite should envenom the player (C virtual_poison_fangs)")
+	}
+}

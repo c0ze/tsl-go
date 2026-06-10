@@ -198,6 +198,9 @@ height = 24
 links = ["laboratory", "dragons_lair", "underpass"]
 monsters = 12
 water = 4
+boss = "lurker"
+retinue = "tentacle"
+retinue_count = 8
 [[level.drowned_city.spawn]]
 monster = "merman"
 weight = 4

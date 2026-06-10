@@ -408,3 +408,54 @@ func TestLevelFromDefNoWaterByDefault(t *testing.T) {
 		}
 	}
 }
+
+func TestPermaswimBossGetsPoolAndRetinue(t *testing.T) {
+	c := levelDefContent()
+	c.Tiles["water"] = &content.TileDef{ID: "water", Glyph: "_", Color: content.ColorBlue, Transparent: true, Water: true}
+	c.Monsters["lurker"] = &content.MonsterDef{ID: "lurker", Name: "the Lurker", Glyph: "L", HP: 22, Attack: 95, Damage: "2d6", Speed: 120, Swim: true, Permaswim: true}
+	c.Monsters["tentacle"] = &content.MonsterDef{ID: "tentacle", Name: "tentacle", Glyph: "l", HP: 12, Attack: 5, Damage: "1d6", Swim: true, Permaswim: true}
+	def := &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"}, Water: 4,
+		Boss: "lurker", Retinue: "tentacle", RetinueCount: 8}
+	lvl, err := LevelFromDef(rng.NewWithSeed(5), c, def)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var lurker *game.Creature
+	tentacles := 0
+	for _, m := range lvl.Creatures {
+		switch m.Def.ID {
+		case "lurker":
+			lurker = m
+		case "tentacle":
+			tentacles++
+		}
+	}
+	if lurker == nil {
+		t.Fatal("the Lurker should be placed")
+	}
+	if !lvl.At(lurker.Pos).Def.Water {
+		t.Errorf("the Lurker's tile is forced to water (C encounter_lurker), tile %q", lvl.At(lurker.Pos).Def.ID)
+	}
+	if tentacles == 0 {
+		t.Errorf("expected a tentacle retinue around the pool, got %d", tentacles)
+	}
+	for _, m := range lvl.Creatures {
+		if m.Def.ID == "tentacle" && chebyshevDist(m.Pos, lurker.Pos) > 6 {
+			t.Errorf("retinue should ring the boss: tentacle at %v, lurker at %v", m.Pos, lurker.Pos)
+		}
+	}
+}
+
+func chebyshevDist(a, b game.Pos) int {
+	dx, dy := a.X-b.X, a.Y-b.Y
+	if dx < 0 {
+		dx = -dx
+	}
+	if dy < 0 {
+		dy = -dy
+	}
+	if dx > dy {
+		return dx
+	}
+	return dy
+}

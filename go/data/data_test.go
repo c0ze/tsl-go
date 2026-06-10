@@ -604,3 +604,29 @@ func TestEmbeddedLevitationPotion(t *testing.T) {
 		t.Errorf("potion_levitation def unexpected: %+v", p)
 	}
 }
+
+// TestEmbeddedLurker checks the Drowned City's pool boss loaded (18c): the
+// Lurker per C unique.c, with its tentacle retinue wiring.
+func TestEmbeddedLurker(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	l := c.Monsters["lurker"]
+	if l == nil || l.Glyph != "L" || l.HP != 22 || l.Attack != 95 || l.Speed != 120 {
+		t.Fatalf("lurker def unexpected: %+v", l)
+	}
+	if !l.Swim || !l.Permaswim || l.Effect != "poison" {
+		t.Errorf("lurker should be a pool-bound venomous swimmer: %+v", l)
+	}
+	if m := c.Monsters["merman"]; m == nil || !m.Swim || m.Permaswim {
+		t.Errorf("merman should free-swim but walk ashore too: %+v", m)
+	}
+	if tn := c.Monsters["tentacle"]; tn == nil || !tn.Swim || !tn.Permaswim {
+		t.Errorf("tentacle should never leave the water: %+v", tn)
+	}
+	d := c.Levels["drowned_city"]
+	if d == nil || d.Boss != "lurker" || d.Retinue != "tentacle" || d.RetinueCount != 8 {
+		t.Errorf("drowned_city should host the Lurker with 8 tentacles: %+v", d)
+	}
+}
