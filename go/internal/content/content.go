@@ -73,6 +73,7 @@ type MonsterDef struct {
 	EffectTurns int    `toml:"effect_turns"` // duration of Effect
 	Breath      string `toml:"breath"`       // cone attack: "fire", "poison", or "" (#19)
 	Mimic       bool   `toml:"mimic"`        // spawns disguised as loot, rooted in place (#13)
+	Chat        string `toml:"chat"`         // the line it gives a t)alking player (C actions.c interact)
 }
 
 // Rune returns the monster's glyph as a rune.

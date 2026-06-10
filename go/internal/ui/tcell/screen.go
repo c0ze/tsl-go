@@ -137,6 +137,8 @@ func keyToAction(ev *tc.EventKey) (ui.Action, bool) {
 		return ui.Action{Kind: ui.ActFire}, true
 	case 'c':
 		return ui.Action{Kind: ui.ActCast}, true
+	case 't':
+		return ui.Action{Kind: ui.ActTalk}, true
 	case '>':
 		return ui.Action{Kind: ui.ActTravel}, true
 	}

@@ -909,3 +909,28 @@ func TestEmbeddedMimic(t *testing.T) {
 		}
 	}
 }
+
+// TestEmbeddedKingOfWorms checks the talk-verb unique loaded (13j): the
+// Ominous Cave's boss with his C lore line, plus the four interact flavor
+// lines from actions.c.
+func TestEmbeddedKingOfWorms(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	k := c.Monsters["king_of_worms"]
+	if k == nil || k.Glyph != "W" || k.HP != 30 || k.Speed != 10 {
+		t.Fatalf("king_of_worms def unexpected: %+v", k)
+	}
+	if k.Chat != "He keeps the wisdom that you need, the password that you want." {
+		t.Errorf("the King's line must be exact (C actions.c:877), got %q", k.Chat)
+	}
+	if l := c.Levels["ominous_cave"]; l == nil || l.Boss != "king_of_worms" {
+		t.Errorf("the Ominous Cave should host the King (C places.c), got %+v", l)
+	}
+	for _, id := range []string{"gnoblin", "ghoul", "imp", "slime"} {
+		if m := c.Monsters[id]; m == nil || m.Chat == "" {
+			t.Errorf("%s should carry its C interact line", id)
+		}
+	}
+}

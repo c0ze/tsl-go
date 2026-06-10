@@ -24,6 +24,7 @@ dodge = 2
 damage = "1d4"
 speed = 80
 corpse = "ghoul_corpse"
+chat = "The ghoul appears to desire your brain."
 
 [monster.graveling]
 name = "graveling"
@@ -46,6 +47,7 @@ dodge = 2
 damage = "1d3"
 speed = 85
 corpse = "corpse"
+chat = "The gnoblin snarls at you!"
 
 [monster.crypt_vermin]
 name = "crypt vermin"
@@ -92,6 +94,7 @@ dodge = 0
 damage = "1d4"
 speed = 80
 min_depth = 3
+chat = "The slime oozes around, indifferent to your inquiries."
 
 # Roster batch 2 (#13) — more standard foes across the tiers. Corpses reuse the
 # generic carcass/corpse food; the undead leave none. Depth is enforced by which
@@ -177,6 +180,7 @@ damage = "1d4"
 speed = 110
 ranged = 5
 min_depth = 2
+chat = "The imp giggles impishly!"
 
 # Roster batch 3 (#13) — more beasts across the tiers. Generic corpses where
 # edible; spiders and wisps leave none.
@@ -542,3 +546,19 @@ damage = "1d4"
 speed = 70
 mimic = true
 min_depth = 1
+
+# The King of Worms (13j, C unique.c:97): boss of the Ominous Cave
+# (places.c). Glacial like the Necromancer, no spells — a lore fixture you
+# can still pick a fight with. "The password" quest needs systems 0.40 never
+# finished; the line is the content.
+[monster.king_of_worms]
+name = "King of Worms"
+glyph = "W"
+color = "normal"
+hp = 30
+attack = 5
+dodge = 1
+damage = "1d4"
+speed = 10
+chat = "He keeps the wisdom that you need, the password that you want."
+min_depth = 99 # boss placement only
