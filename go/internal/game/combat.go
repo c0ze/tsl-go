@@ -35,9 +35,14 @@ const carryCapacity = 400
 func (g *Game) carriedWeight() int {
 	total := 0
 	for _, it := range g.Inventory {
-		if it != nil && it.Def != nil {
-			total += it.Def.Weight
+		if it == nil || it.Def == nil {
+			continue
 		}
+		if it.Def.Kind == "ammo" {
+			total += it.Charges * it.Def.Weight // a stack weighs per arrow (C burdened.c)
+			continue
+		}
+		total += it.Def.Weight
 	}
 	return total
 }

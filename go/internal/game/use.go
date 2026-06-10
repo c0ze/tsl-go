@@ -17,6 +17,9 @@ func (g *Game) PlayerPickup() {
 			if held.Def == it.Def {
 				held.Charges += it.Charges
 				g.log("You pick up the %s.", it.Def.Name)
+				if !wasBurdened && g.burdened() {
+					g.log("You stagger under your load!")
+				}
 				g.advanceWorld()
 				return
 			}
