@@ -559,3 +559,15 @@ func TestEmbeddedSpeedPotions(t *testing.T) {
 		t.Errorf("potion_slowing def unexpected: %+v", p)
 	}
 }
+
+// TestEmbeddedSleepPotion checks the knockout potion loaded (16c): 25 turns,
+// the C SLEEP_DURATION.
+func TestEmbeddedSleepPotion(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if p := c.Items["potion_sleep"]; p == nil || p.Kind != "potion" || p.Use != "tranquilize" || p.Power != 25 {
+		t.Errorf("potion_sleep def unexpected: %+v", p)
+	}
+}
