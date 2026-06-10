@@ -25,16 +25,19 @@ is the engine half.
   (`game.c:150-175`), so the player's effect clocks and EP regen stay per
   player-turn, not per world tick.
 - `play()` opens with `goto creature_turn` for the player: the player always
-  moves first. We keep that by starting `playerEnergy` at a full turn.
+  moves first. We keep that via the surplus convention below — a zero surplus
+  means "exactly ready to act", so a fresh game's zero value needs no builder
+  initialization.
 
 ## Design
-- `Game.playerEnergy int` (start `turnCost` in builders: ready to act first).
+- `Game.playerEnergy int`: the player's surplus beyond the turn just taken (the
+  C's `move_counter − TURN_TIME`), so the zero value means ready to act first.
 - `playerSpeed()`: base 100; `haste` → +30 (`hasteBonus`, C `HASTE_AMOUNT`);
   `slow` → halved (same rule monsters use in `monstersAct`); floor 1.
 - `advanceWorld()` — the per-player-turn entry, replacing `monstersAct()` at all
   8 production call sites (PlayerStep/ZapWand/fire/spell×3/use×2):
   `tickEffects()` + `regenEP()` once, pay `turnCost`, then
-  `for playerEnergy < turnCost { playerEnergy += playerSpeed(); worldTick() }`.
+  `for playerEnergy < 0 { playerEnergy += playerSpeed(); worldTick() }`.
 - `worldTick()` — old `monstersAct` minus the player bookkeeping: monster effect
   ticks + energy banking + actions. Tests that drove single ticks via
   `monstersAct()` rename mechanically.
