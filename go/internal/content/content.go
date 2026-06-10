@@ -108,7 +108,7 @@ type ItemDef struct {
 // no explicit weight inherits its kind's.
 var kindWeights = map[string]int{
 	"potion": 7, "scroll": 4, "wand": 21, "food": 8, "light": 12,
-	"spellbook": 12, "ring": 5, "amulet": 5, "weapon": 22, "armor": 40,
+	"spellbook": 12, "ring": 5, "amulet": 5, "weapon": 22, "armor": 40, "ammo": 1,
 }
 
 // Rune returns the item's glyph as a rune.
@@ -117,7 +117,7 @@ func (i *ItemDef) Rune() rune {
 	return r
 }
 
-var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true, "food": true, "wand": true, "scroll": true, "light": true, "spellbook": true, "ring": true, "amulet": true}
+var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true, "food": true, "wand": true, "scroll": true, "light": true, "spellbook": true, "ring": true, "amulet": true, "ammo": true}
 
 // SpawnEntry is one weighted entry in a level's monster spawn table.
 type SpawnEntry struct {

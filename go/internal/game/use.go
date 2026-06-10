@@ -12,6 +12,16 @@ func (g *Game) PlayerPickup() {
 	}
 	wasBurdened := g.burdened()
 	g.Level.RemoveItem(it)
+	if it.Def.Kind == "ammo" { // bundles merge into one quiver
+		for _, held := range g.Inventory {
+			if held.Def == it.Def {
+				held.Charges += it.Charges
+				g.log("You pick up the %s.", it.Def.Name)
+				g.advanceWorld()
+				return
+			}
+		}
+	}
 	g.Inventory = append(g.Inventory, it)
 	g.log("You pick up the %s.", it.Def.Name)
 	if !wasBurdened && g.burdened() {
