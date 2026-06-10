@@ -166,6 +166,16 @@ func (g *Game) land() {
 	}
 }
 
+// DispelLevitation cuts levitation short and runs the landing (the C elixir's
+// set_attr(levitate,0) + change_altitude). A grounded player is a no-op.
+func (g *Game) DispelLevitation() {
+	if !g.HasEffect("levitate") {
+		return
+	}
+	g.RemoveEffect("levitate")
+	g.land()
+}
+
 // EffectsSummary is a comma-separated list of active effect labels for the HUD,
 // or "" when there are none.
 func (g *Game) EffectsSummary() string {

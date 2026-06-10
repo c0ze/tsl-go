@@ -1,6 +1,7 @@
 package game
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/c0ze/tsl/internal/content"
@@ -181,5 +182,22 @@ func TestPoisonFangsEnvenomOnHit(t *testing.T) {
 	g.worldTick()
 	if !g.HasEffect("poison") {
 		t.Error("a landed bite should envenom the player (C virtual_poison_fangs)")
+	}
+}
+
+func TestDispelLevitationLands(t *testing.T) {
+	g := waterGame()
+	g.AddEffect("levitate", 20)
+	g.PlayerStep(DirE) // float out over the pool
+	g.DispelLevitation()
+	if g.HasEffect("levitate") {
+		t.Fatal("DispelLevitation should drop the effect")
+	}
+	if !hasMessage(g, "You plunge into water!") {
+		t.Errorf("dispelling mid-air runs the landing (C change_altitude), got %v", g.Messages)
+	}
+	g.DispelLevitation() // grounded: a no-op, no second landing
+	if n := strings.Count(strings.Join(g.Messages, "\n"), "You plunge into water!"); n != 1 {
+		t.Errorf("no landing without levitation: %d plunge messages", n)
 	}
 }

@@ -1,6 +1,7 @@
 package behaviors
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/c0ze/tsl/internal/content"
@@ -314,5 +315,43 @@ func TestLevitatePotionLiftsPlayer(t *testing.T) {
 	}
 	if len(msgs) == 0 || msgs[0] != "You soar into the air!" {
 		t.Errorf("expected the C message, got %v", msgs)
+	}
+}
+
+func TestElixirStripsAllListedEffects(t *testing.T) {
+	elixir, ok := Registry()["elixir"]
+	if !ok {
+		t.Fatal("elixir not registered")
+	}
+	g := &game.Game{PlayerHP: 10, PlayerMax: 10}
+	for _, kind := range []string{"poison", "haste", "blind", "fear"} {
+		g.AddEffect(kind, 10)
+	}
+	msgs := elixir(g, &game.Item{Def: &content.ItemDef{Name: "elixir"}})
+	for _, gone := range []string{"poison", "haste", "blind"} {
+		if g.HasEffect(gone) {
+			t.Errorf("elixir should strip %s (C treasure_elixir)", gone)
+		}
+	}
+	if !g.HasEffect("fear") {
+		t.Error("fear is not in the C's expiry list and should survive")
+	}
+	if len(msgs) == 0 || msgs[0] != "You feel perfectly normal." {
+		t.Errorf("expected the C message, got %v", msgs)
+	}
+}
+
+func TestYuckIsAllFlavor(t *testing.T) {
+	yuck, ok := Registry()["yuck"]
+	if !ok {
+		t.Fatal("yuck not registered")
+	}
+	g := &game.Game{PlayerHP: 10, PlayerMax: 10, RNG: rng.NewWithSeed(7)}
+	msgs := yuck(g, &game.Item{Def: &content.ItemDef{Name: "potion of yuck"}})
+	if len(msgs) == 0 || !strings.Contains(msgs[0], "This tastes like") {
+		t.Errorf("expected a taste line, got %v", msgs)
+	}
+	if len(g.Effects) != 0 || g.PlayerHP != 10 {
+		t.Error("yuck is pure flavor: no effects, no damage")
 	}
 }
