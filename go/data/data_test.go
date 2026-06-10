@@ -713,3 +713,28 @@ func TestEmbeddedYuckAndElixir(t *testing.T) {
 		t.Errorf("elixir def unexpected (0.40 name is just \"elixir\"): %+v", p)
 	}
 }
+
+// TestEmbeddedWeights checks the C weight table loaded (16d): kind defaults
+// fill unset items, explicit gear weights override, and a corpse outweighs
+// the whole 400 allowance (rules.h WEIGHT_CORPSE 599 — the anti-hoarding rule).
+func TestEmbeddedWeights(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if w := c.Items["healing_potion"].Weight; w != 7 {
+		t.Errorf("potions default to WEIGHT_POTION 7, got %d", w)
+	}
+	if w := c.Items["scroll_identify"].Weight; w != 4 {
+		t.Errorf("scrolls default to WEIGHT_SCROLL 4, got %d", w)
+	}
+	if w := c.Items["corpse"].Weight; w != 599 {
+		t.Errorf("a corpse weighs 599 (more than the allowance), got %d", w)
+	}
+	if w := c.Items["rune_armor"].Weight; w != 80 {
+		t.Errorf("rune armor is WEIGHT_HEAVY_ARMOR 80, got %d", w)
+	}
+	if w := c.Items["dagger"].Weight; w != 18 {
+		t.Errorf("dagger is WEIGHT_DAGGER 18, got %d", w)
+	}
+}
