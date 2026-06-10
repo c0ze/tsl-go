@@ -401,3 +401,19 @@ glyph = "\""
 color = "magenta"
 kind = "amulet"
 dodge = 3
+
+# The table's dregs (15r): one bottle is pure vile flavor, the other strips
+# every status effect, even the ones you wanted (C treasure_p_yuck/elixir).
+[item.potion_yuck]
+name = "potion of yuck"
+glyph = "!"
+color = "brown"
+kind = "potion"
+use = "yuck"
+
+[item.elixir]
+name = "elixir"
+glyph = "!"
+color = "normal"
+kind = "potion"
+use = "elixir"
