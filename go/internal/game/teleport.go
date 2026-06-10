@@ -21,8 +21,7 @@ func (g *Game) Teleport() bool {
 	// A blink springs whatever waits at the destination (C cast_blink's
 	// activate_trap) — unless the traveller is floating above it.
 	if tile := g.Level.At(g.Player).Def; tile.Effect != "" && !g.HasEffect("levitate") {
-		g.AddEffect(tile.Effect, tile.EffectTurns)
-		g.log("You trigger a trap!")
+		g.springTrapAt(g.Player)
 	}
 	return true
 }
@@ -41,6 +40,21 @@ func (g *Game) ForgetMap() {
 	for i := range g.Level.tiles {
 		g.Level.tiles[i].Seen = false
 	}
+}
+
+// RevealTraps exposes every disguised, unrevealed trap on the level and puts
+// it on the automap (C magic.c reveal_traps), returning how many were found.
+func (g *Game) RevealTraps() int {
+	found := 0
+	for i := range g.Level.tiles {
+		t := &g.Level.tiles[i]
+		if t.Disguise != nil && !t.Revealed {
+			t.Revealed = true
+			t.Seen = true
+			found++
+		}
+	}
+	return found
 }
 
 // MarkRecall pins the player's current level and position as the recall

@@ -161,8 +161,7 @@ func (g *Game) land() {
 	}
 	g.log("You land on the ground.")
 	if tile.Effect != "" {
-		g.AddEffect(tile.Effect, tile.EffectTurns)
-		g.log("You trigger a trap!")
+		g.springTrapAt(g.Player)
 	}
 }
 

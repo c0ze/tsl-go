@@ -448,3 +448,23 @@ func TestRunEatWithNoFoodReports(t *testing.T) {
 		t.Errorf("expected a 'nothing to eat' message, got %v", g.Messages)
 	}
 }
+
+func TestBuildViewHidesDisguisedTraps(t *testing.T) {
+	g := testGame(t, []string{".@."})
+	trap := &content.TileDef{ID: "dart_trap", Glyph: "^", Color: content.ColorRed, Passable: true, Transparent: true, Effect: "poison", EffectTurns: 5}
+	floor := &content.TileDef{ID: "floor", Glyph: ".", Color: content.ColorNormal, Passable: true, Transparent: true}
+	pos := game.Pos{X: 2, Y: 0}
+	g.Level.Set(pos, trap)
+	tile := g.Level.At(pos)
+	tile.Disguise = floor
+	tile.Visible = true
+	v := BuildView(g)
+	if got := v.At(2, 0).Glyph; got != '.' {
+		t.Errorf("an unrevealed trap should render as floor, got %q", got)
+	}
+	tile.Revealed = true
+	v = BuildView(g)
+	if got := v.At(2, 0).Glyph; got != '^' {
+		t.Errorf("a revealed trap should show itself, got %q", got)
+	}
+}
