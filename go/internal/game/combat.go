@@ -135,8 +135,10 @@ func (g *Game) playerAttackStat() int {
 }
 
 // flameHandsDamage approximates the C's virtual_flame_hands attack sequence
-// (vweapon.c: fire damage in a 3/5/5/5 chain) in our flat-dice model.
-const flameHandsDamage = "2d4+1"
+// (vweapon.c: a deterministic 3/5/5/5 fire chain — avg 4.5, max 5) in our
+// flat-dice model: 1d2+3 matches both the average and the cap (min 4 vs the
+// C's occasional 3).
+const flameHandsDamage = "1d2+3"
 
 func (g *Game) playerDamageSpec() string {
 	if g.HasEffect("flame_hands") {
