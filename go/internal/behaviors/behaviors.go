@@ -30,7 +30,15 @@ func Registry() map[string]game.Behavior {
 		"restore_energy":  restoreEnergy,
 		"haste":           haste,
 		"slowness":        slowness,
+		"tranquilize":     tranquilize,
 	}
+}
+
+// tranquilize knocks the player out for Power turns (C sleep.c tranquilize via
+// potions.c treasure_p_sleep); the slept turns play out in advanceWorld.
+func tranquilize(g *game.Game, it *game.Item) []string {
+	g.AddEffect("sleep", it.Def.Power)
+	return []string{"You fall asleep!"}
 }
 
 // haste speeds the player up for Power turns, cancelling an active slow

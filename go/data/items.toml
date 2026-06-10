@@ -192,6 +192,16 @@ kind = "potion"
 use = "slowness"
 power = 20
 
+# Knockout potion (16c): 25 lost turns (C rules.h SLEEP_DURATION) unless
+# something hits you awake first.
+[item.potion_sleep]
+name = "potion of sleep"
+glyph = "!"
+color = "cyan"
+kind = "potion"
+use = "tranquilize"
+power = 25
+
 # Potion of energy — refills spell EP (power = EP restored). Closes the cast loop.
 [item.potion_energy]
 name = "potion of energy"

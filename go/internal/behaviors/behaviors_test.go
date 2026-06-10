@@ -286,3 +286,18 @@ func TestSlownessCancelsHasteAndSlows(t *testing.T) {
 		t.Errorf("expected the C message, got %v", msgs)
 	}
 }
+
+func TestTranquilizePutsPlayerToSleep(t *testing.T) {
+	tranq, ok := Registry()["tranquilize"]
+	if !ok {
+		t.Fatal("tranquilize not registered")
+	}
+	g := &game.Game{PlayerHP: 10, PlayerMax: 10}
+	msgs := tranq(g, &game.Item{Def: &content.ItemDef{Name: "potion of sleep", Power: 25}})
+	if !g.HasEffect("sleep") {
+		t.Error("expected a sleep effect from the potion of sleep")
+	}
+	if len(msgs) == 0 || msgs[0] != "You fall asleep!" {
+		t.Errorf("expected the C message, got %v", msgs)
+	}
+}

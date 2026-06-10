@@ -122,6 +122,7 @@ func (g *Game) playerAttacks(m *Creature) {
 		g.log("You miss the %s.", m.Def.Name)
 		return
 	}
+	m.RemoveEffect("sleep") // a landed hit wakes a sleeper; a whiff doesn't (C combat.c)
 	dmg := g.RNG.RollSpec(g.playerDamageSpec())
 	m.HP -= dmg
 	g.log("You hit the %s for %d.", m.Def.Name, dmg)
@@ -207,17 +208,34 @@ func (g *Game) HurtPlayer(dmg int, cause string) {
 		g.Dead = true
 		g.DeathCause = cause
 		g.log("You die.")
+		return
+	}
+	if g.HasEffect("sleep") { // pain cuts sleep short (C combat.c wakes the defender)
+		g.RemoveEffect("sleep")
+		g.log("You wake up!")
 	}
 }
 
-// advanceWorld passes the player's turn. The per-turn bookkeeping (effect
+// advanceWorld passes the player's turn — and, while the player is asleep,
+// keeps passing turns with no player action, the way the C main loop skips a
+// sleeping creature's turns without prompting (game.c effect_sleep). Sleep
+// ends by tickEffects expiry or by being hit awake (HurtPlayer), so the loop
+// is bounded by the effect's duration.
+func (g *Game) advanceWorld() {
+	g.passTurn()
+	for g.HasEffect("sleep") && !g.Dead {
+		g.passTurn()
+	}
+}
+
+// passTurn is a single player turn. The per-turn bookkeeping (effect
 // clocks, EP regen) runs once — in the C these happen per creature-turn, not
 // per tick (game.c pass_time_on_effects/energy) — then the player pays for the
 // action and the world ticks until the player has banked the next turn.
 // playerEnergy holds the player's surplus beyond the turn just taken (the C's
 // move_counter minus TURN_TIME), so at base speed exactly one tick passes; a
 // slowed player owes two, and a hasted player sometimes none (a free action).
-func (g *Game) advanceWorld() {
+func (g *Game) passTurn() {
 	g.tickEffects()
 	if g.Dead {
 		return // status effects (e.g. poison) killed the player
@@ -275,6 +293,9 @@ func (g *Game) worldTick() {
 // monsterAct is a single monster action: attack the player if adjacent, else
 // step toward the player if within sense range.
 func (g *Game) monsterAct(m *Creature) {
+	if m.HasEffect("sleep") {
+		return // asleep: it loses the turn outright (C game.c effect_sleep skip)
+	}
 	if m.HasEffect("confuse") {
 		g.stepRandom(m) // disoriented: it lurches at random and can't press an attack
 		return
