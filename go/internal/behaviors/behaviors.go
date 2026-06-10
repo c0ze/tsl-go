@@ -25,6 +25,7 @@ func Registry() map[string]game.Behavior {
 		"first_aid":       firstAid,
 		"blindness":       blindness,
 		"flash":           flash,
+		"noxious_cloud":   noxiousCloud,
 		"restore_energy":  restoreEnergy,
 	}
 }
@@ -135,6 +136,17 @@ func flash(g *game.Game, it *game.Item) []string {
 		return []string{fmt.Sprintf("You cast %s, but no creatures are near.", it.Def.Name)}
 	}
 	return []string{fmt.Sprintf("Light erupts from %s, blinding %d nearby creature(s)!", it.Def.Name, n)}
+}
+
+// noxiousCloud is the noxious cloud spell — a billow of poison gas that afflicts
+// the creatures around the caster with damage-over-time (poison drains their HP
+// each turn until it fades or kills).
+func noxiousCloud(g *game.Game, it *game.Item) []string {
+	n := g.PoisonNearby(game.NoxiousRadius, it.Def.Power)
+	if n == 0 {
+		return []string{fmt.Sprintf("You cast %s, but no creatures are near.", it.Def.Name)}
+	}
+	return []string{fmt.Sprintf("A cloud of poison billows from %s, choking %d nearby creature(s)!", it.Def.Name, n)}
 }
 
 // firstAid is the first-aid spell — it knits wounds over time (a regen effect),

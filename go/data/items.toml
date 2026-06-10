@@ -300,6 +300,17 @@ ranged = 6
 damage = "2d4"
 cost = 6
 
+# Noxious cloud (#15) — a self-centred AoE that poisons nearby creatures, who
+# then bleed HP each turn (NoxiousRadius = 3). Area denial, not burst.
+[item.spellbook_noxious_cloud]
+name = "spellbook of noxious cloud"
+glyph = "+"
+color = "green"
+kind = "spellbook"
+use = "noxious_cloud"
+cost = 6
+power = 6
+
 # Light source (#18) — carry it to see in the dark (light = sight radius there).
 [item.torch]
 name = "torch"
