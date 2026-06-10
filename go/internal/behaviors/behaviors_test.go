@@ -248,3 +248,41 @@ func TestEatMushroomHealsAndPoisons(t *testing.T) {
 		t.Error("eating the red mushroom should poison the player")
 	}
 }
+
+func TestHasteCancelsSlowAndHastens(t *testing.T) {
+	haste, ok := Registry()["haste"]
+	if !ok {
+		t.Fatal("haste not registered")
+	}
+	g := &game.Game{PlayerHP: 10, PlayerMax: 10}
+	g.AddEffect("slow", 10)
+	msgs := haste(g, &game.Item{Def: &content.ItemDef{Name: "potion of speed", Power: 20}})
+	if g.HasEffect("slow") {
+		t.Error("a potion of speed cancels slow (C potions.c)")
+	}
+	if !g.HasEffect("haste") {
+		t.Error("expected a haste effect from the potion of speed")
+	}
+	if len(msgs) == 0 || msgs[0] != "You move faster!" {
+		t.Errorf("expected the C message, got %v", msgs)
+	}
+}
+
+func TestSlownessCancelsHasteAndSlows(t *testing.T) {
+	slowness, ok := Registry()["slowness"]
+	if !ok {
+		t.Fatal("slowness not registered")
+	}
+	g := &game.Game{PlayerHP: 10, PlayerMax: 10}
+	g.AddEffect("haste", 10)
+	msgs := slowness(g, &game.Item{Def: &content.ItemDef{Name: "potion of slowing", Power: 20}})
+	if g.HasEffect("haste") {
+		t.Error("a potion of slowing cancels haste (C potions.c)")
+	}
+	if !g.HasEffect("slow") {
+		t.Error("expected a slow effect from the potion of slowing")
+	}
+	if len(msgs) == 0 || msgs[0] != "You feel very sluggish." {
+		t.Errorf("expected the C message, got %v", msgs)
+	}
+}
