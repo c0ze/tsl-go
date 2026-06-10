@@ -121,6 +121,12 @@ weight = 1
 [[level.laboratory.spawn]]
 monster = "goatman"
 weight = 2
+[[level.laboratory.spawn]]
+monster = "sentinel"
+weight = 2
+[[level.laboratory.spawn]]
+monster = "technician"
+weight = 2
 
 [level.comm_hub]
 name = "the Communications Hub"
@@ -147,6 +153,12 @@ weight = 2
 [[level.comm_hub.spawn]]
 monster = "frostling"
 weight = 2
+[[level.comm_hub.spawn]]
+monster = "sentinel"
+weight = 2
+[[level.comm_hub.spawn]]
+monster = "technician"
+weight = 1
 
 [level.underpass]
 name = "the Underpass"
@@ -231,6 +243,12 @@ weight = 3
 [[level.frozen_vault.spawn]]
 monster = "gloom_lord"
 weight = 1
+[[level.frozen_vault.spawn]]
+monster = "burning_skull"
+weight = 2
+[[level.frozen_vault.spawn]]
+monster = "gaoler"
+weight = 1
 
 [level.dragons_lair]
 name = "the Dragons Lair"
@@ -261,6 +279,12 @@ weight = 2
 [[level.dragons_lair.spawn]]
 monster = "hellhound"
 weight = 2
+[[level.dragons_lair.spawn]]
+monster = "burning_skull"
+weight = 2
+[[level.dragons_lair.spawn]]
+monster = "chrome_angel"
+weight = 1
 
 [level.chapel]
 name = "the Chapel of Fallen Stars"
@@ -289,3 +313,12 @@ weight = 2
 [[level.chapel.spawn]]
 monster = "gloom_lord"
 weight = 2
+[[level.chapel.spawn]]
+monster = "gaoler"
+weight = 2
+[[level.chapel.spawn]]
+monster = "chrome_angel"
+weight = 2
+[[level.chapel.spawn]]
+monster = "nameless_horror"
+weight = 1

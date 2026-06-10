@@ -159,6 +159,44 @@ func TestEmbeddedRosterBatch4(t *testing.T) {
 	}
 }
 
+func TestEmbeddedRosterBatch5(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	want := map[string]rune{
+		"sentinel": 'e', "technician": 't', "burning_skull": 'q',
+		"gaoler": 'G', "chrome_angel": 'A', "nameless_horror": 'H',
+	}
+	for id, glyph := range want {
+		m := c.Monsters[id]
+		if m == nil {
+			t.Errorf("missing monster %q", id)
+			continue
+		}
+		if m.Rune() != glyph {
+			t.Errorf("%s glyph = %q, want %q", id, m.Rune(), glyph)
+		}
+	}
+	// the sentinel is a ranged sentry — make sure that survived the port
+	if s := c.Monsters["sentinel"]; s != nil && s.Ranged <= 0 {
+		t.Errorf("sentinel should be ranged, got %+v", s)
+	}
+	seen := map[string]bool{}
+	for _, l := range c.Levels {
+		for _, s := range l.Spawn {
+			if _, ok := want[s.Monster]; ok {
+				seen[s.Monster] = true
+			}
+		}
+	}
+	for id := range want {
+		if !seen[id] {
+			t.Errorf("expected %q to appear in at least one spawn table", id)
+		}
+	}
+}
+
 // TestDepthGatedTanks checks the tougher monsters only appear on deeper floors.
 func TestDepthGatedTanks(t *testing.T) {
 	c, err := content.Load(Files)
