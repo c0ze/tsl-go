@@ -39,7 +39,18 @@ func Registry() map[string]game.Behavior {
 		"recall":          recall,
 		"detect_traps":    detectTraps,
 		"magic_weapon":    magicWeapon,
+		"summon_familiar": summonFamiliar,
 	}
+}
+
+// summonFamiliar calls forth an imp ally for Power ticks (C magic.c
+// summon_familiar: always an imp — the 1d4 switch has only a default —
+// charmed, DEFAULT_SUMMON_LIFETIME).
+func summonFamiliar(g *game.Game, it *game.Item) []string {
+	if g.SummonAlly("imp", it.Def.Power) {
+		return []string{"The imp has arrived."}
+	}
+	return []string{fmt.Sprintf("You read the %s, but nothing happens.", it.Def.Name)}
 }
 
 // magicWeapon ignites the reader's hands for Power turns, superseding any

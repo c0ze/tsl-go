@@ -392,6 +392,16 @@ func (g *Game) worldTick() {
 		if g.Level.CreatureAt(m.Pos) != m {
 			continue // already removed this turn
 		}
+		if m.Lifetime > 0 {
+			m.Lifetime--
+			if m.Lifetime == 0 {
+				// A summon's time is up: it vanishes without corpse or drops
+				// (C game.c lifetime handling).
+				g.log("The %s disappears.", m.Def.Name)
+				g.Level.RemoveCreature(m)
+				continue
+			}
+		}
 		// Capture slow before ticking, so a 1-turn slow still applies this turn
 		// (symmetric with poison dealing its final tick before expiring).
 		slowed := m.HasEffect("slow")
@@ -430,10 +440,21 @@ func (g *Game) monsterAct(m *Creature) {
 		g.stepAway(m, g.Player) // frightened: it flees the player instead of attacking
 		return
 	}
+	if m.Ally {
+		g.allyAct(m)
+		return
+	}
 	dist := chebyshev(m.Pos, g.Player)
 	if dist == 1 {
 		g.monsterAttacks(m)
 		return
+	}
+	// A distant player doesn't shield an ally at the flank (C enemies split).
+	for _, c := range g.Level.Creatures {
+		if c.Ally && chebyshev(m.Pos, c.Pos) == 1 {
+			g.monsterFights(m, c)
+			return
+		}
 	}
 	if m.HasEffect("blind") {
 		return // blinded: it can flail at an adjacent foe but can't track at range
@@ -444,6 +465,50 @@ func (g *Game) monsterAct(m *Creature) {
 	}
 	if dist <= senseRange {
 		g.stepToward(m, g.Player)
+	}
+}
+
+// allyAct is a charmed creature's turn (C charm/ai_offensive): bite the
+// adjacent hostile, else close on the nearest one in sense range, else heel
+// to the player.
+func (g *Game) allyAct(m *Creature) {
+	var target *Creature
+	best := senseRange + 1
+	for _, c := range g.Level.Creatures {
+		if c == m || c.Ally {
+			continue
+		}
+		if d := chebyshev(m.Pos, c.Pos); d < best {
+			best, target = d, c
+		}
+	}
+	if target != nil && best == 1 {
+		g.monsterFights(m, target)
+		return
+	}
+	if target != nil {
+		g.stepToward(m, target.Pos)
+		return
+	}
+	if chebyshev(m.Pos, g.Player) > 2 {
+		g.stepToward(m, g.Player)
+	}
+}
+
+// monsterFights resolves one creature-vs-creature swing — an ally biting a
+// hostile or the reverse — on the same attack-vs-dodge model as every other
+// melee in the port.
+func (g *Game) monsterFights(a, d *Creature) {
+	if !g.RNG.Chance(a.Def.Attack, d.Def.Dodge) {
+		g.log("The %s misses the %s.", a.Def.Name, d.Def.Name)
+		return
+	}
+	d.RemoveEffect("sleep") // a landed hit wakes a sleeper (C combat.c)
+	dmg := g.RNG.RollSpec(a.Def.Damage)
+	d.HP -= dmg
+	g.log("The %s hits the %s for %d.", a.Def.Name, d.Def.Name, dmg)
+	if d.HP <= 0 {
+		g.killCreature(d)
 	}
 }
 

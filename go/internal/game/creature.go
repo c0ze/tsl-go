@@ -19,12 +19,40 @@ type Creature struct {
 	Faction Faction
 	Energy  int
 	Effects []Effect // timed afflictions (e.g. poison from a venom wand)
+
+	Ally     bool // charmed to the player's side (C attr_player_ally)
+	Lifetime int  // ticks before a summon disappears (0 = permanent)
 }
 
 // AddEffect applies a timed status effect to the creature, refreshing an
 // already-active effect of the same kind to the longer duration.
 func (m *Creature) AddEffect(kind string, turns int) {
 	m.Effects = addEffect(m.Effects, kind, turns)
+}
+
+// SummonAlly conjures a charmed monster of the given def at the nearest free
+// tile beside the player (C magic.c summon_familiar / find_nearest_free_spot),
+// expiring after lifetime ticks. It reports whether a spot and def were found.
+func (g *Game) SummonAlly(id string, lifetime int) bool {
+	def := g.Content.Monsters[id]
+	if def == nil {
+		return false
+	}
+	for radius := 1; radius <= 3; radius++ {
+		for dy := -radius; dy <= radius; dy++ {
+			for dx := -radius; dx <= radius; dx++ {
+				p := Pos{X: g.Player.X + dx, Y: g.Player.Y + dy}
+				if chebyshev(p, g.Player) != radius {
+					continue // ring order: nearest spots first
+				}
+				if g.Level.Passable(p) && g.Level.CreatureAt(p) == nil {
+					g.Level.Creatures = append(g.Level.Creatures, &Creature{Def: def, Pos: p, HP: def.HP, Ally: true, Lifetime: lifetime})
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 // RemoveEffect drops an active effect by kind (e.g. a struck sleeper waking);
