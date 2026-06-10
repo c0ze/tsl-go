@@ -312,6 +312,9 @@ func validateLevels(c *Content) error {
 				return fmt.Errorf("level %q: retinue set without a boss to escort", id)
 			}
 		}
+		if l.RetinueCount > 0 && l.Retinue == "" {
+			return fmt.Errorf("level %q: retinue_count > 0 without a retinue monster", id)
+		}
 		if l.Altar {
 			if t, ok := c.Tiles["altar"]; !ok || !t.Win {
 				return fmt.Errorf("level %q: altar set but no win tile %q is defined", id, "altar")
