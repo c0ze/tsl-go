@@ -442,6 +442,26 @@ func placeTraps(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, n 
 	}
 }
 
+// disguiseMimic dresses a freshly spawned mimic as a random spawnable item
+// (C monster.c: the build-time 1d4 disguise roll, item case).
+func disguiseMimic(r *rng.MT, c *content.Content, m *game.Creature) {
+	if !m.Def.Mimic {
+		return
+	}
+	ids := make([]string, 0, len(c.Items))
+	for id, it := range c.Items {
+		if !it.NoSpawn {
+			ids = append(ids, id)
+		}
+	}
+	if len(ids) == 0 {
+		return
+	}
+	sort.Strings(ids)
+	m.Disguised = true
+	m.DisguiseAs = c.Items[ids[r.Intn(len(ids))]]
+}
+
 // placeSpawnMonsters scatters def.Monsters monsters drawn from def's weighted
 // spawn table across the rooms (never on the start tile).
 func placeSpawnMonsters(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, def *content.LevelDef) {
@@ -459,7 +479,9 @@ func placeSpawnMonsters(r *rng.MT, c *content.Content, lvl *game.Level, rooms []
 			continue
 		}
 		mdef := c.Monsters[pickSpawn(r, def.Spawn, total)]
-		lvl.Creatures = append(lvl.Creatures, &game.Creature{Def: mdef, Pos: pos, HP: mdef.HP})
+		m := &game.Creature{Def: mdef, Pos: pos, HP: mdef.HP}
+		disguiseMimic(r, c, m)
+		lvl.Creatures = append(lvl.Creatures, m)
 	}
 }
 

@@ -516,3 +516,28 @@ func TestLevelFromDefCarvesLavaPools(t *testing.T) {
 		}
 	}
 }
+
+func TestMimicSpawnsDisguised(t *testing.T) {
+	c := levelDefContent()
+	c.Monsters["mimic"] = &content.MonsterDef{ID: "mimic", Name: "mimic", Glyph: "m", HP: 5, Attack: 6, Damage: "1d4", Speed: 70, Mimic: true}
+	c.Items = map[string]*content.ItemDef{"healing_potion": {ID: "healing_potion", Name: "healing potion", Glyph: "!", Color: content.ColorRed, Kind: "potion"}}
+	def := &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"}, Monsters: 12,
+		Spawn: []content.SpawnEntry{{Monster: "mimic", Weight: 1}}}
+	lvl, err := LevelFromDef(rng.NewWithSeed(2), c, def)
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, m := range lvl.Creatures {
+		if m.Def.ID != "mimic" {
+			continue
+		}
+		found = true
+		if !m.Disguised || m.DisguiseAs == nil {
+			t.Errorf("a spawned mimic should wear a loot glamour, got %+v", m)
+		}
+	}
+	if !found {
+		t.Skip("no mimic placed this seed")
+	}
+}

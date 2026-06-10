@@ -72,6 +72,7 @@ type MonsterDef struct {
 	Effect      string `toml:"effect"`       // status effect a landed melee hit applies ("" = none)
 	EffectTurns int    `toml:"effect_turns"` // duration of Effect
 	Breath      string `toml:"breath"`       // cone attack: "fire", "poison", or "" (#19)
+	Mimic       bool   `toml:"mimic"`        // spawns disguised as loot, rooted in place (#13)
 }
 
 // Rune returns the monster's glyph as a rune.
