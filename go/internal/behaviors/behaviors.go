@@ -26,6 +26,7 @@ func Registry() map[string]game.Behavior {
 		"blindness":       blindness,
 		"flash":           flash,
 		"noxious_cloud":   noxiousCloud,
+		"scare":           scare,
 		"restore_energy":  restoreEnergy,
 	}
 }
@@ -147,6 +148,16 @@ func noxiousCloud(g *game.Game, it *game.Item) []string {
 		return []string{fmt.Sprintf("You cast %s, but no creatures are near.", it.Def.Name)}
 	}
 	return []string{fmt.Sprintf("A cloud of poison billows from %s, choking %d nearby creature(s)!", it.Def.Name, n)}
+}
+
+// scare is the scroll of scare monster — a wave of terror that sends the nearby
+// creatures fleeing instead of pressing their attack.
+func scare(g *game.Game, it *game.Item) []string {
+	n := g.ScareNearby(game.ScareRadius, it.Def.Power)
+	if n == 0 {
+		return []string{fmt.Sprintf("You read the %s, but no creatures are near.", it.Def.Name)}
+	}
+	return []string{fmt.Sprintf("You read the %s; %d nearby creature(s) turn and flee!", it.Def.Name, n)}
 }
 
 // firstAid is the first-aid spell — it knits wounds over time (a regen effect),

@@ -115,6 +115,16 @@ func (g *Game) PoisonNearby(radius, turns int) int {
 	return g.affectNearby(radius, "poison", turns)
 }
 
+// ScareRadius is how far the scroll of scare monster's terror spreads.
+const ScareRadius = 4
+
+// ScareNearby frightens every creature within radius of the player for turns and
+// reports how many fled — the scroll of scare monster's area effect. A
+// frightened creature flees the player (stepAway) instead of attacking.
+func (g *Game) ScareNearby(radius, turns int) int {
+	return g.affectNearby(radius, "fear", turns)
+}
+
 // fireBeam traces a straight 8-directional ray from the player toward target, up
 // to the spell's range, damaging every creature it crosses (killing at 0 HP) and
 // stopping at the first opaque tile — a wall or a closed door.

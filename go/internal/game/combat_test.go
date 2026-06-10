@@ -260,3 +260,19 @@ func TestAdjacentMonsterAttacksWhenNotConfused(t *testing.T) {
 		t.Errorf("an adjacent creature should attack the player, HP unchanged at %d", g.PlayerHP)
 	}
 }
+
+func TestFearedMonsterFleesInsteadOfAttacking(t *testing.T) {
+	g := combatGame() // player at (1,1)
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Attack: 99, Dodge: 0, Damage: "5d1", HP: 9}, Pos: Pos{2, 1}, HP: 9}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	rat.AddEffect("fear", 5)
+	hp := g.PlayerHP
+	before := chebyshev(rat.Pos, g.Player)
+	g.monstersAct()
+	if g.PlayerHP != hp {
+		t.Errorf("a frightened creature should flee, not attack: HP %d -> %d", hp, g.PlayerHP)
+	}
+	if got := chebyshev(rat.Pos, g.Player); got <= before {
+		t.Errorf("a frightened creature should increase its distance from the player (%d -> %d)", before, got)
+	}
+}

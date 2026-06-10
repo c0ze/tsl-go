@@ -15,6 +15,7 @@ var effectLabels = map[string]string{
 	"slow":    "Slowed",
 	"blind":   "Blinded",
 	"confuse": "Confused",
+	"fear":    "Afraid",
 }
 
 // HasEffect reports whether a timed effect of the given kind is active on the
@@ -33,6 +34,7 @@ var effectVerbs = map[string]string{
 	"poison":  "poisons",
 	"slow":    "slows",
 	"confuse": "confuses",
+	"fear":    "frightens",
 }
 
 // effectVerb returns the verb describing inflicting kind, with a generic
