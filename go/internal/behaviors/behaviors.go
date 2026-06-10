@@ -32,6 +32,32 @@ func Registry() map[string]game.Behavior {
 		"slowness":        slowness,
 		"tranquilize":     tranquilize,
 		"levitate":        levitate,
+		"elixir":          elixir,
+		"yuck":            yuck,
+	}
+}
+
+// elixir strips every status the C expires — poison, haste, slow, regen,
+// blindness — and cuts levitation short, landing the drinker (C potions.c
+// treasure_elixir: "Removes all status effects, even good ones").
+func elixir(g *game.Game, it *game.Item) []string {
+	for _, kind := range []string{"poison", "haste", "slow", "regen", "blind"} {
+		g.RemoveEffect(kind)
+	}
+	g.DispelLevitation()
+	return []string{"You feel perfectly normal."}
+}
+
+// yuck is pure flavor — a vile taste and nothing else (C treasure_p_yuck's
+// 1d4 roll: gnoblin blood on 2-3).
+func yuck(g *game.Game, it *game.Item) []string {
+	switch g.RNG.Intn(4) {
+	case 0:
+		return []string{"This tastes like ratman urine."}
+	case 3:
+		return []string{"This tastes like liquified maggots."}
+	default:
+		return []string{"This tastes like gnoblin blood."}
 	}
 }
 

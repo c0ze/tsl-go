@@ -698,3 +698,18 @@ func TestEmbeddedNecromancer(t *testing.T) {
 		t.Errorf("catacombs should host the Necromancer (C places.c), got %+v", l)
 	}
 }
+
+// TestEmbeddedYuckAndElixir checks the last two portable potion-table entries
+// loaded (15r). Note the elixir's 0.40 name has no "potion of" prefix.
+func TestEmbeddedYuckAndElixir(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if p := c.Items["potion_yuck"]; p == nil || p.Kind != "potion" || p.Use != "yuck" {
+		t.Errorf("potion_yuck def unexpected: %+v", p)
+	}
+	if p := c.Items["elixir"]; p == nil || p.Kind != "potion" || p.Use != "elixir" || p.Name != "elixir" {
+		t.Errorf("elixir def unexpected (0.40 name is just \"elixir\"): %+v", p)
+	}
+}
