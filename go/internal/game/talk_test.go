@@ -51,9 +51,13 @@ func TestTalkToSleeperIsFree(t *testing.T) {
 func TestTalkToSilentMonster(t *testing.T) {
 	g := combatGame()
 	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Glyph: "r", HP: 3, Attack: 0, Dodge: 1, Damage: "1d1"}, Pos: Pos{2, 1}, HP: 3}
-	g.Level.Creatures = append(g.Level.Creatures, rat)
+	observer := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Glyph: "r", HP: 3, Attack: 0, Dodge: 1, Damage: "1d1"}, Pos: Pos{8, 1}, HP: 3}
+	g.Level.Creatures = append(g.Level.Creatures, rat, observer)
 	g.Talk()
 	if !hasMessage(g, "You get no reply.") {
 		t.Errorf("a silent monster gets the gentle default (the C's line is a BUG marker), got %v", g.Messages)
+	}
+	if observer.Pos.X != 7 {
+		t.Error("stopping to ask still costs the turn")
 	}
 }

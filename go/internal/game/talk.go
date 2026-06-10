@@ -1,11 +1,10 @@
 package game
 
 // Talk is the C's interaction verb (actions.c interact): address the first
-// adjacent creature. A chat line passes the turn; an empty square, a sleeping
-// neighbor, or a wordless one costs nothing — except the wordless one still
-// takes your turn, since you did stop to ask (the C passes the turn for any
-// awake interaction; its no-line default is literally a BUG marker, so ours
-// is gentler).
+// adjacent creature. Any awake interaction passes the turn — a chat line or
+// the silent default alike — while an empty square or a sleeping neighbor
+// costs nothing (the C returns false for sleepers; its no-line default is
+// literally a BUG marker, so ours is gentler).
 func (g *Game) Talk() {
 	if g.Dead || g.Won {
 		return
