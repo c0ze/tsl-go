@@ -478,3 +478,21 @@ color = "normal"
 kind = "scroll"
 use = "summon_familiar"
 power = 500
+
+# Breath spellbooks (19b, C treasure.h's first two books): a cone of your own,
+# 5 EP each (C attrs.c). Point it away from the imp.
+[item.book_breathe_fire]
+name = "book of Breathe Fire"
+glyph = "+"
+color = "red"
+kind = "spellbook"
+breath = "fire"
+cost = 5
+
+[item.book_noxious_breath]
+name = "book of Noxious Breath"
+glyph = "+"
+color = "green"
+kind = "spellbook"
+breath = "poison"
+cost = 5
