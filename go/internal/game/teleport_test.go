@@ -88,3 +88,54 @@ func TestPlayerUseScrollConsumesAndRuns(t *testing.T) {
 		t.Error("a read scroll should be consumed")
 	}
 }
+
+func TestBlinkLandingSpringsTrap(t *testing.T) {
+	g := combatGame()
+	trap := &content.TileDef{ID: "dart_trap", Glyph: "^", Passable: true, Transparent: true, Effect: "poison", EffectTurns: 5}
+	// Every tile the blink can land on is a trap, so the landing is certain.
+	for y := 0; y < g.Level.H; y++ {
+		for x := 0; x < g.Level.W; x++ {
+			p := Pos{X: x, Y: y}
+			if p != g.Player && g.Level.Passable(p) {
+				g.Level.Set(p, trap)
+			}
+		}
+	}
+	if !g.Teleport() {
+		t.Fatal("expected the blink to land somewhere")
+	}
+	if !g.HasEffect("poison") {
+		t.Error("a blink springs the trap it lands on (C cast_blink/activate_trap)")
+	}
+}
+
+func TestFloatingBlinkSkipsLandingTrap(t *testing.T) {
+	g := combatGame()
+	trap := &content.TileDef{ID: "dart_trap", Glyph: "^", Passable: true, Transparent: true, Effect: "poison", EffectTurns: 5}
+	for y := 0; y < g.Level.H; y++ {
+		for x := 0; x < g.Level.W; x++ {
+			p := Pos{X: x, Y: y}
+			if p != g.Player && g.Level.Passable(p) {
+				g.Level.Set(p, trap)
+			}
+		}
+	}
+	g.AddEffect("levitate", 10)
+	g.Teleport()
+	if g.HasEffect("poison") {
+		t.Error("a floater blinks over the trap below (C activate_trap is_floating)")
+	}
+}
+
+func TestForgetMapClearsSeen(t *testing.T) {
+	g := combatGame()
+	g.RevealMap()
+	g.ForgetMap()
+	for y := 0; y < g.Level.H; y++ {
+		for x := 0; x < g.Level.W; x++ {
+			if g.Level.At(Pos{X: x, Y: y}).Seen {
+				t.Fatal("ForgetMap should wipe the automap (C magic.c amnesia)")
+			}
+		}
+	}
+}

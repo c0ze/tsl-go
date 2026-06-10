@@ -18,6 +18,12 @@ func (g *Game) Teleport() bool {
 		return false
 	}
 	g.Player = candidates[g.RNG.Intn(len(candidates))]
+	// A blink springs whatever waits at the destination (C cast_blink's
+	// activate_trap) — unless the traveller is floating above it.
+	if tile := g.Level.At(g.Player).Def; tile.Effect != "" && !g.HasEffect("levitate") {
+		g.AddEffect(tile.Effect, tile.EffectTurns)
+		g.log("You trigger a trap!")
+	}
 	return true
 }
 
@@ -26,5 +32,13 @@ func (g *Game) Teleport() bool {
 func (g *Game) RevealMap() {
 	for i := range g.Level.tiles {
 		g.Level.tiles[i].Seen = true
+	}
+}
+
+// ForgetMap wipes the automap — every tile forgotten, the inverse of RevealMap
+// (C magic.c amnesia: memory[y][x] = gent_blank).
+func (g *Game) ForgetMap() {
+	for i := range g.Level.tiles {
+		g.Level.tiles[i].Seen = false
 	}
 }

@@ -303,8 +303,8 @@ effect_turns = 8
 power = 5
 
 # Scrolls (#15) — read (r) to invoke. Glyph ?.
-[item.scroll_teleport]
-name = "scroll of teleportation"
+[item.scroll_blink]
+name = "blink scroll"
 glyph = "?"
 color = "magenta"
 kind = "scroll"
@@ -426,3 +426,11 @@ glyph = "!"
 color = "normal"
 kind = "potion"
 use = "elixir"
+
+# The map-eraser (15t, C magic.c amnesia) — an unlucky unidentified read.
+[item.scroll_amnesia]
+name = "scroll of amnesia"
+glyph = "?"
+color = "magenta"
+kind = "scroll"
+use = "amnesia"
