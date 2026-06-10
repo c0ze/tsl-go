@@ -544,3 +544,18 @@ func TestEmbeddedDungeon(t *testing.T) {
 		t.Error("altar tile should be a win tile")
 	}
 }
+
+// TestEmbeddedSpeedPotions checks the haste/slow potion pair loaded (16b):
+// 20 turns each, the C HASTE_LENGTH/SLOW_LENGTH.
+func TestEmbeddedSpeedPotions(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if p := c.Items["potion_speed"]; p == nil || p.Kind != "potion" || p.Use != "haste" || p.Power != 20 {
+		t.Errorf("potion_speed def unexpected: %+v", p)
+	}
+	if p := c.Items["potion_slowing"]; p == nil || p.Kind != "potion" || p.Use != "slowness" || p.Power != 20 {
+		t.Errorf("potion_slowing def unexpected: %+v", p)
+	}
+}
