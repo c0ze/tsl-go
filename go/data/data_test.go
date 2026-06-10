@@ -492,6 +492,20 @@ func TestEmbeddedSlowingWand(t *testing.T) {
 	}
 }
 
+func TestEmbeddedConfusionWand(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	w := c.Items["wand_confusion"]
+	if w == nil || w.Kind != "wand" || w.Effect != "confuse" || w.EffectTurns <= 0 {
+		t.Errorf("wand_confusion def unexpected: %+v", w)
+	}
+	if w != nil && w.Damage != "" {
+		t.Errorf("wand_confusion should be a pure status wand (no damage), got %q", w.Damage)
+	}
+}
+
 // TestEmbeddedDungeon validates the shipped level graph loads with exactly one
 // start and the expected starter levels.
 func TestEmbeddedDungeon(t *testing.T) {

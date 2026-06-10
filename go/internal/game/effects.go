@@ -10,10 +10,11 @@ type Effect struct {
 
 // effectLabels maps effect kinds to their HUD labels.
 var effectLabels = map[string]string{
-	"poison": "Poisoned",
-	"regen":  "Regenerating",
-	"slow":   "Slowed",
-	"blind":  "Blinded",
+	"poison":  "Poisoned",
+	"regen":   "Regenerating",
+	"slow":    "Slowed",
+	"blind":   "Blinded",
+	"confuse": "Confused",
 }
 
 // HasEffect reports whether a timed effect of the given kind is active on the
@@ -29,8 +30,9 @@ func (g *Game) HasEffect(kind string) bool {
 
 // effectVerbs phrases how a source inflicts an effect, for the zap message.
 var effectVerbs = map[string]string{
-	"poison": "poisons",
-	"slow":   "slows",
+	"poison":  "poisons",
+	"slow":    "slows",
+	"confuse": "confuses",
 }
 
 // effectVerb returns the verb describing inflicting kind, with a generic

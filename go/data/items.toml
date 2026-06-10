@@ -244,6 +244,17 @@ effect = "slow"
 effect_turns = 10
 power = 5
 
+# Wand of confusion (#15) — a pure status wand: the target lurches around at
+# random and can't press an attack until the confusion wears off (effect_turns).
+[item.wand_confusion]
+name = "wand of confusion"
+glyph = "/"
+color = "magenta"
+kind = "wand"
+effect = "confuse"
+effect_turns = 8
+power = 5
+
 # Scrolls (#15) — read (r) to invoke. Glyph ?.
 [item.scroll_teleport]
 name = "scroll of teleportation"

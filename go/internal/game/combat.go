@@ -239,6 +239,10 @@ func (g *Game) monstersAct() {
 // monsterAct is a single monster action: attack the player if adjacent, else
 // step toward the player if within sense range.
 func (g *Game) monsterAct(m *Creature) {
+	if m.HasEffect("confuse") {
+		g.stepRandom(m) // disoriented: it lurches at random and can't press an attack
+		return
+	}
 	dist := chebyshev(m.Pos, g.Player)
 	if dist == 1 {
 		g.monsterAttacks(m)
@@ -273,6 +277,21 @@ func (g *Game) stepToward(m *Creature, target Pos) {
 	}
 	if !g.Level.Passable(dst) {
 		g.openDoor(dst) // open a door in the way (spends this move); a plain wall is a no-op
+		return
+	}
+	m.Pos = dst
+}
+
+// stepRandom moves m one tile in a random direction — a confused creature's
+// aimless lurch. It won't stumble onto the player (so a confused creature never
+// attacks), onto another creature, or into a wall; those just cost the turn.
+func (g *Game) stepRandom(m *Creature) {
+	dx, dy := g.RNG.Intn(3)-1, g.RNG.Intn(3)-1
+	if dx == 0 && dy == 0 {
+		return // stumbles in place
+	}
+	dst := Pos{m.Pos.X + dx, m.Pos.Y + dy}
+	if dst == g.Player || g.Level.CreatureAt(dst) != nil || !g.Level.Passable(dst) {
 		return
 	}
 	m.Pos = dst
