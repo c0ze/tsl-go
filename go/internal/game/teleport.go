@@ -42,3 +42,50 @@ func (g *Game) ForgetMap() {
 		g.Level.tiles[i].Seen = false
 	}
 }
+
+// MarkRecall pins the player's current level and position as the recall
+// destination (C teleport.c cast_mark).
+func (g *Game) MarkRecall() {
+	g.recallLevel = g.Level.ID
+	g.recallPos = g.Player
+	g.recallSet = true
+}
+
+// Recall snaps the player back to the pinned mark, crossing levels through the
+// Dungeon's persisted cache like stairs do (C cast_recall's change_level). It
+// reports whether the recall happened: with no mark set it fizzles — the C
+// would land at its zero-initialized location; we decline instead. If a
+// creature now stands on the mark, the player lands one ring outward.
+func (g *Game) Recall() bool {
+	if !g.recallSet {
+		return false
+	}
+	if g.recallLevel != g.Level.ID {
+		if g.Dungeon == nil {
+			return false
+		}
+		g.Level.Return = g.Player
+		if err := g.Dungeon.enter(g.recallLevel); err != nil {
+			return false
+		}
+		g.Level = g.Dungeon.Current()
+		g.Level.entered = true
+	}
+	dst := g.recallPos
+	if g.Level.CreatureAt(dst) != nil {
+		nudged := false
+		for dy := -1; dy <= 1 && !nudged; dy++ {
+			for dx := -1; dx <= 1 && !nudged; dx++ {
+				p := Pos{X: dst.X + dx, Y: dst.Y + dy}
+				if p != dst && g.Level.Passable(p) && g.Level.CreatureAt(p) == nil {
+					dst, nudged = p, true
+				}
+			}
+		}
+		if !nudged {
+			return false // the mark is buried in bodies; nowhere to appear
+		}
+	}
+	g.Player = dst
+	return true
+}
