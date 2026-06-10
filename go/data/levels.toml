@@ -12,6 +12,7 @@ height = 24
 start = true
 links = ["catacombs", "ominous_cave"]
 monsters = 8
+water = 1
 [[level.dungeon.spawn]]
 monster = "ratman"
 weight = 3
@@ -167,6 +168,7 @@ height = 24
 links = ["ominous_cave", "drowned_city"]
 monsters = 10
 dark = true
+water = 3
 [[level.underpass.spawn]]
 monster = "ratman"
 weight = 2
@@ -195,6 +197,7 @@ width = 60
 height = 24
 links = ["laboratory", "dragons_lair", "underpass"]
 monsters = 12
+water = 4
 [[level.drowned_city.spawn]]
 monster = "merman"
 weight = 4

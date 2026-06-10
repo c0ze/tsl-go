@@ -571,3 +571,24 @@ func TestEmbeddedSleepPotion(t *testing.T) {
 		t.Errorf("potion_sleep def unexpected: %+v", p)
 	}
 }
+
+// TestEmbeddedWaterLevels checks the water tile + per-level pool counts loaded
+// (18a): the Dungeon dips a toe, the Drowned City earns its name.
+func TestEmbeddedWaterLevels(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if w := c.Tiles["water"]; w == nil || !w.Water || w.Passable || !w.Transparent {
+		t.Errorf("water tile def unexpected: %+v", w)
+	}
+	if l := c.Levels["dungeon"]; l == nil || l.Water != 1 {
+		t.Errorf("dungeon should have 1 water pool, got %+v", l)
+	}
+	if l := c.Levels["underpass"]; l == nil || l.Water != 3 {
+		t.Errorf("underpass should have 3 water pools, got %+v", l)
+	}
+	if l := c.Levels["drowned_city"]; l == nil || l.Water != 4 {
+		t.Errorf("drowned_city should have 4 water pools, got %+v", l)
+	}
+}

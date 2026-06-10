@@ -39,6 +39,7 @@ type TileDef struct {
 	Passable    bool   `toml:"passable"`
 	Transparent bool   `toml:"transparent"`
 	Win         bool   `toml:"win"`          // stepping onto this tile wins (the ascension altar)
+	Water       bool   `toml:"water"`        // deep water: impassable on foot, drowns waders (#18)
 	Effect      string `toml:"effect"`       // status effect applied when stepped on ("" = none)
 	EffectTurns int    `toml:"effect_turns"` // duration of Effect
 	OpensTo     string `toml:"opens_to"`     // tile id this becomes when opened ("" = not a door)
@@ -121,6 +122,7 @@ type LevelDef struct {
 	Altar    bool         `toml:"altar"` // place an ascension altar (a win tile)
 	Boss     string       `toml:"boss"`  // a guaranteed monster placed once on the level
 	Traps    int          `toml:"traps"` // number of dart_trap tiles to scatter
+	Water    int          `toml:"water"` // number of water pools to carve (C level->water)
 	Doors    bool         `toml:"doors"` // place closed doors in room doorways
 	Dark     bool         `toml:"dark"`  // unlit level: the player sees only a small radius
 }
@@ -304,6 +306,14 @@ func validateLevels(c *Content) error {
 		if l.Traps > 0 {
 			if t, ok := c.Tiles["dart_trap"]; !ok || t.Effect == "" {
 				return fmt.Errorf("level %q: traps set but no dart_trap effect tile is defined", id)
+			}
+		}
+		if l.Water < 0 {
+			return fmt.Errorf("level %q: water must be >= 0, got %d", id, l.Water)
+		}
+		if l.Water > 0 {
+			if t, ok := c.Tiles["water"]; !ok || !t.Water {
+				return fmt.Errorf("level %q: water pools set but no water tile is defined", id)
 			}
 		}
 	}

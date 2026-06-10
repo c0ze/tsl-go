@@ -222,10 +222,85 @@ func LevelFromDef(r *rng.MT, c *content.Content, def *content.LevelDef) (*game.L
 	}
 	placeSpawnMonsters(r, c, lvl, rooms, def)
 	placeItems(r, c, lvl, rooms, lvl.Start)
+	if def.Water > 0 {
+		if err := placePools(r, c, lvl, rooms, def.Water); err != nil {
+			return nil, err
+		}
+	}
 	if def.Traps > 0 {
 		placeTraps(r, c, lvl, rooms, def.Traps)
 	}
 	return lvl, nil
+}
+
+// placePools carves n water pools (the C add_pools/area_cloud: blobs of 5-24
+// tiles) into room floors. Water is impassable, so any pool that would cut the
+// start off from a portal is reverted — the C instead rejects whole unsolvable
+// levels; reverting one pool keeps generation deterministic and cheap.
+func placePools(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, n int) error {
+	water := c.Tiles["water"]
+	if water == nil {
+		return fmt.Errorf("gen: level wants water pools but no \"water\" tile defined")
+	}
+	floor := c.Tiles["floor"]
+	for k := 0; k < n; k++ {
+		room := rooms[r.Intn(len(rooms))]
+		seed := game.Pos{X: room.x + r.Intn(room.w), Y: room.y + r.Intn(room.h)}
+		if !poolable(lvl, seed) {
+			continue
+		}
+		// Grow a cloud: each added tile is a random neighbour of the pool so far.
+		size := 5 + r.Intn(20)
+		pool := []game.Pos{seed}
+		lvl.Set(seed, water)
+		// Bounded tries: a pool hemmed in by walls simply stays small.
+		for tries := 0; len(pool) < size && tries < 200; tries++ {
+			from := pool[r.Intn(len(pool))]
+			next := game.Pos{X: from.X + r.Intn(3) - 1, Y: from.Y + r.Intn(3) - 1}
+			if !poolable(lvl, next) {
+				continue
+			}
+			lvl.Set(next, water)
+			pool = append(pool, next)
+		}
+		if cutsOff(lvl) {
+			for _, p := range pool {
+				lvl.Set(p, floor)
+			}
+		}
+	}
+	return nil
+}
+
+// poolable reports whether p is plain floor a pool may flood: never the start,
+// a portal, or any special tile.
+func poolable(lvl *game.Level, p game.Pos) bool {
+	return lvl.InBounds(p) && lvl.At(p).Def.ID == "floor" && p != lvl.Start && lvl.PortalAt(p) == nil
+}
+
+// cutsOff reports whether any portal is no longer walkable from the start.
+func cutsOff(lvl *game.Level) bool {
+	seen := map[game.Pos]bool{lvl.Start: true}
+	frontier := []game.Pos{lvl.Start}
+	for len(frontier) > 0 {
+		p := frontier[len(frontier)-1]
+		frontier = frontier[:len(frontier)-1]
+		for dy := -1; dy <= 1; dy++ {
+			for dx := -1; dx <= 1; dx++ {
+				q := game.Pos{X: p.X + dx, Y: p.Y + dy}
+				if !seen[q] && lvl.Passable(q) {
+					seen[q] = true
+					frontier = append(frontier, q)
+				}
+			}
+		}
+	}
+	for _, portal := range lvl.Portals {
+		if !seen[portal.Pos] {
+			return true
+		}
+	}
+	return false
 }
 
 // placeDoors converts each room's doorways — single-tile passages where a
