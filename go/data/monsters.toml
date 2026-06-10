@@ -262,6 +262,7 @@ damage = "1d5"
 speed = 140
 corpse = "carcass"
 min_depth = 2
+breath = "poison"
 
 [monster.frostling]
 name = "frostling"
@@ -324,6 +325,7 @@ damage = "2d4"
 speed = 75
 corpse = "carcass"
 min_depth = 3
+breath = "poison"
 
 # Roster batch 5 (#13) — more of the canonical 0.40 bestiary (names/glyphs from
 # common/glyph.c), leaning into its sci-fi/horror streak (the Lab, the Comm Hub).
@@ -362,6 +364,7 @@ dodge = 3
 damage = "1d5"
 speed = 140
 min_depth = 3
+breath = "fire"
 
 [monster.gaoler]
 name = "gaoler"
@@ -420,6 +423,7 @@ dodge = 3
 damage = "1d10"
 speed = 110
 ranged = 4
+breath = "fire"
 
 # The Lurker (#18c/#13 uniques, C unique.c): a pool-bound horror — free_swim +
 # permaswim, poison fangs (C virtual_poison_fangs), speed 120. Placed only as
@@ -438,6 +442,7 @@ permaswim = true
 effect = "poison"
 effect_turns = 5
 min_depth = 99 # never in random spawn tables: boss placement only
+breath = "poison"
 
 # Roster batch 6 (13g) — canonical 0.40 foes (monster.c / glyph.c / places.c).
 # A slow, weak shock-eel of the early Dungeon (m_shock ability out of scope).
@@ -503,6 +508,7 @@ dodge = 3
 damage = "2d4"
 speed = 60
 min_depth = 8
+breath = "fire"
 
 # The Necromancer (13h, C unique.c:78): boss of the Catacombs. Glacial
 # (speed 10 — one move in ten player turns) but hurls bolts from afar

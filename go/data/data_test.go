@@ -815,3 +815,21 @@ func TestEmbeddedSummonFamiliar(t *testing.T) {
 		t.Errorf("scroll_familiar def unexpected: %+v", s)
 	}
 }
+
+// TestEmbeddedBreathers checks the six 0.40 breathers loaded (19a) — note the
+// hellhound breathes POISON in the C (monster.c:588), not fire.
+func TestEmbeddedBreathers(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	breaths := map[string]string{
+		"dragon": "fire", "burning_skull": "fire", "flame_spirit": "fire",
+		"lurker": "poison", "hellhound": "poison", "giant_slimy_toad": "poison",
+	}
+	for id, want := range breaths {
+		if m := c.Monsters[id]; m == nil || m.Breath != want {
+			t.Errorf("%s should breathe %s, got %+v", id, want, m)
+		}
+	}
+}
