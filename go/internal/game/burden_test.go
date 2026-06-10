@@ -52,3 +52,25 @@ func TestLightPackNoBurden(t *testing.T) {
 		t.Errorf("a light pack costs nothing: rat should be at x=7, got x=%d", rat.Pos.X)
 	}
 }
+
+func TestAmmoStackWeighsPerArrow(t *testing.T) {
+	g, rat := schedulerGame()
+	// 500 arrows at WEIGHT_MISSILE 1 each: 500 > the 400 allowance
+	// (C burdened.c: carried = stack_size * weight).
+	g.Inventory = append(g.Inventory, &Item{Def: &content.ItemDef{ID: "arrow", Name: "crude arrow", Kind: "ammo", Weight: 1}, Charges: 500})
+	g.advanceWorld()
+	if rat.Pos.X != 6 {
+		t.Errorf("an overloaded quiver burdens like anything else: rat should be at x=6, got x=%d", rat.Pos.X)
+	}
+}
+
+func TestMergedPickupCanStagger(t *testing.T) {
+	g := combatGame()
+	def := &content.ItemDef{ID: "arrow", Name: "crude arrow", Kind: "ammo", Weight: 1, Power: 8}
+	g.Inventory = append(g.Inventory, &Item{Def: def, Charges: 390})
+	g.Level.Items = append(g.Level.Items, &Item{Def: def, Charges: 50, Pos: g.Player})
+	g.PlayerPickup() // merge crosses the 400 line
+	if !hasMessage(g, "You stagger under your load!") {
+		t.Errorf("a merged bundle that crosses the allowance staggers too, got %v", g.Messages)
+	}
+}
