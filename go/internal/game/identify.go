@@ -125,6 +125,9 @@ func (g *Game) UnidentifiedInventory() []*Item {
 // manual of pharmacy makes the whole potion table known), returning how many
 // were newly learned.
 func (g *Game) IdentifyAllPotions() int {
+	if g.Identified == nil {
+		g.Identified = map[string]bool{}
+	}
 	learned := 0
 	for id, def := range g.Content.Items {
 		if def.Kind == "potion" && !g.Identified[id] {
