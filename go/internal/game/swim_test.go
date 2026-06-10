@@ -72,3 +72,66 @@ func TestPlayerDrowns(t *testing.T) {
 		t.Errorf("expected the C drowning message, got %v", g.Messages)
 	}
 }
+
+func TestFloatingPlayerCrossesWaterUnharmed(t *testing.T) {
+	g := waterGame()
+	g.AddEffect("levitate", 20)
+	g.PlayerStep(DirE) // onto the water, airborne
+	if g.Player != (Pos{2, 1}) {
+		t.Fatalf("a floating player crosses deep water (C move_creature), at %v", g.Player)
+	}
+	if g.PlayerHP != 20 {
+		t.Errorf("no swim fatigue while airborne (C swim() skips floaters): HP %d", g.PlayerHP)
+	}
+	g.PlayerStep(DirE) // and off the far side
+	if g.Player != (Pos{3, 1}) || g.PlayerHP != 20 {
+		t.Errorf("crossing should finish dry: at %v with HP %d", g.Player, g.PlayerHP)
+	}
+}
+
+func TestFloatingPlayerSkipsTraps(t *testing.T) {
+	g := combatGame()
+	trap := &content.TileDef{ID: "dart_trap", Glyph: "^", Passable: true, Transparent: true, Effect: "poison", EffectTurns: 5}
+	g.Level.Set(Pos{2, 1}, trap)
+	g.AddEffect("levitate", 20)
+	g.PlayerStep(DirE)
+	if g.HasEffect("poison") {
+		t.Error("a floater glides over floor traps (C activate_trap)")
+	}
+}
+
+func TestLandingInWaterPlunges(t *testing.T) {
+	g := waterGame()
+	g.AddEffect("levitate", 2) // expires right above the pool
+	g.PlayerStep(DirE)         // onto the water (levitate 2->1 this turn)
+	g.advanceWorld()           // levitate 1->0: the landing
+	if !hasMessage(g, "You plunge into water!") {
+		t.Fatalf("expected the C plunge message, got %v", g.Messages)
+	}
+	hp := g.PlayerHP
+	g.advanceWorld() // now swimming: the drowning clock runs
+	if g.PlayerHP != hp-1 {
+		t.Errorf("after plunging the swim clock resumes: want HP %d, got %d", hp-1, g.PlayerHP)
+	}
+}
+
+func TestLandingOnGround(t *testing.T) {
+	g := combatGame()
+	g.AddEffect("levitate", 1)
+	g.PlayerStep(DirE) // levitate expires over plain floor
+	if !hasMessage(g, "You land on the ground.") {
+		t.Errorf("expected the C ground message, got %v", g.Messages)
+	}
+}
+
+func TestLandingOnTrapSpringsIt(t *testing.T) {
+	g := combatGame()
+	trap := &content.TileDef{ID: "dart_trap", Glyph: "^", Passable: true, Transparent: true, Effect: "poison", EffectTurns: 5}
+	g.Level.Set(Pos{2, 1}, trap)
+	g.AddEffect("levitate", 2)
+	g.PlayerStep(DirE) // float onto the trap (no trigger; levitate 2->1)
+	g.advanceWorld()   // expiry: land right on it
+	if !g.HasEffect("poison") {
+		t.Error("landing on a trap springs it (C change_altitude)")
+	}
+}

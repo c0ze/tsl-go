@@ -31,7 +31,16 @@ func Registry() map[string]game.Behavior {
 		"haste":           haste,
 		"slowness":        slowness,
 		"tranquilize":     tranquilize,
+		"levitate":        levitate,
 	}
+}
+
+// levitate lifts the player off the ground for Power turns (C potions.c
+// treasure_p_levitation → altitude.c): water and floor traps pass harmlessly
+// below until the landing.
+func levitate(g *game.Game, it *game.Item) []string {
+	g.AddEffect("levitate", it.Def.Power)
+	return []string{"You soar into the air!"}
 }
 
 // tranquilize knocks the player out for Power turns (C sleep.c tranquilize via

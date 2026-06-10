@@ -592,3 +592,15 @@ func TestEmbeddedWaterLevels(t *testing.T) {
 		t.Errorf("drowned_city should have 4 water pools, got %+v", l)
 	}
 }
+
+// TestEmbeddedLevitationPotion checks the float potion loaded (18b): 20 turns,
+// the C LEVITATE_TIME.
+func TestEmbeddedLevitationPotion(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if p := c.Items["potion_levitation"]; p == nil || p.Kind != "potion" || p.Use != "levitate" || p.Power != 20 {
+		t.Errorf("potion_levitation def unexpected: %+v", p)
+	}
+}

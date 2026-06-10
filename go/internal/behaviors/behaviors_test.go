@@ -301,3 +301,18 @@ func TestTranquilizePutsPlayerToSleep(t *testing.T) {
 		t.Errorf("expected the C message, got %v", msgs)
 	}
 }
+
+func TestLevitatePotionLiftsPlayer(t *testing.T) {
+	lev, ok := Registry()["levitate"]
+	if !ok {
+		t.Fatal("levitate not registered")
+	}
+	g := &game.Game{PlayerHP: 10, PlayerMax: 10}
+	msgs := lev(g, &game.Item{Def: &content.ItemDef{Name: "potion of levitation", Power: 20}})
+	if !g.HasEffect("levitate") {
+		t.Error("expected a levitate effect from the potion")
+	}
+	if len(msgs) == 0 || msgs[0] != "You soar into the air!" {
+		t.Errorf("expected the C message, got %v", msgs)
+	}
+}

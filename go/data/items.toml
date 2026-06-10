@@ -192,6 +192,16 @@ kind = "potion"
 use = "slowness"
 power = 20
 
+# Float potion (18b): 20 turns airborne (C rules.h LEVITATE_TIME) — cross
+# water and skip traps, but mind where the clock runs out.
+[item.potion_levitation]
+name = "potion of levitation"
+glyph = "!"
+color = "green"
+kind = "potion"
+use = "levitate"
+power = 20
+
 # Knockout potion (16c): 25 lost turns (C rules.h SLEEP_DURATION) unless
 # something hits you awake first.
 [item.potion_sleep]
