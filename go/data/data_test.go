@@ -121,6 +121,44 @@ func TestEmbeddedRosterBatch3(t *testing.T) {
 	}
 }
 
+func TestEmbeddedRosterBatch4(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	want := map[string]rune{
+		"hellhound": 'h', "frostling": 'f', "goatman": 'p',
+		"tentacle": 'l', "gloom_lord": 'K', "giant_slimy_toad": 'Y',
+	}
+	for id, glyph := range want {
+		m := c.Monsters[id]
+		if m == nil {
+			t.Errorf("missing monster %q", id)
+			continue
+		}
+		if m.Rune() != glyph {
+			t.Errorf("%s glyph = %q, want %q", id, m.Rune(), glyph)
+		}
+	}
+	// the gloom lord is a second ranged caster — make sure that survived the port
+	if g := c.Monsters["gloom_lord"]; g != nil && g.Ranged <= 0 {
+		t.Errorf("gloom_lord should be ranged, got %+v", g)
+	}
+	seen := map[string]bool{}
+	for _, l := range c.Levels {
+		for _, s := range l.Spawn {
+			if _, ok := want[s.Monster]; ok {
+				seen[s.Monster] = true
+			}
+		}
+	}
+	for id := range want {
+		if !seen[id] {
+			t.Errorf("expected %q to appear in at least one spawn table", id)
+		}
+	}
+}
+
 // TestDepthGatedTanks checks the tougher monsters only appear on deeper floors.
 func TestDepthGatedTanks(t *testing.T) {
 	c, err := content.Load(Files)

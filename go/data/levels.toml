@@ -62,6 +62,9 @@ weight = 1
 [[level.catacombs.spawn]]
 monster = "giant_spider"
 weight = 2
+[[level.catacombs.spawn]]
+monster = "hellhound"
+weight = 1
 
 [level.ominous_cave]
 name = "the Ominous Cave"
@@ -115,6 +118,9 @@ weight = 2
 [[level.laboratory.spawn]]
 monster = "imp"
 weight = 1
+[[level.laboratory.spawn]]
+monster = "goatman"
+weight = 2
 
 [level.comm_hub]
 name = "the Communications Hub"
@@ -137,6 +143,9 @@ monster = "skeleton"
 weight = 2
 [[level.comm_hub.spawn]]
 monster = "wisp"
+weight = 2
+[[level.comm_hub.spawn]]
+monster = "frostling"
 weight = 2
 
 [level.underpass]
@@ -164,6 +173,9 @@ weight = 2
 [[level.underpass.spawn]]
 monster = "dire_wolf"
 weight = 2
+[[level.underpass.spawn]]
+monster = "tentacle"
+weight = 1
 
 [level.drowned_city]
 name = "the Drowned City"
@@ -186,6 +198,12 @@ weight = 1
 [[level.drowned_city.spawn]]
 monster = "imp"
 weight = 2
+[[level.drowned_city.spawn]]
+monster = "tentacle"
+weight = 2
+[[level.drowned_city.spawn]]
+monster = "giant_slimy_toad"
+weight = 2
 
 [level.frozen_vault]
 name = "the Vault of the Frozen Saint"
@@ -207,6 +225,12 @@ weight = 2
 [[level.frozen_vault.spawn]]
 monster = "ogre"
 weight = 2
+[[level.frozen_vault.spawn]]
+monster = "frostling"
+weight = 3
+[[level.frozen_vault.spawn]]
+monster = "gloom_lord"
+weight = 1
 
 [level.dragons_lair]
 name = "the Dragons Lair"
@@ -234,6 +258,9 @@ weight = 2
 [[level.dragons_lair.spawn]]
 monster = "troll"
 weight = 2
+[[level.dragons_lair.spawn]]
+monster = "hellhound"
+weight = 2
 
 [level.chapel]
 name = "the Chapel of Fallen Stars"
@@ -258,4 +285,7 @@ monster = "merman"
 weight = 1
 [[level.chapel.spawn]]
 monster = "wraith"
+weight = 2
+[[level.chapel.spawn]]
+monster = "gloom_lord"
 weight = 2
