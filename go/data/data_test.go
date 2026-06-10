@@ -749,3 +749,18 @@ func TestEmbeddedAmnesiaScroll(t *testing.T) {
 		t.Errorf("scroll_amnesia def unexpected: %+v", s)
 	}
 }
+
+// TestEmbeddedMarkRecall checks the teleport-home pair loaded (15u) — like the
+// blink scroll, 0.40 names them without the "scroll of" prefix.
+func TestEmbeddedMarkRecall(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if s := c.Items["scroll_mark"]; s == nil || s.Kind != "scroll" || s.Use != "mark" || s.Name != "mark scroll" {
+		t.Errorf("scroll_mark def unexpected: %+v", s)
+	}
+	if s := c.Items["scroll_recall"]; s == nil || s.Kind != "scroll" || s.Use != "recall" || s.Name != "recall scroll" {
+		t.Errorf("scroll_recall def unexpected: %+v", s)
+	}
+}

@@ -372,3 +372,39 @@ func TestAmnesiaWipesTheMap(t *testing.T) {
 		t.Errorf("expected the C message, got %v", msgs)
 	}
 }
+
+func TestMarkAndRecallBehaviors(t *testing.T) {
+	mark, ok := Registry()["mark"]
+	if !ok {
+		t.Fatal("mark not registered")
+	}
+	recall, ok := Registry()["recall"]
+	if !ok {
+		t.Fatal("recall not registered")
+	}
+	floor := &content.TileDef{ID: "floor", Glyph: ".", Color: content.ColorNormal, Passable: true, Transparent: true}
+	g := &game.Game{Level: game.NewLevel(8, 3, floor), Player: game.Pos{X: 1, Y: 1}}
+	msgs := mark(g, &game.Item{Def: &content.ItemDef{Name: "mark scroll"}})
+	if len(msgs) == 0 || msgs[0] != "Destination marked." {
+		t.Errorf("expected the C mark message, got %v", msgs)
+	}
+	home := g.Player
+	g.Player = game.Pos{X: 5, Y: 1}
+	msgs = recall(g, &game.Item{Def: &content.ItemDef{Name: "recall scroll"}})
+	if g.Player != home {
+		t.Errorf("recall should return to the mark, at %v", g.Player)
+	}
+	if len(msgs) == 0 || !strings.Contains(msgs[0], "You find yourself back") {
+		t.Errorf("expected the C recall message, got %v", msgs)
+	}
+}
+
+func TestUnmarkedRecallBehaviorFizzles(t *testing.T) {
+	recall := Registry()["recall"]
+	floor := &content.TileDef{ID: "floor", Glyph: ".", Color: content.ColorNormal, Passable: true, Transparent: true}
+	g := &game.Game{Level: game.NewLevel(8, 3, floor), Player: game.Pos{X: 1, Y: 1}}
+	msgs := recall(g, &game.Item{Def: &content.ItemDef{Name: "recall scroll"}})
+	if len(msgs) == 0 || !strings.Contains(msgs[0], "nothing happens") {
+		t.Errorf("unmarked recall should fizzle, got %v", msgs)
+	}
+}
