@@ -630,3 +630,52 @@ func TestEmbeddedLurker(t *testing.T) {
 		t.Errorf("drowned_city should host the Lurker with 8 tentacles: %+v", d)
 	}
 }
+
+// TestEmbeddedRosterBatch6 checks batch 6 loaded with canonical 0.40 glyphs
+// (13g): electric snake, sludge dweller, severed hand, floating brain, flame
+// spirit (monster.c stats, glyph.c glyphs).
+func TestEmbeddedRosterBatch6(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	checks := []struct {
+		id     string
+		glyph  string
+		hp     int
+		speed  int
+		ranged bool
+	}{
+		{"electric_snake", "S", 3, 35, false},
+		{"sludge_dweller", "s", 2, 60, true},
+		{"severed_hand", "p", 4, 80, false},
+		{"floating_brain", "b", 15, 70, true},
+		{"flame_spirit", "j", 20, 60, false},
+	}
+	for _, want := range checks {
+		m := c.Monsters[want.id]
+		if m == nil {
+			t.Errorf("%s missing", want.id)
+			continue
+		}
+		if m.Glyph != want.glyph || m.HP != want.hp || m.Speed != want.speed {
+			t.Errorf("%s: glyph/hp/speed = %q/%d/%d, want %q/%d/%d", want.id, m.Glyph, m.HP, m.Speed, want.glyph, want.hp, want.speed)
+		}
+		if (m.Ranged > 0) != want.ranged {
+			t.Errorf("%s: ranged = %d, want caster=%v", want.id, m.Ranged, want.ranged)
+		}
+	}
+	// Spot-check the C-faithful spawn homes (places.c std_enemy).
+	spawns := map[string]string{"dungeon": "electric_snake", "catacombs": "severed_hand", "frozen_vault": "floating_brain", "dragons_lair": "flame_spirit", "laboratory": "sludge_dweller"}
+	for lvl, mon := range spawns {
+		found := false
+		for _, s := range c.Levels[lvl].Spawn {
+			if s.Monster == mon {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("%s should spawn %s (C places.c)", lvl, mon)
+		}
+	}
+}

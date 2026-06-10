@@ -34,6 +34,12 @@ weight = 2
 [[level.dungeon.spawn]]
 monster = "jackal"
 weight = 2
+[[level.dungeon.spawn]]
+monster = "electric_snake"
+weight = 2
+[[level.dungeon.spawn]]
+monster = "sludge_dweller"
+weight = 1
 
 [level.catacombs]
 name = "the Catacombs"
@@ -66,6 +72,9 @@ weight = 2
 [[level.catacombs.spawn]]
 monster = "hellhound"
 weight = 1
+[[level.catacombs.spawn]]
+monster = "severed_hand"
+weight = 2
 
 [level.ominous_cave]
 name = "the Ominous Cave"
@@ -92,6 +101,12 @@ weight = 2
 [[level.ominous_cave.spawn]]
 monster = "cave_snake"
 weight = 2
+[[level.ominous_cave.spawn]]
+monster = "sludge_dweller"
+weight = 2
+[[level.ominous_cave.spawn]]
+monster = "electric_snake"
+weight = 1
 
 [level.laboratory]
 name = "the Laboratory"
@@ -128,6 +143,9 @@ weight = 2
 [[level.laboratory.spawn]]
 monster = "technician"
 weight = 2
+[[level.laboratory.spawn]]
+monster = "sludge_dweller"
+weight = 2
 
 [level.comm_hub]
 name = "the Communications Hub"
@@ -160,6 +178,9 @@ weight = 2
 [[level.comm_hub.spawn]]
 monster = "technician"
 weight = 1
+[[level.comm_hub.spawn]]
+monster = "sludge_dweller"
+weight = 1
 
 [level.underpass]
 name = "the Underpass"
@@ -189,6 +210,12 @@ monster = "dire_wolf"
 weight = 2
 [[level.underpass.spawn]]
 monster = "tentacle"
+weight = 1
+[[level.underpass.spawn]]
+monster = "sludge_dweller"
+weight = 1
+[[level.underpass.spawn]]
+monster = "electric_snake"
 weight = 1
 
 [level.drowned_city]
@@ -222,6 +249,9 @@ weight = 2
 [[level.drowned_city.spawn]]
 monster = "giant_slimy_toad"
 weight = 2
+[[level.drowned_city.spawn]]
+monster = "sludge_dweller"
+weight = 1
 
 [level.frozen_vault]
 name = "the Vault of the Frozen Saint"
@@ -255,6 +285,9 @@ weight = 2
 [[level.frozen_vault.spawn]]
 monster = "gaoler"
 weight = 1
+[[level.frozen_vault.spawn]]
+monster = "floating_brain"
+weight = 2
 
 [level.dragons_lair]
 name = "the Dragons Lair"
@@ -291,6 +324,9 @@ weight = 2
 [[level.dragons_lair.spawn]]
 monster = "chrome_angel"
 weight = 1
+[[level.dragons_lair.spawn]]
+monster = "flame_spirit"
+weight = 2
 
 [level.chapel]
 name = "the Chapel of Fallen Stars"

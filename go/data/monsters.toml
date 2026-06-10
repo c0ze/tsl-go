@@ -438,3 +438,68 @@ permaswim = true
 effect = "poison"
 effect_turns = 5
 min_depth = 99 # never in random spawn tables: boss placement only
+
+# Roster batch 6 (13g) — canonical 0.40 foes (monster.c / glyph.c / places.c).
+# A slow, weak shock-eel of the early Dungeon (m_shock ability out of scope).
+[monster.electric_snake]
+name = "electric snake"
+glyph = "S"
+color = "cyan"
+hp = 3
+attack = 3
+dodge = 2
+damage = "1d3"
+speed = 35
+corpse = "corpse"
+min_depth = 1
+
+# Flings mudballs across half the mid-game (C m_mudball -> ranged).
+[monster.sludge_dweller]
+name = "sludge dweller"
+glyph = "s"
+color = "brown"
+hp = 2
+attack = 4
+dodge = 1
+damage = "1d3"
+speed = 60
+ranged = 4
+min_depth = 1
+
+# A fast strangler scuttling the Catacombs ('p' is shared with the goatman in
+# 0.40 itself; colors tell them apart).
+[monster.severed_hand]
+name = "severed hand"
+glyph = "p"
+color = "normal"
+hp = 4
+attack = 6
+dodge = 3
+damage = "1d4"
+speed = 80
+min_depth = 2
+
+# A force-bolt caster drifting the Frozen Vault (blink out of scope).
+[monster.floating_brain]
+name = "floating brain"
+glyph = "b"
+color = "magenta"
+hp = 15
+attack = 7
+dodge = 2
+damage = "1d6"
+speed = 70
+ranged = 6
+min_depth = 7
+
+# A burning guardian of the Dragons Lair.
+[monster.flame_spirit]
+name = "flame spirit"
+glyph = "j"
+color = "red"
+hp = 20
+attack = 8
+dodge = 3
+damage = "2d4"
+speed = 60
+min_depth = 8
