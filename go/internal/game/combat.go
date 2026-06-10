@@ -265,17 +265,7 @@ func (g *Game) monsterAct(m *Creature) {
 }
 
 func (g *Game) stepToward(m *Creature, target Pos) {
-	step := func(a, b int) int {
-		switch {
-		case b > a:
-			return 1
-		case b < a:
-			return -1
-		default:
-			return 0
-		}
-	}
-	dst := Pos{m.Pos.X + step(m.Pos.X, target.X), m.Pos.Y + step(m.Pos.Y, target.Y)}
+	dst := Pos{m.Pos.X + signOf(target.X-m.Pos.X), m.Pos.Y + signOf(target.Y-m.Pos.Y)}
 	if dst == g.Player || g.Level.CreatureAt(dst) != nil {
 		return
 	}
