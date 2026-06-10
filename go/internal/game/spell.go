@@ -84,17 +84,35 @@ func (g *Game) CastSpellAt(book *Item, target Pos) {
 // FlashRadius is how far the flash spell's blinding light reaches.
 const FlashRadius = 4
 
-// FlashBlind blinds every creature within radius (Chebyshev) of the player for
-// turns and reports how many were blinded — the flash spell's area effect.
-func (g *Game) FlashBlind(radius, turns int) int {
+// NoxiousRadius is how far the noxious cloud spell's poison spreads — tighter
+// than the flash, since it deals damage rather than only controlling.
+const NoxiousRadius = 3
+
+// affectNearby applies status effect `kind` for `turns` to every creature within
+// Chebyshev `radius` of the player, returning how many were affected — the shared
+// core of the player's self-centred area spells.
+func (g *Game) affectNearby(radius int, kind string, turns int) int {
 	n := 0
 	for _, m := range g.Level.Creatures {
 		if chebyshev(m.Pos, g.Player) <= radius {
-			m.AddEffect("blind", turns)
+			m.AddEffect(kind, turns)
 			n++
 		}
 	}
 	return n
+}
+
+// FlashBlind blinds every creature within radius of the player for turns and
+// reports how many were blinded — the flash spell's area effect.
+func (g *Game) FlashBlind(radius, turns int) int {
+	return g.affectNearby(radius, "blind", turns)
+}
+
+// PoisonNearby poisons every creature within radius of the player for turns and
+// reports how many were caught — the noxious cloud spell's area effect. Poison
+// then drains 1 HP/turn via tickCreatureEffects until it fades or kills.
+func (g *Game) PoisonNearby(radius, turns int) int {
+	return g.affectNearby(radius, "poison", turns)
 }
 
 // fireBeam traces a straight 8-directional ray from the player toward target, up

@@ -174,6 +174,21 @@ func TestFlashBlindsNearby(t *testing.T) {
 	}
 }
 
+func TestNoxiousCloudPoisonsNearby(t *testing.T) {
+	noxious, ok := Registry()["noxious_cloud"]
+	if !ok {
+		t.Fatal("noxious_cloud not registered")
+	}
+	floor := &content.TileDef{ID: "floor", Glyph: ".", Color: content.ColorNormal, Passable: true, Transparent: true}
+	g := &game.Game{Level: game.NewLevel(10, 3, floor), Player: game.Pos{X: 1, Y: 1}}
+	rat := &game.Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 3}, Pos: game.Pos{X: 3, Y: 1}, HP: 3}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	noxious(g, &game.Item{Def: &content.ItemDef{Name: "spellbook of noxious cloud", Power: 6}})
+	if !rat.HasEffect("poison") {
+		t.Error("noxious cloud should poison a nearby creature")
+	}
+}
+
 func TestBlindnessAddsEffect(t *testing.T) {
 	blind, ok := Registry()["blindness"]
 	if !ok {

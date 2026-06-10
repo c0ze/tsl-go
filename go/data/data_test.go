@@ -244,6 +244,17 @@ func TestEmbeddedFlash(t *testing.T) {
 	}
 }
 
+// TestEmbeddedNoxiousCloud checks the noxious cloud spellbook loaded.
+func TestEmbeddedNoxiousCloud(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if b := c.Items["spellbook_noxious_cloud"]; b == nil || b.Kind != "spellbook" || b.Use != "noxious_cloud" || b.Cost <= 0 {
+		t.Errorf("spellbook_noxious_cloud def unexpected: %+v", b)
+	}
+}
+
 // TestEmbeddedPotionBlindness checks the blindness potion loaded.
 func TestEmbeddedPotionBlindness(t *testing.T) {
 	c, err := content.Load(Files)
