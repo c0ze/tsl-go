@@ -475,6 +475,9 @@ func TestEmbeddedScrolls(t *testing.T) {
 	if s := c.Items["scroll_magic_mapping"]; s == nil || s.Kind != "scroll" || s.Use != "reveal" {
 		t.Errorf("scroll_magic_mapping def unexpected: %+v", s)
 	}
+	if s := c.Items["scroll_scare_monster"]; s == nil || s.Kind != "scroll" || s.Use != "scare" || s.Power <= 0 {
+		t.Errorf("scroll_scare_monster def unexpected: %+v", s)
+	}
 }
 
 // TestEmbeddedSlowingWand checks the control (slowing) wand loaded.

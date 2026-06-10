@@ -189,6 +189,21 @@ func TestNoxiousCloudPoisonsNearby(t *testing.T) {
 	}
 }
 
+func TestScareFrightensNearby(t *testing.T) {
+	scare, ok := Registry()["scare"]
+	if !ok {
+		t.Fatal("scare not registered")
+	}
+	floor := &content.TileDef{ID: "floor", Glyph: ".", Color: content.ColorNormal, Passable: true, Transparent: true}
+	g := &game.Game{Level: game.NewLevel(10, 3, floor), Player: game.Pos{X: 1, Y: 1}}
+	rat := &game.Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 3}, Pos: game.Pos{X: 3, Y: 1}, HP: 3}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	scare(g, &game.Item{Def: &content.ItemDef{Name: "scroll of scare monster", Power: 6}})
+	if !rat.HasEffect("fear") {
+		t.Error("scare should frighten a nearby creature")
+	}
+}
+
 func TestBlindnessAddsEffect(t *testing.T) {
 	blind, ok := Registry()["blindness"]
 	if !ok {

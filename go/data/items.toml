@@ -270,6 +270,16 @@ color = "blue"
 kind = "scroll"
 use = "reveal"
 
+# Scroll of scare monster (#15) — a wave of terror: every nearby creature flees
+# the player (fear effect) for `power` turns instead of attacking.
+[item.scroll_scare_monster]
+name = "scroll of scare monster"
+glyph = "?"
+color = "red"
+kind = "scroll"
+use = "scare"
+power = 8
+
 # Spellbooks (#15i/j) — carry one and press c to cast (costs EP). A book is either
 # a utility spell (use = effect) or a targeted attack (ranged + damage).
 [item.spellbook_first_aid]
