@@ -134,7 +134,17 @@ func (g *Game) playerAttackStat() int {
 	return atk
 }
 
+// flameHandsDamage approximates the C's virtual_flame_hands attack sequence
+// (vweapon.c: a deterministic 3/5/5/5 fire chain — avg 4.5, max 5) in our
+// flat-dice model: 1d2+3 matches both the average and the cap (min 4 vs the
+// C's occasional 3).
+const flameHandsDamage = "1d2+3"
+
 func (g *Game) playerDamageSpec() string {
+	if g.HasEffect("flame_hands") {
+		// A temp weapon supersedes the wielded one (C set_temp_weapon).
+		return flameHandsDamage
+	}
 	if g.Weapon != nil && g.Weapon.Def.Damage != "" {
 		return g.Weapon.Def.Damage
 	}

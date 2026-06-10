@@ -38,7 +38,15 @@ func Registry() map[string]game.Behavior {
 		"mark":            mark,
 		"recall":          recall,
 		"detect_traps":    detectTraps,
+		"magic_weapon":    magicWeapon,
 	}
+}
+
+// magicWeapon ignites the reader's hands for Power turns, superseding any
+// wielded weapon (C magic.c magic_weapon / set_temp_weapon).
+func magicWeapon(g *game.Game, it *game.Item) []string {
+	g.AddEffect("flame_hands", it.Def.Power)
+	return []string{"Your hands seem to be on fire."}
 }
 
 // detectTraps lights up every hidden trap on the level (C magic.c

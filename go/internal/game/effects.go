@@ -10,15 +10,16 @@ type Effect struct {
 
 // effectLabels maps effect kinds to their HUD labels.
 var effectLabels = map[string]string{
-	"poison":   "Poisoned",
-	"regen":    "Regenerating",
-	"slow":     "Slowed",
-	"haste":    "Hastened",
-	"blind":    "Blinded",
-	"confuse":  "Confused",
-	"fear":     "Afraid",
-	"sleep":    "Asleep",
-	"levitate": "Floating",
+	"poison":      "Poisoned",
+	"regen":       "Regenerating",
+	"slow":        "Slowed",
+	"haste":       "Hastened",
+	"blind":       "Blinded",
+	"confuse":     "Confused",
+	"fear":        "Afraid",
+	"sleep":       "Asleep",
+	"levitate":    "Floating",
+	"flame_hands": "Flaming hands",
 }
 
 // HasEffect reports whether a timed effect of the given kind is active on the

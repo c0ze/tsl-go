@@ -791,3 +791,15 @@ func TestEmbeddedLava(t *testing.T) {
 		t.Errorf("dragons_lair should run with 12 lava pools, got %+v", l)
 	}
 }
+
+// TestEmbeddedMagicWeapon checks scroll 9 of 10 loaded (15v) — this one keeps
+// its "scroll of" prefix in 0.40 (treasure.c:1135).
+func TestEmbeddedMagicWeapon(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if s := c.Items["scroll_magic_weapon"]; s == nil || s.Kind != "scroll" || s.Use != "magic_weapon" || s.Power != 22 {
+		t.Errorf("scroll_magic_weapon def unexpected: %+v", s)
+	}
+}

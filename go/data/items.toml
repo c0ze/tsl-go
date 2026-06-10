@@ -458,3 +458,13 @@ glyph = "?"
 color = "red"
 kind = "scroll"
 use = "detect_traps"
+
+# Scroll 9 of 10 (15v, C magic.c magic_weapon): 22 turns of flame hands
+# (C MAGIC_WEAPON_LIFETIME), superseding whatever you wield.
+[item.scroll_magic_weapon]
+name = "scroll of magic weapon"
+glyph = "?"
+color = "cyan"
+kind = "scroll"
+use = "magic_weapon"
+power = 22

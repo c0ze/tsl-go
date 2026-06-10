@@ -432,3 +432,18 @@ func TestDetectTrapsBehaviorRevealsAll(t *testing.T) {
 		t.Errorf("expected the C message, got %v", msgs)
 	}
 }
+
+func TestMagicWeaponIgnitesHands(t *testing.T) {
+	mw, ok := Registry()["magic_weapon"]
+	if !ok {
+		t.Fatal("magic_weapon not registered")
+	}
+	g := &game.Game{PlayerHP: 10, PlayerMax: 10}
+	msgs := mw(g, &game.Item{Def: &content.ItemDef{Name: "scroll of magic weapon", Power: 22}})
+	if !g.HasEffect("flame_hands") {
+		t.Error("expected flaming hands from the scroll")
+	}
+	if len(msgs) == 0 || msgs[0] != "Your hands seem to be on fire." {
+		t.Errorf("expected the C message, got %v", msgs)
+	}
+}
