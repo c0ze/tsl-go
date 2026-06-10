@@ -233,7 +233,13 @@ func LevelFromDef(r *rng.MT, c *content.Content, def *content.LevelDef) (*game.L
 	placeSpawnMonsters(r, c, lvl, rooms, def)
 	placeItems(r, c, lvl, rooms, lvl.Start)
 	if def.Water > 0 {
-		if err := placePools(r, c, lvl, rooms, def.Water); err != nil {
+		if err := placePools(r, c, lvl, rooms, def.Water, "water", 20); err != nil {
+			return nil, err
+		}
+	}
+	if def.Lava > 0 {
+		// Lava clouds run smaller than water (C content.c: 5+rnd%9 vs 5+rnd%20).
+		if err := placePools(r, c, lvl, rooms, def.Lava, "lava", 9); err != nil {
 			return nil, err
 		}
 	}
@@ -285,14 +291,15 @@ func abs(n int) int {
 	return n
 }
 
-// placePools carves n water pools (the C add_pools/area_cloud: blobs of 5-24
-// tiles) into room floors. Water is impassable, so any pool that would cut the
-// start off from a portal is reverted — the C instead rejects whole unsolvable
-// levels; reverting one pool keeps generation deterministic and cheap.
-func placePools(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, n int) error {
-	water := c.Tiles["water"]
-	if water == nil {
-		return fmt.Errorf("gen: level wants water pools but no \"water\" tile defined")
+// placePools carves n pools of the given tile (the C add_pools/area_cloud:
+// water blobs of 5-24 tiles, lava 5-13) into room floors. Pools are
+// impassable, so any one that would cut the start off from a portal is
+// reverted — the C instead rejects whole unsolvable levels; reverting one
+// pool keeps generation deterministic and cheap.
+func placePools(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, n int, tileID string, sizeSpread int) error {
+	pool := c.Tiles[tileID]
+	if pool == nil {
+		return fmt.Errorf("gen: level wants %s pools but no %q tile defined", tileID, tileID)
 	}
 	floor := c.Tiles["floor"]
 	for k := 0; k < n; k++ {
@@ -302,21 +309,21 @@ func placePools(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, n 
 			continue
 		}
 		// Grow a cloud: each added tile is a random neighbour of the pool so far.
-		size := 5 + r.Intn(20)
-		pool := []game.Pos{seed}
-		lvl.Set(seed, water)
+		size := 5 + r.Intn(sizeSpread)
+		grown := []game.Pos{seed}
+		lvl.Set(seed, pool)
 		// Bounded tries: a pool hemmed in by walls simply stays small.
-		for tries := 0; len(pool) < size && tries < 200; tries++ {
-			from := pool[r.Intn(len(pool))]
+		for tries := 0; len(grown) < size && tries < 200; tries++ {
+			from := grown[r.Intn(len(grown))]
 			next := game.Pos{X: from.X + r.Intn(3) - 1, Y: from.Y + r.Intn(3) - 1}
 			if !poolable(lvl, next) {
 				continue
 			}
-			lvl.Set(next, water)
-			pool = append(pool, next)
+			lvl.Set(next, pool)
+			grown = append(grown, next)
 		}
 		if cutsOff(lvl) {
-			for _, p := range pool {
+			for _, p := range grown {
 				lvl.Set(p, floor)
 			}
 		}

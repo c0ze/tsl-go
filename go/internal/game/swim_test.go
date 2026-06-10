@@ -201,3 +201,58 @@ func TestDispelLevitationLands(t *testing.T) {
 		t.Errorf("no landing without levitation: %d plunge messages", n)
 	}
 }
+
+// lavaGame is a corridor with a lava tile directly east of the player.
+func lavaGame() *Game {
+	g := combatGame()
+	lava := &content.TileDef{ID: "lava", Glyph: "^", Passable: false, Transparent: true, Lava: true}
+	g.Level.Set(Pos{2, 1}, lava)
+	return g
+}
+
+func TestBlindStumbleIntoLavaBurns(t *testing.T) {
+	g := lavaGame()
+	g.AddEffect("blind", 10)
+	g.PlayerStep(DirE)
+	if g.Player != (Pos{2, 1}) {
+		t.Fatalf("the blinded blunder into lava like water (C move_creature), at %v", g.Player)
+	}
+	if g.PlayerHP >= 20 {
+		t.Errorf("lava burns 1d6+1 from the first turn (C lava_bath), HP %d", g.PlayerHP)
+	}
+	if !hasMessage(g, "You get burned by lava!") {
+		t.Errorf("expected the C burn message, got %v", g.Messages)
+	}
+}
+
+func TestFloatingCrossesLavaUnburned(t *testing.T) {
+	g := lavaGame()
+	g.AddEffect("levitate", 20)
+	g.PlayerStep(DirE)
+	if g.Player != (Pos{2, 1}) || g.PlayerHP != 20 {
+		t.Errorf("a floater drifts over lava unburned: at %v with HP %d", g.Player, g.PlayerHP)
+	}
+}
+
+func TestLandingInLava(t *testing.T) {
+	g := lavaGame()
+	g.AddEffect("levitate", 2)
+	g.PlayerStep(DirE) // out over the lava (2->1)
+	g.advanceWorld()   // expiry: the landing
+	if !hasMessage(g, "You land in lava!") {
+		t.Fatalf("expected the C landing line, got %v", g.Messages)
+	}
+	if g.PlayerHP >= 20 {
+		t.Errorf("landing in lava burns immediately, HP %d", g.PlayerHP)
+	}
+}
+
+func TestLavaCanKill(t *testing.T) {
+	g := lavaGame()
+	g.PlayerHP = 1
+	g.AddEffect("blind", 10)
+	g.PlayerStep(DirE)
+	if !g.Dead || g.DeathCause != "lava" {
+		t.Errorf("dead=%v cause=%q, want death by lava", g.Dead, g.DeathCause)
+	}
+}

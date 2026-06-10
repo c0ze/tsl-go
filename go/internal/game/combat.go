@@ -101,10 +101,10 @@ func (g *Game) PlayerStep(d Direction) {
 	} else if g.openDoor(dst) { // blocked by a closed door: open it (costs the turn)
 		g.log("You open the door.")
 		acted = true
-	} else if g.Level.InBounds(dst) && g.Level.At(dst).Def.Water &&
+	} else if g.Level.InBounds(dst) && (g.Level.At(dst).Def.Water || g.Level.At(dst).Def.Lava) &&
 		(g.HasEffect("blind") || g.HasEffect("levitate")) {
-		// Deep water turns away a sighted walker; the blinded blunder in and
-		// floaters drift across (C move_creature).
+		// Deep water and lava turn away a sighted walker; the blinded blunder
+		// in and floaters drift across (C move_creature).
 		g.Player = dst
 		acted = true
 	}
@@ -302,6 +302,10 @@ func (g *Game) passTurn() {
 	if g.Dead {
 		return // drowned
 	}
+	g.lavaCheck()
+	if g.Dead {
+		return // melted
+	}
 	g.spotTraps()
 	g.tickEffects()
 	if g.Dead {
@@ -315,6 +319,22 @@ func (g *Game) passTurn() {
 		if g.Dead {
 			return
 		}
+	}
+}
+
+// lavaCheck burns a non-floating player standing in lava for 1d6+1 every
+// turn (C elements.c lava_bath, LAVA_DAMAGE) — no fatigue grace, unlike water.
+func (g *Game) lavaCheck() {
+	if g.HasEffect("levitate") || !g.Level.At(g.Player).Def.Lava {
+		return
+	}
+	g.log("You get burned by lava!")
+	g.PlayerHP -= g.RNG.RollSpec("1d6+1")
+	if g.PlayerHP <= 0 {
+		g.PlayerHP = 0
+		g.Dead = true
+		g.DeathCause = "lava"
+		g.log("You die...")
 	}
 }
 

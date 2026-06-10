@@ -58,3 +58,12 @@ color = "blue"
 passable = false
 transparent = true
 water = true
+
+# Molten rock (#18e, C tiles.c/elements.c): impassable on foot, burns 1d6+1
+# per turn. 0.40 renders lava and every trap as '^'; our colors differ them.
+[tile.lava]
+glyph = "^"
+color = "brown"
+passable = false
+transparent = true
+lava = true
