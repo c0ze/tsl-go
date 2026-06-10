@@ -214,7 +214,17 @@ func LevelFromDef(r *rng.MT, c *content.Content, def *content.LevelDef) (*game.L
 			return nil, fmt.Errorf("gen: level %q boss %q is not a defined monster", def.ID, def.Boss)
 		}
 		if pos, ok := bossSpot(r, lvl, rooms[len(rooms)-1]); ok {
+			if bdef.Permaswim {
+				// "Reset the lurkers pool" (C encounter_lurker): a water-bound
+				// boss gets water forced under it, wherever it lands.
+				water := c.Tiles["water"]
+				if water == nil {
+					return nil, fmt.Errorf("gen: level %q boss %q is permaswim but no \"water\" tile defined", def.ID, def.Boss)
+				}
+				lvl.Set(pos, water)
+			}
 			lvl.Creatures = append(lvl.Creatures, &game.Creature{Def: bdef, Pos: pos, HP: bdef.HP})
+			placeRetinue(c, lvl, def, pos)
 		}
 	}
 	if def.Doors {
@@ -231,6 +241,48 @@ func LevelFromDef(r *rng.MT, c *content.Content, def *content.LevelDef) (*game.L
 		placeTraps(r, c, lvl, rooms, def.Traps)
 	}
 	return lvl, nil
+}
+
+// placeRetinue rings the boss with def.Retinue escorts at the nearest free
+// tiles (C encounter_lurker: 8 tentacles at the nearest free spots), water
+// before land so swimmers start wet.
+func placeRetinue(c *content.Content, lvl *game.Level, def *content.LevelDef, boss game.Pos) {
+	if def.Retinue == "" || def.RetinueCount <= 0 {
+		return
+	}
+	rdef := c.Monsters[def.Retinue]
+	if rdef == nil {
+		return
+	}
+	placed := 0
+	for _, wantWater := range []bool{true, false} {
+		for radius := 1; radius <= 5 && placed < def.RetinueCount; radius++ {
+			for dy := -radius; dy <= radius && placed < def.RetinueCount; dy++ {
+				for dx := -radius; dx <= radius && placed < def.RetinueCount; dx++ {
+					if max(abs(dx), abs(dy)) != radius {
+						continue // ring only: nearest spots first
+					}
+					p := game.Pos{X: boss.X + dx, Y: boss.Y + dy}
+					if !lvl.InBounds(p) || lvl.CreatureAt(p) != nil || p == lvl.Start || lvl.PortalAt(p) != nil {
+						continue
+					}
+					tile := lvl.At(p).Def
+					if tile.Water != wantWater || (!tile.Water && !tile.Passable) {
+						continue
+					}
+					lvl.Creatures = append(lvl.Creatures, &game.Creature{Def: rdef, Pos: p, HP: rdef.HP})
+					placed++
+				}
+			}
+		}
+	}
+}
+
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
 }
 
 // placePools carves n water pools (the C add_pools/area_cloud: blobs of 5-24

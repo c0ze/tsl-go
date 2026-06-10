@@ -115,20 +115,22 @@ type SpawnEntry struct {
 
 // LevelDef defines a named dungeon level and its place in the graph.
 type LevelDef struct {
-	ID       string       `toml:"-"`
-	Name     string       `toml:"name"`
-	W        int          `toml:"width"`
-	H        int          `toml:"height"`
-	Start    bool         `toml:"start"` // the single entry level
-	Links    []string     `toml:"links"` // ids of connected levels
-	Monsters int          `toml:"monsters"`
-	Spawn    []SpawnEntry `toml:"spawn"`
-	Altar    bool         `toml:"altar"` // place an ascension altar (a win tile)
-	Boss     string       `toml:"boss"`  // a guaranteed monster placed once on the level
-	Traps    int          `toml:"traps"` // number of dart_trap tiles to scatter
-	Water    int          `toml:"water"` // number of water pools to carve (C level->water)
-	Doors    bool         `toml:"doors"` // place closed doors in room doorways
-	Dark     bool         `toml:"dark"`  // unlit level: the player sees only a small radius
+	ID           string       `toml:"-"`
+	Name         string       `toml:"name"`
+	W            int          `toml:"width"`
+	H            int          `toml:"height"`
+	Start        bool         `toml:"start"` // the single entry level
+	Links        []string     `toml:"links"` // ids of connected levels
+	Monsters     int          `toml:"monsters"`
+	Spawn        []SpawnEntry `toml:"spawn"`
+	Altar        bool         `toml:"altar"`         // place an ascension altar (a win tile)
+	Boss         string       `toml:"boss"`          // a guaranteed monster placed once on the level
+	Retinue      string       `toml:"retinue"`       // escort monster spawned around the boss ("" = none)
+	RetinueCount int          `toml:"retinue_count"` // how many escorts (C encounter_lurker spawns 8)
+	Traps        int          `toml:"traps"`         // number of dart_trap tiles to scatter
+	Water        int          `toml:"water"`         // number of water pools to carve (C level->water)
+	Doors        bool         `toml:"doors"`         // place closed doors in room doorways
+	Dark         bool         `toml:"dark"`          // unlit level: the player sees only a small radius
 }
 
 // Content is the fully-loaded, validated game content.
@@ -297,6 +299,17 @@ func validateLevels(c *Content) error {
 		if l.Boss != "" {
 			if _, ok := c.Monsters[l.Boss]; !ok {
 				return fmt.Errorf("level %q: boss %q is not a defined monster", id, l.Boss)
+			}
+		}
+		if l.RetinueCount < 0 {
+			return fmt.Errorf("level %q: retinue_count must be >= 0, got %d", id, l.RetinueCount)
+		}
+		if l.Retinue != "" {
+			if _, ok := c.Monsters[l.Retinue]; !ok {
+				return fmt.Errorf("level %q: retinue %q is not a defined monster", id, l.Retinue)
+			}
+			if l.Boss == "" {
+				return fmt.Errorf("level %q: retinue set without a boss to escort", id)
 			}
 		}
 		if l.Altar {

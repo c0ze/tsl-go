@@ -67,6 +67,7 @@ attack = 4
 dodge = 2
 damage = "1d4"
 speed = 65
+swim = true
 corpse = "corpse"
 
 # Depth-gated tanks (no corpse — straw/ooze isn't edible). See #16 depth scaling.
@@ -294,6 +295,8 @@ attack = 5
 dodge = 1
 damage = "1d6"
 speed = 70
+swim = true
+permaswim = true
 min_depth = 3
 
 # A second ranged caster (after the imp) — flings gloom across a lit room
@@ -417,3 +420,21 @@ dodge = 3
 damage = "1d10"
 speed = 110
 ranged = 4
+
+# The Lurker (#18c/#13 uniques, C unique.c): a pool-bound horror — free_swim +
+# permaswim, poison fangs (C virtual_poison_fangs), speed 120. Placed only as
+# the Drowned City's boss, ringed by tentacles (C encounter_lurker).
+[monster.lurker]
+name = "Lurker"
+glyph = "L"
+color = "green"
+hp = 22
+attack = 95
+dodge = 0
+damage = "2d6"
+speed = 120
+swim = true
+permaswim = true
+effect = "poison"
+effect_turns = 5
+min_depth = 99 # never in random spawn tables: boss placement only
