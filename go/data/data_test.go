@@ -585,6 +585,9 @@ func TestEmbeddedWaterLevels(t *testing.T) {
 	if l := c.Levels["dungeon"]; l == nil || l.Water != 1 {
 		t.Errorf("dungeon should have 1 water pool, got %+v", l)
 	}
+	if l := c.Levels["underpass"]; l == nil || l.Water != 3 {
+		t.Errorf("underpass should have 3 water pools, got %+v", l)
+	}
 	if l := c.Levels["drowned_city"]; l == nil || l.Water != 4 {
 		t.Errorf("drowned_city should have 4 water pools, got %+v", l)
 	}

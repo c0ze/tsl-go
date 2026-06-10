@@ -308,6 +308,14 @@ func validateLevels(c *Content) error {
 				return fmt.Errorf("level %q: traps set but no dart_trap effect tile is defined", id)
 			}
 		}
+		if l.Water < 0 {
+			return fmt.Errorf("level %q: water must be >= 0, got %d", id, l.Water)
+		}
+		if l.Water > 0 {
+			if t, ok := c.Tiles["water"]; !ok || !t.Water {
+				return fmt.Errorf("level %q: water pools set but no water tile is defined", id)
+			}
+		}
 	}
 	if starts != 1 {
 		return fmt.Errorf("levels: need exactly one start level, found %d", starts)
