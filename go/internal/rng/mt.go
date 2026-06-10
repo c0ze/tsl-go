@@ -121,3 +121,27 @@ func (g *MT) Intn(nn int) int {
 		}
 	}
 }
+
+// Snapshot captures the generator's full internal state (the MT word array
+// plus the index) so a saved game's dice continue exactly where they stopped.
+func (g *MT) Snapshot() []uint32 {
+	out := make([]uint32, n+1)
+	copy(out, g.mt[:])
+	out[n] = uint32(g.mti)
+	return out
+}
+
+// Restore rebuilds a generator from a Snapshot, or returns nil if the
+// snapshot is malformed.
+func Restore(snapshot []uint32) *MT {
+	if len(snapshot) != n+1 {
+		return nil
+	}
+	g := &MT{}
+	copy(g.mt[:], snapshot[:n])
+	g.mti = int(snapshot[n])
+	if g.mti < 0 || g.mti > n {
+		return nil
+	}
+	return g
+}
