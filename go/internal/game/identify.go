@@ -121,6 +121,23 @@ func (g *Game) UnidentifiedInventory() []*Item {
 
 // identify marks an item's type as globally known (use-identify), announcing the
 // reveal the first time it happens. A no-op for kinds that are never hidden.
+// IdentifyAllPotions reveals every potion type at once (C reading.c: the
+// manual of pharmacy makes the whole potion table known), returning how many
+// were newly learned.
+func (g *Game) IdentifyAllPotions() int {
+	if g.Identified == nil {
+		g.Identified = map[string]bool{}
+	}
+	learned := 0
+	for id, def := range g.Content.Items {
+		if def.Kind == "potion" && !g.Identified[id] {
+			g.Identified[id] = true
+			learned++
+		}
+	}
+	return learned
+}
+
 func (g *Game) identify(it *Item) {
 	if it == nil || it.Def == nil || !unidentifiable(it.Def.Kind) {
 		return

@@ -53,6 +53,29 @@ func (g *Game) CastSpellAt(book *Item, target Pos) {
 		g.log("You lack the energy to cast %s.", book.Def.Name)
 		return
 	}
+	if book.Def.Deathspell { // the touch-range coin flip (C magic.c deathspell)
+		m := g.Level.CreatureAt(target)
+		if m == nil || chebyshev(g.Player, target) != 1 {
+			// Free refusal: the C notes the death risk already deters
+			// using this to probe tiles, so no EP and no turn.
+			g.log("No one is there!")
+			return
+		}
+		g.EP -= book.Def.Cost
+		g.log("Death...")
+		if g.RNG.Intn(2) == 0 {
+			g.log("Yours!")
+			g.PlayerHP = 0
+			g.Dead = true
+			g.DeathCause = "deathspell"
+			g.log("You die.")
+			return
+		}
+		g.log("Theirs!")
+		g.killCreature(m) // outright, regardless of HP
+		g.advanceWorld()
+		return
+	}
 	if book.Def.Breath != "" { // a breath book exhales a cone toward the target
 		g.EP -= book.Def.Cost
 		g.playerBreathe(book.Def.Breath, target)

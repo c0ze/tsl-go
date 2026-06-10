@@ -40,7 +40,15 @@ func Registry() map[string]game.Behavior {
 		"detect_traps":    detectTraps,
 		"magic_weapon":    magicWeapon,
 		"summon_familiar": summonFamiliar,
+		"pharmacy":        pharmacy,
 	}
+}
+
+// pharmacy reveals the whole potion table at once (C reading.c: the manual
+// of pharmacy).
+func pharmacy(g *game.Game, it *game.Item) []string {
+	g.IdentifyAllPotions()
+	return []string{"You learn how to identify all potions."}
 }
 
 // summonFamiliar calls forth an imp ally for Power ticks (C magic.c

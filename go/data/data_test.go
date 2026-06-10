@@ -848,3 +848,21 @@ func TestEmbeddedBreathBooks(t *testing.T) {
 		t.Errorf("book_noxious_breath def unexpected: %+v", b)
 	}
 }
+
+// TestEmbeddedDeathspellAndPharmacy checks the 15x books loaded; the manual of
+// camouflage is faithfully absent (commented out in 0.40's treasure.c).
+func TestEmbeddedDeathspellAndPharmacy(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if b := c.Items["book_deathspell"]; b == nil || !b.Deathspell || b.Cost != 1 || b.Name != "book of Deathspell" {
+		t.Errorf("book_deathspell def unexpected: %+v", b)
+	}
+	if b := c.Items["manual_pharmacy"]; b == nil || b.Use != "pharmacy" || b.Name != "manual of pharmacy" {
+		t.Errorf("manual_pharmacy def unexpected: %+v", b)
+	}
+	if _, exists := c.Items["manual_camouflage"]; exists {
+		t.Error("camouflage is commented out in 0.40 and should stay absent")
+	}
+}

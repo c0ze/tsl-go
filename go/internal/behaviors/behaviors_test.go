@@ -467,3 +467,22 @@ func TestSummonFamiliarBringsAnImp(t *testing.T) {
 		t.Errorf("expected the C arrival line, got %v", msgs)
 	}
 }
+
+func TestPharmacyIdentifiesAllPotions(t *testing.T) {
+	ph, ok := Registry()["pharmacy"]
+	if !ok {
+		t.Fatal("pharmacy not registered")
+	}
+	g := &game.Game{
+		PlayerHP: 10, PlayerMax: 10,
+		Content:    &content.Content{Items: map[string]*content.ItemDef{"potion_pain": {ID: "potion_pain", Name: "potion of pain", Kind: "potion"}}},
+		Identified: map[string]bool{},
+	}
+	msgs := ph(g, &game.Item{Def: &content.ItemDef{Name: "manual of pharmacy"}})
+	if !g.Identified["potion_pain"] {
+		t.Error("the manual identifies every potion (C reading.c)")
+	}
+	if len(msgs) == 0 || msgs[0] != "You learn how to identify all potions." {
+		t.Errorf("expected the C line, got %v", msgs)
+	}
+}

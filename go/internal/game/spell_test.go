@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/c0ze/tsl/internal/content"
+	"github.com/c0ze/tsl/internal/rng"
 )
 
 func TestCastSpellSpendsEP(t *testing.T) {
@@ -245,5 +246,63 @@ func TestSpellInventoryFiltersSpellbooks(t *testing.T) {
 	s := g.SpellInventory()
 	if len(s) != 1 || s[0].Def.Kind != "spellbook" {
 		t.Errorf("SpellInventory should list only spellbooks, got %v", s)
+	}
+}
+
+func TestDeathspellTheirs(t *testing.T) {
+	g := combatGame()
+	g.EP, g.EPMax = 5, 5
+	book := &Item{Def: &content.ItemDef{Name: "book of Deathspell", Kind: "spellbook", Cost: 1, Deathspell: true}}
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Glyph: "r", HP: 99, Attack: 0, Dodge: 0, Damage: "1d1"}, Pos: Pos{2, 1}, HP: 99}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	// Seed 1's first Intn(2) lands "Theirs!": the rat dies outright at any HP.
+	g.CastSpellAt(book, rat.Pos)
+	if g.Dead {
+		t.Skip("seed flipped against the caster; covered by TestDeathspellYours")
+	}
+	if g.Level.CreatureAt(Pos{2, 1}) != nil {
+		t.Error("Theirs! — the target dies outright regardless of HP (C deathspell)")
+	}
+	if g.EP != 4 {
+		t.Errorf("the spell costs 1 EP (C attrs.c:355), EP %d", g.EP)
+	}
+}
+
+func TestDeathspellYours(t *testing.T) {
+	// Walk seeds until the flip lands on the caster; both outcomes must occur.
+	for seed := uint32(1); seed <= 16; seed++ {
+		g := combatGame()
+		g.RNG = rng.NewWithSeed(seed)
+		g.EP, g.EPMax = 5, 5
+		book := &Item{Def: &content.ItemDef{Name: "book of Deathspell", Kind: "spellbook", Cost: 1, Deathspell: true}}
+		rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Glyph: "r", HP: 99, Attack: 0, Dodge: 0, Damage: "1d1"}, Pos: Pos{2, 1}, HP: 99}
+		g.Level.Creatures = append(g.Level.Creatures, rat)
+		g.CastSpellAt(book, rat.Pos)
+		if g.Dead {
+			if g.DeathCause != "deathspell" {
+				t.Errorf("morgue cause should be %q, got %q", "deathspell", g.DeathCause)
+			}
+			if !hasMessage(g, "Yours!") {
+				t.Errorf("expected the C line, got %v", g.Messages)
+			}
+			return
+		}
+	}
+	t.Fatal("sixteen seeds never killed the caster; the coin looks rigged")
+}
+
+func TestDeathspellNeedsAdjacentTarget(t *testing.T) {
+	g := combatGame()
+	g.EP, g.EPMax = 5, 5
+	book := &Item{Def: &content.ItemDef{Name: "book of Deathspell", Kind: "spellbook", Cost: 1, Deathspell: true}}
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Glyph: "r", HP: 9, Attack: 0, Dodge: 0, Damage: "1d1"}, Pos: Pos{5, 1}, HP: 9}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	g.CastSpellAt(book, rat.Pos) // too far: touch range only
+	if g.EP != 5 || g.Dead || rat.HP != 9 {
+		t.Error("a non-adjacent target refuses free (C: 'No one is there!', no turn, no EP)")
+	}
+	g.CastSpellAt(book, Pos{2, 1}) // empty tile
+	if g.EP != 5 || !hasMessage(g, "No one is there!") {
+		t.Errorf("an empty tile refuses with the C line, got %v", g.Messages)
 	}
 }
