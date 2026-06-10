@@ -54,18 +54,22 @@ func (t *TileDef) Rune() rune {
 
 // MonsterDef defines a kind of monster.
 type MonsterDef struct {
-	ID       string `toml:"-"`
-	Name     string `toml:"name"`
-	Glyph    string `toml:"glyph"`
-	Color    Color  `toml:"color"`
-	HP       int    `toml:"hp"`
-	Attack   int    `toml:"attack"`
-	Dodge    int    `toml:"dodge"`
-	Damage   string `toml:"damage"`    // dice spec, e.g. "1d4"
-	Speed    int    `toml:"speed"`     // energy gained per turn; <= 0 defaults to 100
-	Corpse   string `toml:"corpse"`    // item id dropped on death ("" = none); must be a food item
-	MinDepth int    `toml:"min_depth"` // earliest depth this monster spawns (0/1 = from depth 1)
-	Ranged   int    `toml:"ranged"`    // ranged attack distance in tiles (0 = melee only)
+	ID          string `toml:"-"`
+	Name        string `toml:"name"`
+	Glyph       string `toml:"glyph"`
+	Color       Color  `toml:"color"`
+	HP          int    `toml:"hp"`
+	Attack      int    `toml:"attack"`
+	Dodge       int    `toml:"dodge"`
+	Damage      string `toml:"damage"`       // dice spec, e.g. "1d4"
+	Speed       int    `toml:"speed"`        // energy gained per turn; <= 0 defaults to 100
+	Corpse      string `toml:"corpse"`       // item id dropped on death ("" = none); must be a food item
+	MinDepth    int    `toml:"min_depth"`    // earliest depth this monster spawns (0/1 = from depth 1)
+	Ranged      int    `toml:"ranged"`       // ranged attack distance in tiles (0 = melee only)
+	Swim        bool   `toml:"swim"`         // free_swim: may enter deep water (#18)
+	Permaswim   bool   `toml:"permaswim"`    // water only — it won't leave its pool (implies swim)
+	Effect      string `toml:"effect"`       // status effect a landed melee hit applies ("" = none)
+	EffectTurns int    `toml:"effect_turns"` // duration of Effect
 }
 
 // Rune returns the monster's glyph as a rune.
@@ -386,6 +390,12 @@ func validateMonster(m *MonsterDef) error {
 	}
 	if m.Ranged < 0 {
 		return fmt.Errorf("ranged must be >= 0, got %d", m.Ranged)
+	}
+	if m.Permaswim && !m.Swim {
+		return fmt.Errorf("permaswim requires swim")
+	}
+	if m.Effect != "" && m.EffectTurns <= 0 {
+		return fmt.Errorf("melee effect %q needs effect_turns > 0", m.Effect)
 	}
 	return nil
 }

@@ -193,6 +193,10 @@ func (g *Game) monsterAttacks(m *Creature) {
 	dmg := g.RNG.RollSpec(m.Def.Damage)
 	g.log("The %s hits you for %d.", m.Def.Name, dmg)
 	g.HurtPlayer(dmg, m.Def.Name)
+	if !g.Dead && m.Def.Effect != "" { // venomous bites etc. (C virtual weapons)
+		g.AddEffect(m.Def.Effect, m.Def.EffectTurns)
+		g.log("The %s %s you.", m.Def.Name, effectVerb(m.Def.Effect))
+	}
 }
 
 // rangedAttack fires a bolt at the player from a distance, using the same
@@ -362,12 +366,28 @@ func (g *Game) monsterAct(m *Creature) {
 	}
 }
 
+// creatureCanEnter is the terrain half of a monster's move (C move_creature):
+// a permaswimmer refuses anything but water, a free-swimmer takes water or
+// land, and everyone else needs walkable ground.
+func (g *Game) creatureCanEnter(m *Creature, dst Pos) bool {
+	if !g.Level.InBounds(dst) {
+		return false
+	}
+	if m.Def.Permaswim {
+		return g.Level.At(dst).Def.Water
+	}
+	if m.Def.Swim && g.Level.At(dst).Def.Water {
+		return true
+	}
+	return g.Level.Passable(dst)
+}
+
 func (g *Game) stepToward(m *Creature, target Pos) {
 	dst := Pos{m.Pos.X + signOf(target.X-m.Pos.X), m.Pos.Y + signOf(target.Y-m.Pos.Y)}
 	if dst == g.Player || g.Level.CreatureAt(dst) != nil {
 		return
 	}
-	if !g.Level.Passable(dst) {
+	if !g.creatureCanEnter(m, dst) {
 		g.openDoor(dst) // open a door in the way (spends this move); a plain wall is a no-op
 		return
 	}
@@ -383,7 +403,7 @@ func (g *Game) stepAway(m *Creature, from Pos) {
 		return // on top of the player (shouldn't happen): nowhere to flee
 	}
 	dst := Pos{m.Pos.X + dx, m.Pos.Y + dy}
-	if dst == g.Player || g.Level.CreatureAt(dst) != nil || !g.Level.Passable(dst) {
+	if dst == g.Player || g.Level.CreatureAt(dst) != nil || !g.creatureCanEnter(m, dst) {
 		return
 	}
 	m.Pos = dst
@@ -398,7 +418,7 @@ func (g *Game) stepRandom(m *Creature) {
 		return // stumbles in place
 	}
 	dst := Pos{m.Pos.X + dx, m.Pos.Y + dy}
-	if dst == g.Player || g.Level.CreatureAt(dst) != nil || !g.Level.Passable(dst) {
+	if dst == g.Player || g.Level.CreatureAt(dst) != nil || !g.creatureCanEnter(m, dst) {
 		return
 	}
 	m.Pos = dst
