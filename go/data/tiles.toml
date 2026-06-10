@@ -49,3 +49,12 @@ glyph = "'"
 color = "brown"
 passable = true
 transparent = true
+
+# Deep water (#18, C tiles.c): impassable on foot — only the blinded stumble in
+# (later: levitation floats over) — and each turn spent in it drains the wader.
+[tile.water]
+glyph = "_"
+color = "blue"
+passable = false
+transparent = true
+water = true

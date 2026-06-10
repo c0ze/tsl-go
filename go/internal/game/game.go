@@ -100,6 +100,7 @@ type Game struct {
 	EPMax        int
 	epTurn       int // counter for slow EP regeneration
 	playerEnergy int // turn-energy surplus banked toward the next action (see advanceWorld)
+	swimFatigue  int // consecutive turns spent in deep water (see swimCheck)
 	Messages     []string
 	Dead         bool
 	Inventory    []*Item

@@ -75,6 +75,11 @@ func (g *Game) PlayerStep(d Direction) {
 	} else if g.openDoor(dst) { // blocked by a closed door: open it (costs the turn)
 		g.log("You open the door.")
 		acted = true
+	} else if g.Level.InBounds(dst) && g.Level.At(dst).Def.Water && g.HasEffect("blind") {
+		// Deep water turns away a sighted walker, but the blinded blunder
+		// straight in (C move_creature).
+		g.Player = dst
+		acted = true
 	}
 	if acted { // a blocked move into a wall doesn't pass the turn
 		g.advanceWorld()
@@ -236,6 +241,10 @@ func (g *Game) advanceWorld() {
 // move_counter minus TURN_TIME), so at base speed exactly one tick passes; a
 // slowed player owes two, and a hasted player sometimes none (a free action).
 func (g *Game) passTurn() {
+	g.swimCheck()
+	if g.Dead {
+		return // drowned
+	}
 	g.tickEffects()
 	if g.Dead {
 		return // status effects (e.g. poison) killed the player
@@ -248,6 +257,32 @@ func (g *Game) passTurn() {
 		if g.Dead {
 			return
 		}
+	}
+}
+
+// playerSwimming is the player's swimming skill — how many turns of deep water
+// are free before fatigue bites (C attr_swimming, base 0; gear may raise it
+// when the attribute lands).
+const playerSwimming = 0
+
+// swimCheck is the C's swim() for the player, run right after each turn's
+// action: a turn spent in deep water adds fatigue, and past the swimming skill
+// each turn costs 1 HP until the swimmer drowns; dry land resets the count.
+func (g *Game) swimCheck() {
+	if !g.Level.At(g.Player).Def.Water {
+		g.swimFatigue = 0
+		return
+	}
+	g.swimFatigue++
+	if g.swimFatigue <= playerSwimming {
+		return
+	}
+	g.PlayerHP--
+	if g.PlayerHP <= 0 {
+		g.PlayerHP = 0
+		g.Dead = true
+		g.DeathCause = "drowned"
+		g.log("You drown...")
 	}
 }
 
