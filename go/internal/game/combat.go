@@ -118,11 +118,11 @@ func (g *Game) playerDodgeStat() int {
 }
 
 func (g *Game) playerAttacks(m *Creature) {
-	m.RemoveEffect("sleep") // being attacked wakes a sleeper (C combat.c)
 	if !g.RNG.Chance(g.playerAttackStat(), m.Def.Dodge) {
 		g.log("You miss the %s.", m.Def.Name)
 		return
 	}
+	m.RemoveEffect("sleep") // a landed hit wakes a sleeper; a whiff doesn't (C combat.c)
 	dmg := g.RNG.RollSpec(g.playerDamageSpec())
 	m.HP -= dmg
 	g.log("You hit the %s for %d.", m.Def.Name, dmg)

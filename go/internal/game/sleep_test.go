@@ -64,8 +64,22 @@ func TestSleepingMonsterHoldsUntilStruck(t *testing.T) {
 	if rat.Pos != (Pos{2, 1}) {
 		t.Error("a sleeping monster must not move")
 	}
-	g.PlayerStep(DirE) // strike it: the hit (or even a miss beside it) wakes it
+	g.PlayerStep(DirE) // strike it: a landed hit wakes it
 	if !g.Dead && rat.HP < 9 && rat.HasEffect("sleep") {
 		t.Error("a struck monster should wake (sleep effect removed)")
+	}
+}
+
+func TestMissedSwingDoesNotWakeMonster(t *testing.T) {
+	g := combatGame()
+	// Dodge so high the player's swing is all but guaranteed to whiff; the C
+	// wakes the sleeper only after a hit lands ("we *hit* before the enemy
+	// wakes up", combat.c).
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Glyph: "r", HP: 9, Attack: 0, Dodge: 100000, Damage: "1d1"}, Pos: Pos{2, 1}, HP: 9}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	rat.AddEffect("sleep", 50)
+	g.PlayerStep(DirE)
+	if rat.HP == 9 && !rat.HasEffect("sleep") {
+		t.Error("a missed swing must not wake a sleeping monster (C combat.c)")
 	}
 }
