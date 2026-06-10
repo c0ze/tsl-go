@@ -72,6 +72,17 @@ func (g *Game) AddEffect(kind string, turns int) {
 	g.Effects = addEffect(g.Effects, kind, turns)
 }
 
+// RemoveEffect drops an active player effect by kind (the C's effect_expire,
+// e.g. a potion of speed cancelling slow); an absent kind is a no-op.
+func (g *Game) RemoveEffect(kind string) {
+	for i, e := range g.Effects {
+		if e.Kind == kind {
+			g.Effects = append(g.Effects[:i], g.Effects[i+1:]...)
+			return
+		}
+	}
+}
+
 // tickCreatureEffects applies each of a creature's active effects (poison costs
 // it 1 HP), decrements and expires them, and resolves death through killCreature
 // when its HP reaches 0. It reports whether the creature died this tick.

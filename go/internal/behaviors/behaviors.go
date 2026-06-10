@@ -28,7 +28,25 @@ func Registry() map[string]game.Behavior {
 		"noxious_cloud":   noxiousCloud,
 		"scare":           scare,
 		"restore_energy":  restoreEnergy,
+		"haste":           haste,
+		"slowness":        slowness,
 	}
+}
+
+// haste speeds the player up for Power turns, cancelling an active slow
+// (C potions.c treasure_p_speed).
+func haste(g *game.Game, it *game.Item) []string {
+	g.RemoveEffect("slow")
+	g.AddEffect("haste", it.Def.Power)
+	return []string{"You move faster!"}
+}
+
+// slowness drags the player down for Power turns, cancelling an active haste
+// (C potions.c treasure_p_slowing).
+func slowness(g *game.Game, it *game.Item) []string {
+	g.RemoveEffect("haste")
+	g.AddEffect("slow", it.Def.Power)
+	return []string{"You feel very sluggish."}
 }
 
 // restoreHP adds amount to the player's HP, clamped to PlayerMax, and reports

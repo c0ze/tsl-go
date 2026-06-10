@@ -117,3 +117,20 @@ func TestCreatureAddEffectRefreshesToLonger(t *testing.T) {
 		t.Errorf("shorter refresh should not shorten, got %d", m.Effects[0].Turns)
 	}
 }
+
+func TestRemoveEffectDropsOnlyNamedKind(t *testing.T) {
+	g := &Game{}
+	g.AddEffect("slow", 10)
+	g.AddEffect("poison", 5)
+	g.RemoveEffect("slow")
+	if g.HasEffect("slow") {
+		t.Error("slow should be gone after RemoveEffect")
+	}
+	if !g.HasEffect("poison") {
+		t.Error("poison should be untouched by removing slow")
+	}
+	g.RemoveEffect("haste") // absent kind: a no-op
+	if len(g.Effects) != 1 {
+		t.Errorf("expected 1 effect left, got %v", g.Effects)
+	}
+}
