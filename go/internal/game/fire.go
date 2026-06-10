@@ -37,5 +37,5 @@ func (g *Game) FireWeapon(target Pos) {
 	} else {
 		g.log("Your shot flies into empty space.")
 	}
-	g.monstersAct()
+	g.advanceWorld()
 }

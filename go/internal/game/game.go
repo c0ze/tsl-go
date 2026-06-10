@@ -89,29 +89,30 @@ func (l *Level) Passable(p Pos) bool {
 
 // Game is the whole game state.
 type Game struct {
-	Content     *content.Content
-	Level       *Level
-	Dungeon     *Dungeon
-	Player      Pos
-	RNG         *rng.MT
-	PlayerHP    int
-	PlayerMax   int
-	EP          int // energy points: the spellcasting resource
-	EPMax       int
-	epTurn      int // counter for slow EP regeneration
-	Messages    []string
-	Dead        bool
-	Inventory   []*Item
-	Weapon      *Item
-	Armor       *Item
-	Ring        *Item // worn accessory: passive attack/dodge bonus
-	Amulet      *Item // worn accessory: passive attack/dodge bonus
-	Behaviors   map[string]Behavior
-	Won         bool
-	DeathCause  string
-	Effects     []Effect
-	Identified  map[string]bool   // item ids whose type is globally known this game
-	appearances map[string]string // item id -> shuffled cosmetic name while unidentified
+	Content      *content.Content
+	Level        *Level
+	Dungeon      *Dungeon
+	Player       Pos
+	RNG          *rng.MT
+	PlayerHP     int
+	PlayerMax    int
+	EP           int // energy points: the spellcasting resource
+	EPMax        int
+	epTurn       int // counter for slow EP regeneration
+	playerEnergy int // turn-energy surplus banked toward the next action (see advanceWorld)
+	Messages     []string
+	Dead         bool
+	Inventory    []*Item
+	Weapon       *Item
+	Armor        *Item
+	Ring         *Item // worn accessory: passive attack/dodge bonus
+	Amulet       *Item // worn accessory: passive attack/dodge bonus
+	Behaviors    map[string]Behavior
+	Won          bool
+	DeathCause   string
+	Effects      []Effect
+	Identified   map[string]bool   // item ids whose type is globally known this game
+	appearances  map[string]string // item id -> shuffled cosmetic name while unidentified
 }
 
 // Move attempts to move the player one step in d. It returns true if the player

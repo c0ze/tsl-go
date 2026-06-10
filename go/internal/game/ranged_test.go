@@ -28,7 +28,7 @@ func TestRangedMonsterShootsAcrossRoom(t *testing.T) {
 	g.Level.Creatures = append(g.Level.Creatures, imp)
 	before := imp.Pos
 
-	g.monstersAct()
+	g.worldTick()
 
 	if g.PlayerHP >= 20 {
 		t.Errorf("a ranged monster with line of sight should hit the player, HP=%d", g.PlayerHP)
@@ -46,7 +46,7 @@ func TestRangedMonsterBlockedApproaches(t *testing.T) {
 	g.Level.Creatures = append(g.Level.Creatures, imp)
 	beforeX := imp.Pos.X
 
-	g.monstersAct()
+	g.worldTick()
 
 	if g.PlayerHP != 20 {
 		t.Errorf("a monster with no line of sight should not shoot, HP=%d", g.PlayerHP)
@@ -63,7 +63,7 @@ func TestRangedMonsterOutOfRangeApproaches(t *testing.T) {
 	g.Level.Creatures = append(g.Level.Creatures, imp)
 	beforeX := imp.Pos.X
 
-	g.monstersAct()
+	g.worldTick()
 
 	if g.PlayerHP != 20 {
 		t.Errorf("an out-of-range ranged monster should not shoot, HP=%d", g.PlayerHP)

@@ -43,7 +43,7 @@ func TestMonsterAttacksAndCanKillPlayer(t *testing.T) {
 	// Player waits in place (steps into a wall-less open tile west and back is
 	// unnecessary); just run monster turns directly.
 	for i := 0; i < 50 && !g.Dead; i++ {
-		g.monstersAct()
+		g.worldTick()
 	}
 	if !g.Dead {
 		t.Fatal("player should be dead after the ogre attacks")
@@ -55,7 +55,7 @@ func TestMonsterMovesTowardPlayer(t *testing.T) {
 	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Glyph: "r", HP: 3, Attack: 1, Dodge: 1, Damage: "1d1"}, Pos: Pos{8, 1}, HP: 3}
 	g.Level.Creatures = append(g.Level.Creatures, rat)
 	before := rat.Pos.X
-	g.monstersAct()
+	g.worldTick()
 	if rat.Pos.X >= before {
 		t.Errorf("rat at x=%d should have stepped toward the player (x decreasing), was %d", rat.Pos.X, before)
 	}
@@ -66,7 +66,7 @@ func TestFasterMonsterActsMultipleTimes(t *testing.T) {
 	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Glyph: "r", HP: 9, Attack: 1, Dodge: 1, Damage: "1d1", Speed: 250}, Pos: Pos{8, 1}, HP: 9}
 	g.Level.Creatures = append(g.Level.Creatures, rat)
 	before := rat.Pos.X
-	g.monstersAct() // speed 250 → 250 energy → acts twice (250-100-100=50)
+	g.worldTick() // speed 250 → 250 energy → acts twice (250-100-100=50)
 	if before-rat.Pos.X != 2 {
 		t.Errorf("speed-250 monster stepped %d tiles in one turn, want 2", before-rat.Pos.X)
 	}
@@ -77,7 +77,7 @@ func TestDefaultSpeedActsOnce(t *testing.T) {
 	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Glyph: "r", HP: 9, Attack: 1, Dodge: 1, Damage: "1d1"}, Pos: Pos{8, 1}, HP: 9} // Speed 0 → default 100
 	g.Level.Creatures = append(g.Level.Creatures, rat)
 	before := rat.Pos.X
-	g.monstersAct()
+	g.worldTick()
 	if before-rat.Pos.X != 1 {
 		t.Errorf("default-speed monster stepped %d tiles, want 1", before-rat.Pos.X)
 	}
@@ -187,8 +187,8 @@ func TestSlowedMonsterActsLessOften(t *testing.T) {
 	g.Level.Creatures = append(g.Level.Creatures, rat)
 	rat.AddEffect("slow", 10)
 	start := rat.Pos.X
-	g.monstersAct() // gains 50 energy: not enough to act
-	g.monstersAct() // 50+50=100: acts once
+	g.worldTick() // gains 50 energy: not enough to act
+	g.worldTick() // 50+50=100: acts once
 	if moved := start - rat.Pos.X; moved != 1 {
 		t.Errorf("slowed default-speed monster moved %d tiles in two turns, want 1", moved)
 	}
@@ -217,7 +217,7 @@ func TestPoisonedMonsterDiesOverTurns(t *testing.T) {
 	rat.AddEffect("poison", 8)
 
 	for i := 0; i < 8 && g.Level.CreatureAt(rat.Pos) == rat; i++ {
-		g.monstersAct()
+		g.worldTick()
 	}
 	for _, m := range g.Level.Creatures {
 		if m == rat {
@@ -244,7 +244,7 @@ func TestConfusedMonsterCannotAttack(t *testing.T) {
 	g.Level.Creatures = append(g.Level.Creatures, rat)
 	rat.AddEffect("confuse", 5)
 	hp := g.PlayerHP
-	g.monstersAct()
+	g.worldTick()
 	if g.PlayerHP != hp {
 		t.Errorf("a confused creature should be too disoriented to attack: HP %d -> %d", hp, g.PlayerHP)
 	}
@@ -255,7 +255,7 @@ func TestAdjacentMonsterAttacksWhenNotConfused(t *testing.T) {
 	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Attack: 99, Dodge: 0, Damage: "5d1", HP: 9}, Pos: Pos{2, 1}, HP: 9}
 	g.Level.Creatures = append(g.Level.Creatures, rat)
 	hp := g.PlayerHP
-	g.monstersAct()
+	g.worldTick()
 	if g.PlayerHP >= hp {
 		t.Errorf("an adjacent creature should attack the player, HP unchanged at %d", g.PlayerHP)
 	}
@@ -268,7 +268,7 @@ func TestFearedMonsterFleesInsteadOfAttacking(t *testing.T) {
 	rat.AddEffect("fear", 5)
 	hp := g.PlayerHP
 	before := chebyshev(rat.Pos, g.Player)
-	g.monstersAct()
+	g.worldTick()
 	if g.PlayerHP != hp {
 		t.Errorf("a frightened creature should flee, not attack: HP %d -> %d", hp, g.PlayerHP)
 	}

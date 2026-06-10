@@ -14,7 +14,7 @@ func (g *Game) PlayerPickup() {
 	g.Inventory = append(g.Inventory, it)
 	g.log("You pick up the %s.", it.Def.Name)
 	g.autoEquip(it)
-	g.monstersAct()
+	g.advanceWorld()
 }
 
 // autoEquip wields/wears a just-picked-up weapon or armor when its slot is empty
@@ -76,7 +76,7 @@ func (g *Game) PlayerUse(it *Item) {
 		}
 		g.removeInventory(it)
 	}
-	g.monstersAct()
+	g.advanceWorld()
 }
 
 func (g *Game) hasInventoryItem(it *Item) bool {

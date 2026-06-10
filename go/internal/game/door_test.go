@@ -45,7 +45,7 @@ func TestMonsterOpensDoor(t *testing.T) {
 	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 3, Damage: "1d1"}, Pos: Pos{3, 1}, HP: 3}
 	g.Level.Creatures = append(g.Level.Creatures, rat)
 
-	g.monstersAct() // rat steps toward the player, blocked by the closed door
+	g.worldTick() // rat steps toward the player, blocked by the closed door
 
 	if g.Level.At(Pos{2, 1}).Def.ID != "door_open" {
 		t.Errorf("a monster should open a door in its path, got %q", g.Level.At(Pos{2, 1}).Def.ID)
