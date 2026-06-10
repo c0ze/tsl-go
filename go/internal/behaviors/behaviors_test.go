@@ -447,3 +447,23 @@ func TestMagicWeaponIgnitesHands(t *testing.T) {
 		t.Errorf("expected the C message, got %v", msgs)
 	}
 }
+
+func TestSummonFamiliarBringsAnImp(t *testing.T) {
+	sf, ok := Registry()["summon_familiar"]
+	if !ok {
+		t.Fatal("summon_familiar not registered")
+	}
+	floor := &content.TileDef{ID: "floor", Glyph: ".", Color: content.ColorNormal, Passable: true, Transparent: true}
+	g := &game.Game{
+		Level:   game.NewLevel(8, 3, floor),
+		Player:  game.Pos{X: 1, Y: 1},
+		Content: &content.Content{Monsters: map[string]*content.MonsterDef{"imp": {ID: "imp", Name: "imp", Glyph: "i", HP: 6, Attack: 8, Dodge: 2, Damage: "1d4"}}},
+	}
+	msgs := sf(g, &game.Item{Def: &content.ItemDef{Name: "scroll of Summon Familiar", Power: 500}})
+	if len(g.Level.Creatures) != 1 || !g.Level.Creatures[0].Ally {
+		t.Error("the scroll should summon a charmed imp")
+	}
+	if len(msgs) == 0 || msgs[0] != "The imp has arrived." {
+		t.Errorf("expected the C arrival line, got %v", msgs)
+	}
+}

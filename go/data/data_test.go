@@ -803,3 +803,15 @@ func TestEmbeddedMagicWeapon(t *testing.T) {
 		t.Errorf("scroll_magic_weapon def unexpected: %+v", s)
 	}
 }
+
+// TestEmbeddedSummonFamiliar checks the final scroll loaded (15w): all ten
+// 0.40 scrolls are now in.
+func TestEmbeddedSummonFamiliar(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if s := c.Items["scroll_familiar"]; s == nil || s.Kind != "scroll" || s.Use != "summon_familiar" || s.Power != 500 || s.Name != "scroll of Summon Familiar" {
+		t.Errorf("scroll_familiar def unexpected: %+v", s)
+	}
+}

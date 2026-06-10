@@ -468,3 +468,13 @@ color = "cyan"
 kind = "scroll"
 use = "magic_weapon"
 power = 22
+
+# The tenth and last scroll (15w, C magic.c summon_familiar): an imp ally for
+# 500 turns (C DEFAULT_SUMMON_LIFETIME). 0.40 capitalizes the name.
+[item.scroll_familiar]
+name = "scroll of Summon Familiar"
+glyph = "?"
+color = "normal"
+kind = "scroll"
+use = "summon_familiar"
+power = 500

@@ -82,3 +82,26 @@ func TestHostilePrefersAdjacentAlly(t *testing.T) {
 		t.Error("the player was out of reach this tick")
 	}
 }
+
+func TestSummonAllyArrivesBesideThePlayer(t *testing.T) {
+	g := combatGame()
+	g.Content.Monsters = map[string]*content.MonsterDef{"imp": {ID: "imp", Name: "imp", Glyph: "i", HP: 6, Attack: 8, Dodge: 2, Damage: "1d4"}}
+	if !g.SummonAlly("imp", 500) {
+		t.Fatal("the summon should find a spot")
+	}
+	var imp *Creature
+	for _, c := range g.Level.Creatures {
+		if c.Def.ID == "imp" {
+			imp = c
+		}
+	}
+	if imp == nil || !imp.Ally || imp.Lifetime != 500 {
+		t.Fatalf("expected a charmed 500-tick imp, got %+v", imp)
+	}
+	if d := chebyshev(imp.Pos, g.Player); d != 1 {
+		t.Errorf("the familiar arrives at its master's side, %d away", d)
+	}
+	if g.SummonAlly("ghost", 1) {
+		t.Error("an unknown def must not summon")
+	}
+}
