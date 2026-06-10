@@ -81,6 +81,7 @@ type savedGame struct {
 	Effects      []savedEffect     `json:"fx,omitempty"`
 	Identified   map[string]bool   `json:"identified,omitempty"`
 	Known        map[string]bool   `json:"known,omitempty"`
+	Shape        string            `json:"shape,omitempty"`
 	Appearances  map[string]string `json:"appearances,omitempty"`
 	Inventory    []savedItem       `json:"inventory,omitempty"`
 	Weapon       int               `json:"weapon"` // inventory indices; -1 = empty slot
@@ -132,6 +133,9 @@ func (g *Game) Save(w io.Writer) error {
 		Identified: g.Identified, Known: g.Known, Appearances: g.appearances,
 		Weapon: slotIndex(g.Inventory, g.Weapon), Armor: slotIndex(g.Inventory, g.Armor),
 		Ring: slotIndex(g.Inventory, g.Ring), Amulet: slotIndex(g.Inventory, g.Amulet),
+	}
+	if g.Shape != nil {
+		sg.Shape = g.Shape.ID
 	}
 	if g.RNG != nil {
 		sg.RNG = g.RNG.Snapshot()
@@ -205,6 +209,11 @@ func LoadGame(r io.Reader, c *content.Content, behaviors map[string]Behavior,
 		Dead: sg.Dead, Won: sg.Won, DeathCause: sg.DeathCause,
 		Messages: sg.Messages, Effects: loadEffects(sg.Effects),
 		Identified: sg.Identified, Known: sg.Known, appearances: sg.Appearances,
+	}
+	if sg.Shape != "" {
+		if g.Shape = c.Monsters[sg.Shape]; g.Shape == nil {
+			return nil, fmt.Errorf("load: unknown shape %q", sg.Shape)
+		}
 	}
 	if sg.RNG != nil {
 		if g.RNG = rng.Restore(sg.RNG); g.RNG == nil {

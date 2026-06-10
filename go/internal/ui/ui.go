@@ -120,7 +120,11 @@ func BuildView(g *game.Game) View {
 		*v.At(m.Pos.X, m.Pos.Y) = Cell{Glyph: m.Def.Rune(), Color: m.Def.Color}
 	}
 	if l.InBounds(g.Player) {
-		*v.At(g.Player.X, g.Player.Y) = Cell{Glyph: PlayerGlyph, Color: PlayerColor}
+		if g.Shape != nil { // a polymorphed player wears the form's glyph
+			*v.At(g.Player.X, g.Player.Y) = Cell{Glyph: g.Shape.Rune(), Color: g.Shape.Color}
+		} else {
+			*v.At(g.Player.X, g.Player.Y) = Cell{Glyph: PlayerGlyph, Color: PlayerColor}
+		}
 	}
 	v.Status = statusLine(g)
 	v.Messages = lastN(g.Messages, 4)

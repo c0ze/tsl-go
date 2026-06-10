@@ -934,3 +934,15 @@ func TestEmbeddedKingOfWorms(t *testing.T) {
 		}
 	}
 }
+
+// TestEmbeddedPolymorph checks the final potion loaded (22a): with it the
+// 0.40 potion table is complete.
+func TestEmbeddedPolymorph(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if p := c.Items["potion_polymorph"]; p == nil || p.Kind != "potion" || p.Use != "polymorph" || p.Power != 85 {
+		t.Errorf("potion_polymorph def unexpected: %+v", p)
+	}
+}

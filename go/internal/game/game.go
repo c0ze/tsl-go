@@ -130,9 +130,10 @@ type Game struct {
 	Won          bool
 	DeathCause   string
 	Effects      []Effect
-	Identified   map[string]bool   // item ids whose type is globally known this game
-	Known        map[string]bool   // spellbook ids learned by reading (C reading.c)
-	appearances  map[string]string // item id -> shuffled cosmetic name while unidentified
+	Identified   map[string]bool     // item ids whose type is globally known this game
+	Known        map[string]bool     // spellbook ids learned by reading (C reading.c)
+	Shape        *content.MonsterDef // polymorphed form (nil = native; C shapeshf.c)
+	appearances  map[string]string   // item id -> shuffled cosmetic name while unidentified
 }
 
 // Move attempts to move the player one step in d. It returns true if the player

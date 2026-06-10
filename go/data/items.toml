@@ -524,3 +524,13 @@ glyph = ":"
 color = "brown"
 kind = "ammo"
 power = 8
+
+# The thirteenth and final potion (22a, C treasure_p_polymorph): any shape in
+# the roster, for 85 turns (C SHAPESHIFT_DURATION). The table is complete.
+[item.potion_polymorph]
+name = "potion of polymorph"
+glyph = "!"
+color = "normal"
+kind = "potion"
+use = "polymorph"
+power = 85

@@ -21,6 +21,7 @@ var effectLabels = map[string]string{
 	"levitate":    "Floating",
 	"flame_hands": "Flaming hands",
 	"hungry_book": "Hungry book",
+	"polymorph":   "Polymorphed",
 }
 
 // HasEffect reports whether a timed effect of the given kind is active on the
@@ -136,6 +137,9 @@ func (g *Game) tickEffects() {
 			g.log("You wake up!") // sleep ran its course (C creature_sleep)
 		} else if e.Kind == "levitate" {
 			landed = true // resolved below, once the effects slice is settled
+		} else if e.Kind == "polymorph" && g.Shape != nil {
+			g.Shape = nil
+			g.log("You return to your native shape.") // C shapeshift_native
 		}
 	}
 	g.Effects = kept
