@@ -55,3 +55,27 @@ func TestNewWithKeyPanicsOnEmptyKey(t *testing.T) {
 	}()
 	NewWithKey([]uint32{})
 }
+
+func TestSnapshotRestoreContinuesSequence(t *testing.T) {
+	g := NewWithSeed(42)
+	for i := 0; i < 100; i++ {
+		g.Uint32() // advance into the stream
+	}
+	snap := g.Snapshot()
+	want := make([]uint32, 50)
+	for i := range want {
+		want[i] = g.Uint32()
+	}
+	r := Restore(snap)
+	for i := range want {
+		if got := r.Uint32(); got != want[i] {
+			t.Fatalf("restored stream diverged at %d: got %d, want %d", i, got, want[i])
+		}
+	}
+}
+
+func TestRestoreRejectsBadSnapshot(t *testing.T) {
+	if Restore([]uint32{1, 2, 3}) != nil {
+		t.Error("a truncated snapshot must not restore")
+	}
+}
