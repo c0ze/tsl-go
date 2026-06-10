@@ -45,6 +45,7 @@ const (
 	ActRead
 	ActFire
 	ActCast
+	ActTalk
 )
 
 // Action is a decoded player intent. Dir is meaningful only when Kind==ActMove.
@@ -197,6 +198,8 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			}
 		case ActTravel:
 			g.Travel()
+		case ActTalk:
+			g.Talk()
 		case ActEat:
 			food := g.EdibleInventory()
 			if len(food) == 0 {

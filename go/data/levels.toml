@@ -89,6 +89,7 @@ width = 60
 height = 24
 links = ["dungeon", "comm_hub", "underpass"]
 monsters = 9
+boss = "king_of_worms"
 dark = true
 [[level.ominous_cave.spawn]]
 monster = "graveling"
