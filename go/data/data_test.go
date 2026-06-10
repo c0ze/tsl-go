@@ -679,3 +679,22 @@ func TestEmbeddedRosterBatch6(t *testing.T) {
 		}
 	}
 }
+
+// TestEmbeddedNecromancer checks the Catacombs boss loaded (13h): the
+// Necromancer per C unique.c — glacial, ranged, with a chilling touch.
+func TestEmbeddedNecromancer(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	n := c.Monsters["necromancer"]
+	if n == nil || n.Glyph != "N" || n.HP != 30 || n.Speed != 10 || n.Ranged <= 0 {
+		t.Fatalf("necromancer def unexpected: %+v", n)
+	}
+	if n.Effect != "slow" {
+		t.Errorf("the Necromancer's cold touch should chill (slow on hit): %+v", n)
+	}
+	if l := c.Levels["catacombs"]; l == nil || l.Boss != "necromancer" {
+		t.Errorf("catacombs should host the Necromancer (C places.c), got %+v", l)
+	}
+}
