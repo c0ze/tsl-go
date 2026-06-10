@@ -486,3 +486,23 @@ func TestPharmacyIdentifiesAllPotions(t *testing.T) {
 		t.Errorf("expected the C line, got %v", msgs)
 	}
 }
+
+func TestPolymorphTransforms(t *testing.T) {
+	poly, ok := Registry()["polymorph"]
+	if !ok {
+		t.Fatal("polymorph not registered")
+	}
+	g := &game.Game{
+		PlayerHP: 10, PlayerMax: 10, RNG: rng.NewWithSeed(3),
+		Content: &content.Content{Monsters: map[string]*content.MonsterDef{
+			"rat": {ID: "rat", Name: "rat", Glyph: "r", HP: 3, Attack: 2, Dodge: 1, Damage: "1d2"},
+		}},
+	}
+	msgs := poly(g, &game.Item{Def: &content.ItemDef{Name: "potion of polymorph", Power: 85}})
+	if g.Shape == nil || !g.HasEffect("polymorph") {
+		t.Error("the potion should set a form for 85 turns (C SHAPESHIFT_DURATION)")
+	}
+	if len(msgs) == 0 || msgs[0] != "You transform into a rat!" {
+		t.Errorf("expected the C transform line, got %v", msgs)
+	}
+}

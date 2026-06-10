@@ -58,6 +58,9 @@ func (g *Game) burdened() bool { return g.carriedWeight() > carryCapacity }
 // effect mods as in increment_counters).
 func (g *Game) playerSpeed() int {
 	speed := defaultSpeed
+	if g.Shape != nil && g.Shape.Speed > 0 {
+		speed = g.Shape.Speed // the form's pace, modifiers on top
+	}
 	if g.HasEffect("haste") {
 		speed += hasteBonus
 	}
@@ -107,7 +110,8 @@ func (g *Game) PlayerStep(d Direction) {
 		g.log("You open the door.")
 		acted = true
 	} else if g.Level.InBounds(dst) && (g.Level.At(dst).Def.Water || g.Level.At(dst).Def.Lava) &&
-		(g.HasEffect("blind") || g.HasEffect("levitate")) {
+		(g.HasEffect("blind") || g.HasEffect("levitate") ||
+			(g.Level.At(dst).Def.Water && g.Shape != nil && g.Shape.Swim)) {
 		// Deep water and lava turn away a sighted walker; the blinded blunder
 		// in and floaters drift across (C move_creature).
 		g.Player = dst
@@ -132,6 +136,9 @@ func (g *Game) equippedGear() []*Item {
 }
 
 func (g *Game) playerAttackStat() int {
+	if g.Shape != nil {
+		return g.Shape.Attack // the form's claws; gear grants nothing (C shapeshift)
+	}
 	atk := playerAttack
 	for _, it := range g.equippedGear() {
 		atk += it.Def.Attack
@@ -154,6 +161,9 @@ func (g *Game) playerDamageSpec() string {
 		// A temp weapon supersedes the wielded one (C set_temp_weapon).
 		return flameHandsDamage
 	}
+	if g.Shape != nil && g.Shape.Damage != "" {
+		return g.Shape.Damage // the form's natural attack
+	}
 	if g.Weapon != nil && g.Weapon.Def.Damage != "" {
 		return g.Weapon.Def.Damage
 	}
@@ -161,6 +171,9 @@ func (g *Game) playerDamageSpec() string {
 }
 
 func (g *Game) playerDodgeStat() int {
+	if g.Shape != nil {
+		return g.Shape.Dodge
+	}
 	dodge := playerDodge
 	for _, it := range g.equippedGear() {
 		dodge += it.Def.Dodge
@@ -383,6 +396,9 @@ const playerSwimming = 0
 func (g *Game) swimCheck() {
 	if g.HasEffect("levitate") {
 		return // airborne: the fatigue counter freezes (C swim() skips floaters)
+	}
+	if g.Shape != nil && g.Shape.Swim {
+		return // a swimming form never drowns (C swim() free_swim)
 	}
 	if !g.Level.At(g.Player).Def.Water {
 		g.swimFatigue = 0
