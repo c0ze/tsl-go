@@ -1,16 +1,24 @@
 package game
 
+import "sort"
+
 // epRegenInterval is how many turns pass per point of EP regained.
 const epRegenInterval = 3
 
-// SpellInventory returns the spellbooks the player is carrying, in inventory
-// order — the spells they can currently cast.
+// SpellInventory returns the spells the player has learned (C: casting draws
+// on knowledge, not the pack), as synthetic items in sorted-ID order so the
+// cast path downstream is unchanged.
 func (g *Game) SpellInventory() []*Item {
-	var out []*Item
-	for _, it := range g.Inventory {
-		if it.Def != nil && it.Def.Kind == "spellbook" {
-			out = append(out, it)
+	ids := make([]string, 0, len(g.Known))
+	for id := range g.Known {
+		if g.Known[id] && g.Content.Items[id] != nil {
+			ids = append(ids, id)
 		}
+	}
+	sort.Strings(ids)
+	out := make([]*Item, 0, len(ids))
+	for _, id := range ids {
+		out = append(out, &Item{Def: g.Content.Items[id]})
 	}
 	return out
 }

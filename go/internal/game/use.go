@@ -71,6 +71,10 @@ func (g *Game) PlayerUse(it *Item) {
 		g.log("You aren't carrying that.")
 		return
 	}
+	if it.Def.Kind == "spellbook" { // books are studied, not used (C read_book)
+		g.readBook(it)
+		return
+	}
 	switch it.Def.Kind {
 	case "weapon":
 		g.Weapon = it
@@ -146,7 +150,7 @@ func (g *Game) WandInventory() []*Item {
 func (g *Game) ReadableInventory() []*Item {
 	var scrolls []*Item
 	for _, it := range g.Inventory {
-		if it.Def != nil && it.Def.Kind == "scroll" {
+		if it.Def != nil && (it.Def.Kind == "scroll" || it.Def.Kind == "spellbook") {
 			scrolls = append(scrolls, it)
 		}
 	}

@@ -237,15 +237,16 @@ func TestBlindMonsterStillMeleesAdjacent(t *testing.T) {
 	}
 }
 
-func TestSpellInventoryFiltersSpellbooks(t *testing.T) {
+func TestSpellInventoryListsTheKnown(t *testing.T) {
 	g := combatGame()
-	g.Inventory = []*Item{
-		{Def: &content.ItemDef{Name: "potion", Kind: "potion", Use: "heal"}},
-		{Def: &content.ItemDef{Name: "book", Kind: "spellbook", Use: "first_aid", Cost: 4}},
+	g.Content.Items = map[string]*content.ItemDef{
+		"book_aid":   {ID: "book_aid", Name: "spellbook of first aid", Kind: "spellbook", Use: "first_aid", Cost: 4},
+		"book_force": {ID: "book_force", Name: "spellbook of force bolt", Kind: "spellbook", Ranged: 6, Damage: "2d6", Cost: 5},
 	}
+	g.Known = map[string]bool{"book_aid": true}
 	s := g.SpellInventory()
-	if len(s) != 1 || s[0].Def.Kind != "spellbook" {
-		t.Errorf("SpellInventory should list only spellbooks, got %v", s)
+	if len(s) != 1 || s[0].Def.ID != "book_aid" {
+		t.Errorf("SpellInventory lists the learned set (C: knowledge, not the pack), got %v", s)
 	}
 }
 

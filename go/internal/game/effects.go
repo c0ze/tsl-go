@@ -20,6 +20,7 @@ var effectLabels = map[string]string{
 	"sleep":       "Asleep",
 	"levitate":    "Floating",
 	"flame_hands": "Flaming hands",
+	"hungry_book": "Hungry book",
 }
 
 // HasEffect reports whether a timed effect of the given kind is active on the
