@@ -237,3 +237,26 @@ func TestKillCreatureNoCorpse(t *testing.T) {
 		t.Error("monster with no corpse should drop nothing")
 	}
 }
+
+func TestConfusedMonsterCannotAttack(t *testing.T) {
+	g := combatGame() // player at (1,1)
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Attack: 99, Dodge: 0, Damage: "5d1", HP: 9}, Pos: Pos{2, 1}, HP: 9}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	rat.AddEffect("confuse", 5)
+	hp := g.PlayerHP
+	g.monstersAct()
+	if g.PlayerHP != hp {
+		t.Errorf("a confused creature should be too disoriented to attack: HP %d -> %d", hp, g.PlayerHP)
+	}
+}
+
+func TestAdjacentMonsterAttacksWhenNotConfused(t *testing.T) {
+	g := combatGame() // control: same setup, no confusion
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Attack: 99, Dodge: 0, Damage: "5d1", HP: 9}, Pos: Pos{2, 1}, HP: 9}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	hp := g.PlayerHP
+	g.monstersAct()
+	if g.PlayerHP >= hp {
+		t.Errorf("an adjacent creature should attack the player, HP unchanged at %d", g.PlayerHP)
+	}
+}
