@@ -84,3 +84,54 @@ func TestBreatherClosesWhenOutOfRange(t *testing.T) {
 		t.Error("no breath should reach from range 7")
 	}
 }
+
+func TestCastBreatheFireBurnsTheCone(t *testing.T) {
+	g := combatGame()
+	g.EP, g.EPMax = 10, 10
+	book := &Item{Def: &content.ItemDef{Name: "book of Breathe Fire", Kind: "spellbook", Cost: 5, Breath: "fire"}}
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Glyph: "r", HP: 9, Attack: 0, Dodge: 0, Damage: "1d1"}, Pos: Pos{4, 1}, HP: 9}
+	flank := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Glyph: "r", HP: 9, Attack: 0, Dodge: 0, Damage: "1d1"}, Pos: Pos{3, 0}, HP: 9}
+	far := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Glyph: "r", HP: 9, Attack: 0, Dodge: 0, Damage: "1d1"}, Pos: Pos{8, 1}, HP: 9}
+	g.Level.Creatures = append(g.Level.Creatures, rat, flank, far)
+	g.CastSpellAt(book, rat.Pos)
+	if rat.HP >= 9 || flank.HP >= 9 {
+		t.Error("the cone should burn the target and the flank bystander")
+	}
+	if far.HP != 9 {
+		t.Error("a creature beyond the cone is untouched")
+	}
+	if g.EP != 5 {
+		t.Errorf("the cast costs 5 EP (C attrs.c), EP %d", g.EP)
+	}
+	if !hasMessage(g, "You breathe fire!") {
+		t.Errorf("expected the C cast line, got %v", g.Messages)
+	}
+}
+
+func TestCastNoxiousBreathPoisons(t *testing.T) {
+	g := combatGame()
+	g.EP, g.EPMax = 10, 10
+	book := &Item{Def: &content.ItemDef{Name: "book of Noxious Breath", Kind: "spellbook", Cost: 5, Breath: "poison"}}
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Glyph: "r", HP: 9, Attack: 0, Dodge: 0, Damage: "1d1"}, Pos: Pos{3, 1}, HP: 9}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	g.CastSpellAt(book, rat.Pos)
+	if !rat.HasEffect("poison") {
+		t.Error("noxious breath poisons the cone's occupants (C NOXIOUS_BREATH_POISON)")
+	}
+	if !hasMessage(g, "You breathe poison!") {
+		t.Errorf("expected the C cast line, got %v", g.Messages)
+	}
+}
+
+func TestBreathCastRefusedWithoutEP(t *testing.T) {
+	g := combatGame()
+	g.EP, g.EPMax = 2, 10
+	book := &Item{Def: &content.ItemDef{Name: "book of Breathe Fire", Kind: "spellbook", Cost: 5, Breath: "fire"}}
+	g.CastSpellAt(book, Pos{4, 1})
+	if g.EP != 2 {
+		t.Error("a refused cast must not spend EP")
+	}
+	if hasMessage(g, "You breathe fire!") {
+		t.Error("no EP, no fire")
+	}
+}

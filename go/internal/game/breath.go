@@ -112,3 +112,32 @@ func (g *Game) breathe(m *Creature) {
 		}
 	}
 }
+
+// playerBreathe is the player's exhale (C breath.c, the is_player branch):
+// a cone toward the chosen target hitting every creature in it — your own
+// allies included — with the same per-target rolls the monsters use.
+func (g *Game) playerBreathe(kind string, target Pos) {
+	rng := breathFireRange
+	if kind == "fire" {
+		g.log("You breathe fire!")
+	} else {
+		g.log("You breathe poison!")
+		rng = breathPoisonRange
+	}
+	dx, dy := signOf(target.X-g.Player.X), signOf(target.Y-g.Player.Y)
+	for _, p := range g.breathCone(g.Player, dx, dy, rng) {
+		c := g.Level.CreatureAt(p)
+		if c == nil {
+			continue
+		}
+		if kind == "fire" {
+			c.HP -= g.RNG.RollSpec(breathFireDamage)
+		} else {
+			c.HP -= g.RNG.RollSpec(breathPoisonDamage)
+			c.AddEffect("poison", breathPoisonTurns)
+		}
+		if c.HP <= 0 {
+			g.killCreature(c)
+		}
+	}
+}

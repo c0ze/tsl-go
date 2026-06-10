@@ -53,6 +53,12 @@ func (g *Game) CastSpellAt(book *Item, target Pos) {
 		g.log("You lack the energy to cast %s.", book.Def.Name)
 		return
 	}
+	if book.Def.Breath != "" { // a breath book exhales a cone toward the target
+		g.EP -= book.Def.Cost
+		g.playerBreathe(book.Def.Breath, target)
+		g.advanceWorld()
+		return
+	}
 	if book.Def.Beam { // a beam fires in the aimed direction, hitting all in its path
 		g.EP -= book.Def.Cost
 		g.fireBeam(book, target)

@@ -100,6 +100,7 @@ type ItemDef struct {
 	Beam        bool   `toml:"beam"`         // a spell that strikes every creature in a line
 	NoSpawn     bool   `toml:"nospawn"`      // exclude from random floor loot (e.g. corpses)
 	Weight      int    `toml:"weight"`       // carry weight (0 = kind default, C rules.h WEIGHT_*)
+	Breath      string `toml:"breath"`       // spellbook cone: "fire", "poison", or "" (#19)
 }
 
 // kindWeights are the C's per-kind WEIGHT_* defaults (rules.h); an item with
@@ -467,8 +468,8 @@ func validateItem(i *ItemDef) error {
 	case "spellbook":
 		hasUse := strings.TrimSpace(i.Use) != ""
 		hasAttack := i.Ranged > 0 && i.Damage != ""
-		if !hasUse && !hasAttack {
-			return fmt.Errorf("spellbook needs a use behavior or a ranged damage spec")
+		if !hasUse && !hasAttack && i.Breath == "" {
+			return fmt.Errorf("spellbook needs a use behavior, a ranged damage spec, or a breath")
 		}
 		if hasAttack && !validDamageSpec(i.Damage) {
 			return fmt.Errorf("spellbook damage %q is not a valid dice spec", i.Damage)
@@ -507,6 +508,9 @@ func validateItem(i *ItemDef) error {
 	}
 	if i.Weight < 0 {
 		return fmt.Errorf("weight must be >= 0, got %d", i.Weight)
+	}
+	if i.Breath != "" && i.Breath != "fire" && i.Breath != "poison" {
+		return fmt.Errorf("breath must be fire or poison, got %q", i.Breath)
 	}
 	if i.Light < 0 {
 		return fmt.Errorf("light must be >= 0, got %d", i.Light)

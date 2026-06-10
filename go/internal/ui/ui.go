@@ -258,7 +258,7 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 				break
 			}
 			spell := spells[idx]
-			if spell.Def != nil && spell.Def.Ranged > 0 { // a targeted attack spell
+			if spell.Def != nil && (spell.Def.Ranged > 0 || spell.Def.Breath != "") { // a targeted or directed spell
 				if target, ok := p.Target(g.Player); ok {
 					g.CastSpellAt(spell, target)
 				}

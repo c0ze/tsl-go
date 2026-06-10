@@ -833,3 +833,18 @@ func TestEmbeddedBreathers(t *testing.T) {
 		}
 	}
 }
+
+// TestEmbeddedBreathBooks checks 0.40's first two spellbooks loaded (19b),
+// with the C's "book of" capitalized names.
+func TestEmbeddedBreathBooks(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if b := c.Items["book_breathe_fire"]; b == nil || b.Kind != "spellbook" || b.Breath != "fire" || b.Cost != 5 || b.Name != "book of Breathe Fire" {
+		t.Errorf("book_breathe_fire def unexpected: %+v", b)
+	}
+	if b := c.Items["book_noxious_breath"]; b == nil || b.Kind != "spellbook" || b.Breath != "poison" || b.Cost != 5 || b.Name != "book of Noxious Breath" {
+		t.Errorf("book_noxious_breath def unexpected: %+v", b)
+	}
+}
