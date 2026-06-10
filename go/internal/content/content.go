@@ -40,6 +40,7 @@ type TileDef struct {
 	Transparent bool   `toml:"transparent"`
 	Win         bool   `toml:"win"`          // stepping onto this tile wins (the ascension altar)
 	Water       bool   `toml:"water"`        // deep water: impassable on foot, drowns waders (#18)
+	Lava        bool   `toml:"lava"`         // molten rock: impassable on foot, burns per turn (#18)
 	Effect      string `toml:"effect"`       // status effect applied when stepped on ("" = none)
 	EffectTurns int    `toml:"effect_turns"` // duration of Effect
 	OpensTo     string `toml:"opens_to"`     // tile id this becomes when opened ("" = not a door)

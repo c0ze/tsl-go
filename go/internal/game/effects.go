@@ -159,6 +159,11 @@ func (g *Game) land() {
 		g.log("You plunge into water!")
 		return
 	}
+	if tile.Lava {
+		g.log("You land in lava!")
+		g.lavaCheck() // the bath is immediate (C altitude.c:78)
+		return
+	}
 	g.log("You land on the ground.")
 	if tile.Effect != "" {
 		g.springTrapAt(g.Player)
