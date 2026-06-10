@@ -243,6 +243,10 @@ func (g *Game) monsterAct(m *Creature) {
 		g.stepRandom(m) // disoriented: it lurches at random and can't press an attack
 		return
 	}
+	if m.HasEffect("fear") {
+		g.stepAway(m, g.Player) // frightened: it flees the player instead of attacking
+		return
+	}
 	dist := chebyshev(m.Pos, g.Player)
 	if dist == 1 {
 		g.monsterAttacks(m)
@@ -277,6 +281,21 @@ func (g *Game) stepToward(m *Creature, target Pos) {
 	}
 	if !g.Level.Passable(dst) {
 		g.openDoor(dst) // open a door in the way (spends this move); a plain wall is a no-op
+		return
+	}
+	m.Pos = dst
+}
+
+// stepAway moves m one tile directly away from `from` — a frightened creature's
+// flight. If the retreat tile is blocked (a wall, another creature, or the
+// player), the cornered creature holds its ground.
+func (g *Game) stepAway(m *Creature, from Pos) {
+	dx, dy := signOf(m.Pos.X-from.X), signOf(m.Pos.Y-from.Y)
+	if dx == 0 && dy == 0 {
+		return // on top of the player (shouldn't happen): nowhere to flee
+	}
+	dst := Pos{m.Pos.X + dx, m.Pos.Y + dy}
+	if dst == g.Player || g.Level.CreatureAt(dst) != nil || !g.Level.Passable(dst) {
 		return
 	}
 	m.Pos = dst

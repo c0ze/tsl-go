@@ -189,6 +189,25 @@ func TestPoisonNearbyPoisonsAndDamages(t *testing.T) {
 	}
 }
 
+func TestScareNearbyFrightens(t *testing.T) {
+	g := combatGame()                                                                             // player at (1,1)
+	near := &Creature{Def: &content.MonsterDef{ID: "a", Name: "a", HP: 3}, Pos: Pos{3, 1}, HP: 3} // dist 2
+	far := &Creature{Def: &content.MonsterDef{ID: "b", Name: "b", HP: 3}, Pos: Pos{9, 1}, HP: 3}  // dist 8
+	g.Level.Creatures = append(g.Level.Creatures, near, far)
+
+	n := g.ScareNearby(3, 5)
+
+	if n != 1 {
+		t.Errorf("ScareNearby radius 3 should frighten 1 creature, got %d", n)
+	}
+	if !near.HasEffect("fear") {
+		t.Error("the near creature should be frightened")
+	}
+	if far.HasEffect("fear") {
+		t.Error("the far creature should be out of range")
+	}
+}
+
 func TestBlindMonsterHoldsAtRange(t *testing.T) {
 	g := combatGame()
 	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 9, Damage: "1d1"}, Pos: Pos{5, 1}, HP: 9}
