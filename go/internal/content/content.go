@@ -71,6 +71,7 @@ type MonsterDef struct {
 	Permaswim   bool   `toml:"permaswim"`    // water only — it won't leave its pool (implies swim)
 	Effect      string `toml:"effect"`       // status effect a landed melee hit applies ("" = none)
 	EffectTurns int    `toml:"effect_turns"` // duration of Effect
+	Breath      string `toml:"breath"`       // cone attack: "fire", "poison", or "" (#19)
 }
 
 // Rune returns the monster's glyph as a rune.
@@ -430,6 +431,9 @@ func validateMonster(m *MonsterDef) error {
 	}
 	if m.Permaswim && !m.Swim {
 		return fmt.Errorf("permaswim requires swim")
+	}
+	if m.Breath != "" && m.Breath != "fire" && m.Breath != "poison" {
+		return fmt.Errorf("breath must be fire or poison, got %q", m.Breath)
 	}
 	if m.Effect != "" && m.EffectTurns <= 0 {
 		return fmt.Errorf("melee effect %q needs effect_turns > 0", m.Effect)
