@@ -8,6 +8,7 @@ bestiary glyphs in `common/glyph.c` — broadening the mid-to-deep tiers. The
 with free glyphs (no collisions with the current roster).
 
 ## Monsters (names/glyphs verbatim from `common/glyph.c`)
+
 | id | name | glyph | color | role | min_depth |
 |----|------|-------|-------|------|-----------|
 | `hellhound` | hellhound | `h` | red | fast pack hunter | 2 |

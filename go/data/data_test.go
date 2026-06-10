@@ -144,16 +144,18 @@ func TestEmbeddedRosterBatch4(t *testing.T) {
 	if g := c.Monsters["gloom_lord"]; g != nil && g.Ranged <= 0 {
 		t.Errorf("gloom_lord should be ranged, got %+v", g)
 	}
-	spawned := false
+	seen := map[string]bool{}
 	for _, l := range c.Levels {
 		for _, s := range l.Spawn {
 			if _, ok := want[s.Monster]; ok {
-				spawned = true
+				seen[s.Monster] = true
 			}
 		}
 	}
-	if !spawned {
-		t.Error("expected at least one batch-4 monster placed in a spawn table")
+	for id := range want {
+		if !seen[id] {
+			t.Errorf("expected %q to appear in at least one spawn table", id)
+		}
 	}
 }
 
