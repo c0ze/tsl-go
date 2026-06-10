@@ -42,3 +42,66 @@ func (g *Game) ForgetMap() {
 		g.Level.tiles[i].Seen = false
 	}
 }
+
+// MarkRecall pins the player's current level and position as the recall
+// destination (C teleport.c cast_mark).
+func (g *Game) MarkRecall() {
+	g.recallLevel = g.Level.ID
+	g.recallPos = g.Player
+	g.recallSet = true
+}
+
+// Recall snaps the player back to the pinned mark, crossing levels through the
+// Dungeon's persisted cache like stairs do (C cast_recall's change_level). It
+// reports whether the recall happened: with no mark set it fizzles — the C
+// would land at its zero-initialized location; we decline instead. If a
+// creature now stands on the mark, the player lands one ring outward.
+func (g *Game) Recall() bool {
+	if !g.recallSet {
+		return false
+	}
+	fromID := g.Level.ID
+	switched := false
+	if g.recallLevel != fromID {
+		if g.Dungeon == nil {
+			return false
+		}
+		g.Level.Return = g.Player
+		if err := g.Dungeon.enter(g.recallLevel); err != nil {
+			return false
+		}
+		g.Level = g.Dungeon.Current()
+		g.Level.entered = true
+		switched = true
+	}
+	dst, ok := g.freeSpotNear(g.recallPos)
+	if !ok {
+		// The mark is buried in bodies. A fizzle must leave no trace, so
+		// undo the level switch (re-entering a cached level cannot fail).
+		if switched {
+			g.Dungeon.enter(fromID)
+			g.Level = g.Dungeon.Current()
+			g.Player = g.Level.Return
+		}
+		return false
+	}
+	g.Player = dst
+	return true
+}
+
+// freeSpotNear returns p itself when unoccupied, else a free passable tile one
+// ring outward; ok is false when every candidate is taken.
+func (g *Game) freeSpotNear(p Pos) (Pos, bool) {
+	if g.Level.CreatureAt(p) == nil {
+		return p, true
+	}
+	for dy := -1; dy <= 1; dy++ {
+		for dx := -1; dx <= 1; dx++ {
+			q := Pos{X: p.X + dx, Y: p.Y + dy}
+			if q != p && g.Level.Passable(q) && g.Level.CreatureAt(q) == nil {
+				return q, true
+			}
+		}
+	}
+	return Pos{}, false
+}

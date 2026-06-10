@@ -139,3 +139,80 @@ func TestForgetMapClearsSeen(t *testing.T) {
 		}
 	}
 }
+
+func TestMarkAndRecallSameLevel(t *testing.T) {
+	g := fakeDungeon(t)
+	g.MarkRecall()
+	mark := g.Player
+	g.Player = Pos{2, 1} // wander off
+	if !g.Recall() {
+		t.Fatal("a marked recall should succeed")
+	}
+	if g.Player != mark {
+		t.Errorf("recall should return to the mark %v, got %v", mark, g.Player)
+	}
+}
+
+func TestRecallAcrossLevels(t *testing.T) {
+	g := fakeDungeon(t)
+	mark := g.Player
+	g.MarkRecall()
+	g.Player = Pos{3, 1}
+	g.Travel() // descend to B
+	if g.Dungeon.current != "b" {
+		t.Fatal("setup: expected to be on B")
+	}
+	if !g.Recall() {
+		t.Fatal("recall should pull the player back across levels (C change_level)")
+	}
+	if g.Dungeon.current != "a" || g.Player != mark {
+		t.Errorf("recall should land on A at %v, got level %q at %v", mark, g.Dungeon.current, g.Player)
+	}
+}
+
+func TestUnmarkedRecallFizzles(t *testing.T) {
+	g := fakeDungeon(t)
+	if g.Recall() {
+		t.Error("recall with no mark set must fizzle (we diverge from the C's zero-init landing)")
+	}
+}
+
+func TestRecallNudgesOffOccupiedMark(t *testing.T) {
+	g := fakeDungeon(t)
+	g.MarkRecall()
+	mark := g.Player
+	g.Player = Pos{3, 1}
+	squatter := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Glyph: "r", HP: 3}, Pos: mark, HP: 3}
+	g.Level.Creatures = append(g.Level.Creatures, squatter)
+	if !g.Recall() {
+		t.Fatal("an occupied mark should still recall, one tile off")
+	}
+	if g.Player == mark {
+		t.Error("the player must not land inside the squatter")
+	}
+	if d := chebyshev(g.Player, mark); d != 1 {
+		t.Errorf("expected a one-ring nudge, landed %d away", d)
+	}
+}
+
+func TestBuriedMarkRollsBackLevelSwitch(t *testing.T) {
+	g := fakeDungeon(t)
+	g.MarkRecall()
+	mark := g.Player
+	// Bury the mark and its whole ring in bodies on level A.
+	for dy := -1; dy <= 1; dy++ {
+		for dx := -1; dx <= 1; dx++ {
+			p := Pos{X: mark.X + dx, Y: mark.Y + dy}
+			g.Level.Creatures = append(g.Level.Creatures, &Creature{Def: &content.MonsterDef{ID: "rat", Glyph: "r", HP: 1}, Pos: p, HP: 1})
+		}
+	}
+	g.Player = Pos{3, 1}
+	g.Travel() // over to B
+	before := g.Player
+	if g.Recall() {
+		t.Fatal("a fully buried mark must fizzle")
+	}
+	if g.Dungeon.current != "b" || g.Player != before {
+		t.Errorf("a fizzled recall must leave no trace: on %q at %v", g.Dungeon.current, g.Player)
+	}
+}

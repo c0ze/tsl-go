@@ -35,7 +35,32 @@ func Registry() map[string]game.Behavior {
 		"elixir":          elixir,
 		"yuck":            yuck,
 		"amnesia":         amnesia,
+		"mark":            mark,
+		"recall":          recall,
 	}
+}
+
+// mark pins the spot a recall scroll will return to (C teleport.c cast_mark).
+func mark(g *game.Game, it *game.Item) []string {
+	g.MarkRecall()
+	return []string{"Destination marked."}
+}
+
+// recall snaps the reader back to the mark, across levels (C cast_recall).
+func recall(g *game.Game, it *game.Item) []string {
+	if g.Recall() {
+		return []string{fmt.Sprintf("You find yourself back in %s.", recallPlace(g))}
+	}
+	return []string{fmt.Sprintf("You read the %s, but nothing happens.", it.Def.Name)}
+}
+
+// recallPlace names the arrival level, with a fallback for bare unit-test
+// games that have no dungeon wired.
+func recallPlace(g *game.Game) string {
+	if name := g.LocationName(); name != "" {
+		return name
+	}
+	return "familiar surroundings"
 }
 
 // amnesia wipes the automap (C magic.c amnesia) — the priciest thing an

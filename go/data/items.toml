@@ -434,3 +434,18 @@ glyph = "?"
 color = "magenta"
 kind = "scroll"
 use = "amnesia"
+
+# The teleport-home pair (15u, C teleport.c cast_mark/cast_recall).
+[item.scroll_mark]
+name = "mark scroll"
+glyph = "?"
+color = "green"
+kind = "scroll"
+use = "mark"
+
+[item.scroll_recall]
+name = "recall scroll"
+glyph = "?"
+color = "brown"
+kind = "scroll"
+use = "recall"
