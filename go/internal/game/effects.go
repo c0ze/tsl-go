@@ -17,6 +17,7 @@ var effectLabels = map[string]string{
 	"blind":   "Blinded",
 	"confuse": "Confused",
 	"fear":    "Afraid",
+	"sleep":   "Asleep",
 }
 
 // HasEffect reports whether a timed effect of the given kind is active on the
@@ -127,6 +128,8 @@ func (g *Game) tickEffects() {
 		e.Turns--
 		if e.Turns > 0 {
 			kept = append(kept, e)
+		} else if e.Kind == "sleep" {
+			g.log("You wake up!") // sleep ran its course (C creature_sleep)
 		}
 	}
 	g.Effects = kept

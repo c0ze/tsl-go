@@ -27,6 +27,17 @@ func (m *Creature) AddEffect(kind string, turns int) {
 	m.Effects = addEffect(m.Effects, kind, turns)
 }
 
+// RemoveEffect drops an active effect by kind (e.g. a struck sleeper waking);
+// an absent kind is a no-op.
+func (m *Creature) RemoveEffect(kind string) {
+	for i, e := range m.Effects {
+		if e.Kind == kind {
+			m.Effects = append(m.Effects[:i], m.Effects[i+1:]...)
+			return
+		}
+	}
+}
+
 // HasEffect reports whether a timed effect of the given kind is currently active
 // on the creature.
 func (m *Creature) HasEffect(kind string) bool {
