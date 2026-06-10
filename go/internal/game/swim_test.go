@@ -65,8 +65,8 @@ func TestPlayerDrowns(t *testing.T) {
 	if !g.Dead {
 		t.Fatal("at 1 HP the first turn under water drowns the player")
 	}
-	if g.DeathCause != "drowned" {
-		t.Errorf("morgue cause should be %q, got %q", "drowned", g.DeathCause)
+	if g.DeathCause != "drowning" {
+		t.Errorf("morgue cause should be %q, got %q", "drowning", g.DeathCause)
 	}
 	if !hasMessage(g, "You drown...") {
 		t.Errorf("expected the C drowning message, got %v", g.Messages)

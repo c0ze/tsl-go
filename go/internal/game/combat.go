@@ -281,7 +281,7 @@ func (g *Game) swimCheck() {
 	if g.PlayerHP <= 0 {
 		g.PlayerHP = 0
 		g.Dead = true
-		g.DeathCause = "drowned"
+		g.DeathCause = "drowning"
 		g.log("You drown...")
 	}
 }
