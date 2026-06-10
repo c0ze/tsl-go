@@ -1,8 +1,9 @@
 package game
 
 // Breath weapons (#19, C breath.c): cone attacks for fire- and
-// poison-breathing creatures. Every creature caught in the cone takes the
-// roll — friendly fire included — and there is no dodge against a breath.
+// poison-breathing creatures. Every creature caught in the cone is hit —
+// friendly fire included, no dodge — each taking its own damage roll, as in
+// the C (sroll() is called per target inside breath_weapon's loop).
 const (
 	breathFireRange    = 3     // C missile.c get_spell_range(m_breathe_fire)
 	breathFireDamage   = "2d4" // C rules.h BREATHE_FIRE_DAMAGE
