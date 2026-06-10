@@ -411,3 +411,24 @@ func TestUnmarkedRecallBehaviorFizzles(t *testing.T) {
 		t.Errorf("unmarked recall should fizzle, got %v", msgs)
 	}
 }
+
+func TestDetectTrapsBehaviorRevealsAll(t *testing.T) {
+	detect, ok := Registry()["detect_traps"]
+	if !ok {
+		t.Fatal("detect_traps not registered")
+	}
+	floor := &content.TileDef{ID: "floor", Glyph: ".", Color: content.ColorNormal, Passable: true, Transparent: true}
+	trap := &content.TileDef{ID: "dart_trap", Glyph: "^", Color: content.ColorRed, Passable: true, Transparent: true, Effect: "poison", EffectTurns: 5}
+	g := &game.Game{Level: game.NewLevel(6, 3, floor), Player: game.Pos{X: 1, Y: 1}}
+	g.Level.Set(game.Pos{X: 4, Y: 1}, trap)
+	tile := g.Level.At(game.Pos{X: 4, Y: 1})
+	tile.Disguise = floor
+	tile.TrapDifficulty = 12
+	msgs := detect(g, &game.Item{Def: &content.ItemDef{Name: "trap detection scroll"}})
+	if !tile.Revealed {
+		t.Error("the scroll exposes every trap on the level (C reveal_traps)")
+	}
+	if len(msgs) == 0 || msgs[0] != "You sense the presence of traps." {
+		t.Errorf("expected the C message, got %v", msgs)
+	}
+}

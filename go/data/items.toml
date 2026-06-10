@@ -449,3 +449,12 @@ glyph = "?"
 color = "brown"
 kind = "scroll"
 use = "recall"
+
+# Scroll 8 of 10 (18d, C magic.c reveal_traps): every needle on the level,
+# lit up at once.
+[item.scroll_trap_detection]
+name = "trap detection scroll"
+glyph = "?"
+color = "red"
+kind = "scroll"
+use = "detect_traps"

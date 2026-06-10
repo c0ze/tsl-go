@@ -459,3 +459,32 @@ func chebyshevDist(a, b game.Pos) int {
 	}
 	return dy
 }
+
+func TestPlacedTrapsAreDisguised(t *testing.T) {
+	c := levelDefContent()
+	c.Tiles["dart_trap"] = &content.TileDef{ID: "dart_trap", Glyph: "^", Color: content.ColorRed, Passable: true, Transparent: true, Effect: "poison", EffectTurns: 5}
+	def := &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"}, Traps: 8}
+	lvl, err := LevelFromDef(rng.NewWithSeed(3), c, def)
+	if err != nil {
+		t.Fatal(err)
+	}
+	traps := 0
+	for y := 0; y < lvl.H; y++ {
+		for x := 0; x < lvl.W; x++ {
+			tile := lvl.At(game.Pos{X: x, Y: y})
+			if tile.Def.Effect == "" {
+				continue
+			}
+			traps++
+			if tile.Disguise == nil || tile.Revealed {
+				t.Errorf("trap at %d,%d should be placed hidden", x, y)
+			}
+			if tile.TrapDifficulty < 2 || tile.TrapDifficulty > 12 {
+				t.Errorf("trap difficulty should be 2d6, got %d", tile.TrapDifficulty)
+			}
+		}
+	}
+	if traps == 0 {
+		t.Fatal("expected traps placed")
+	}
+}
