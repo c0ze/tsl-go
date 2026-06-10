@@ -34,7 +34,15 @@ func Registry() map[string]game.Behavior {
 		"levitate":        levitate,
 		"elixir":          elixir,
 		"yuck":            yuck,
+		"amnesia":         amnesia,
 	}
+}
+
+// amnesia wipes the automap (C magic.c amnesia) — the priciest thing an
+// unidentified scroll can cost you is what you already knew.
+func amnesia(g *game.Game, it *game.Item) []string {
+	g.ForgetMap()
+	return []string{"You suddenly feel very forgetful."}
 }
 
 // elixir strips every status the C expires — poison, haste, slow, regen,
@@ -149,7 +157,8 @@ func eatMushroom(g *game.Game, it *game.Item) []string {
 // teleport blinks the player to a random spot on the level (an escape hatch).
 func teleport(g *game.Game, it *game.Item) []string {
 	if g.Teleport() {
-		return []string{fmt.Sprintf("You read the %s and blink across the dungeon.", it.Def.Name)}
+		// The C's blink lines (teleport.c cast_blink).
+		return []string{"You blink away...", "Suddenly, you are somewhere else."}
 	}
 	return []string{fmt.Sprintf("You read the %s, but nothing happens.", it.Def.Name)}
 }

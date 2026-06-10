@@ -469,8 +469,8 @@ func TestEmbeddedScrolls(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	if s := c.Items["scroll_teleport"]; s == nil || s.Kind != "scroll" || s.Use != "teleport" {
-		t.Errorf("scroll_teleport def unexpected: %+v", s)
+	if s := c.Items["scroll_blink"]; s == nil || s.Kind != "scroll" || s.Use != "teleport" || s.Name != "blink scroll" {
+		t.Errorf("scroll_blink def unexpected (0.40 treasure.c names it \"blink scroll\"): %+v", s)
 	}
 	if s := c.Items["scroll_magic_mapping"]; s == nil || s.Kind != "scroll" || s.Use != "reveal" {
 		t.Errorf("scroll_magic_mapping def unexpected: %+v", s)
@@ -736,5 +736,16 @@ func TestEmbeddedWeights(t *testing.T) {
 	}
 	if w := c.Items["dagger"].Weight; w != 18 {
 		t.Errorf("dagger is WEIGHT_DAGGER 18, got %d", w)
+	}
+}
+
+// TestEmbeddedAmnesiaScroll checks the map-eraser loaded (15t).
+func TestEmbeddedAmnesiaScroll(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if s := c.Items["scroll_amnesia"]; s == nil || s.Kind != "scroll" || s.Use != "amnesia" {
+		t.Errorf("scroll_amnesia def unexpected: %+v", s)
 	}
 }

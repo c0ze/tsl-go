@@ -355,3 +355,20 @@ func TestYuckIsAllFlavor(t *testing.T) {
 		t.Error("yuck is pure flavor: no effects, no damage")
 	}
 }
+
+func TestAmnesiaWipesTheMap(t *testing.T) {
+	amn, ok := Registry()["amnesia"]
+	if !ok {
+		t.Fatal("amnesia not registered")
+	}
+	floor := &content.TileDef{ID: "floor", Glyph: ".", Color: content.ColorNormal, Passable: true, Transparent: true}
+	g := &game.Game{Level: game.NewLevel(6, 3, floor), Player: game.Pos{X: 1, Y: 1}}
+	g.RevealMap()
+	msgs := amn(g, &game.Item{Def: &content.ItemDef{Name: "scroll of amnesia"}})
+	if g.Level.At(game.Pos{X: 4, Y: 1}).Seen {
+		t.Error("amnesia should wipe the automap (C magic.c)")
+	}
+	if len(msgs) == 0 || msgs[0] != "You suddenly feel very forgetful." {
+		t.Errorf("expected the C message, got %v", msgs)
+	}
+}
