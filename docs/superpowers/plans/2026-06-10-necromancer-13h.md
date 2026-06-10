@@ -4,7 +4,7 @@
 
 **Goal:** The second unique: **the Necromancer**, boss of the Catacombs
 (`places.c:130 temp->boss = encounter_necromancer`). Advances #13 (uniques).
-Data-only — every mechanic he needs shipped in earlier increments.
+Data-only — every mechanic he needs already shipped in earlier increments.
 
 ## C grounding
 - `unique.c:78`: HP 30, **speed 10** (glacial — roughly one action per ten
