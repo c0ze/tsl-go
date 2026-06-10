@@ -896,8 +896,12 @@ func TestEmbeddedMimic(t *testing.T) {
 		}
 		found := false
 		for _, s := range l.Spawn {
-			if s.Monster == "mimic" {
-				found = true
+			if s.Monster != "mimic" {
+				continue
+			}
+			found = true
+			if s.Weight != 1 {
+				t.Errorf("level %s mimic weight = %d, want 1 (C places.c)", id, s.Weight)
 			}
 		}
 		if !found {
