@@ -37,7 +37,15 @@ func Registry() map[string]game.Behavior {
 		"amnesia":         amnesia,
 		"mark":            mark,
 		"recall":          recall,
+		"detect_traps":    detectTraps,
 	}
+}
+
+// detectTraps lights up every hidden trap on the level (C magic.c
+// reveal_traps; the C queues its message whether or not anything was found).
+func detectTraps(g *game.Game, it *game.Item) []string {
+	g.RevealTraps()
+	return []string{"You sense the presence of traps."}
 }
 
 // mark pins the spot a recall scroll will return to (C teleport.c cast_mark).

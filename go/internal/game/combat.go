@@ -96,8 +96,7 @@ func (g *Game) PlayerStep(d Direction) {
 		if tile.Effect != "" && !g.HasEffect("levitate") {
 			// A floater glides over floor traps (C activate_trap); Win above
 			// already fired regardless, the C's trap_win exception.
-			g.AddEffect(tile.Effect, tile.EffectTurns)
-			g.log("You trigger a trap!")
+			g.springTrapAt(g.Player)
 		}
 	} else if g.openDoor(dst) { // blocked by a closed door: open it (costs the turn)
 		g.log("You open the door.")
@@ -272,11 +271,38 @@ func (g *Game) advanceWorld() {
 // playerEnergy holds the player's surplus beyond the turn just taken (the C's
 // move_counter minus TURN_TIME), so at base speed exactly one tick passes; a
 // slowed player owes two, and a hasted player sometimes none (a free action).
+// playerPerception is the player's trap-spotting sense (C player.c:1265):
+// only traps flimsier than it betray themselves on sight.
+const playerPerception = 3
+
+// springTrapAt reveals the trap at p and inflicts its effect — the one
+// trigger path shared by stepping, landing, and blinking (C activate_trap).
+func (g *Game) springTrapAt(p Pos) {
+	tile := g.Level.At(p)
+	tile.Revealed = true
+	if tile.Def.Effect != "" {
+		g.AddEffect(tile.Def.Effect, tile.Def.EffectTurns)
+		g.log("You trigger a trap!")
+	}
+}
+
+// spotTraps is the C's try_to_detect_traps: each turn, a visible unrevealed
+// trap is spotted when the player's perception beats its difficulty.
+func (g *Game) spotTraps() {
+	for i := range g.Level.tiles {
+		t := &g.Level.tiles[i]
+		if t.Disguise != nil && !t.Revealed && t.Visible && playerPerception > t.TrapDifficulty {
+			t.Revealed = true
+		}
+	}
+}
+
 func (g *Game) passTurn() {
 	g.swimCheck()
 	if g.Dead {
 		return // drowned
 	}
+	g.spotTraps()
 	g.tickEffects()
 	if g.Dead {
 		return // status effects (e.g. poison) killed the player

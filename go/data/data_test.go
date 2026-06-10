@@ -764,3 +764,15 @@ func TestEmbeddedMarkRecall(t *testing.T) {
 		t.Errorf("scroll_recall def unexpected: %+v", s)
 	}
 }
+
+// TestEmbeddedTrapDetection checks scroll 8 of 10 loaded (18d) — prefix-less
+// 0.40 name, like blink/mark/recall.
+func TestEmbeddedTrapDetection(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if s := c.Items["scroll_trap_detection"]; s == nil || s.Kind != "scroll" || s.Use != "detect_traps" || s.Name != "trap detection scroll" {
+		t.Errorf("scroll_trap_detection def unexpected: %+v", s)
+	}
+}

@@ -85,11 +85,12 @@ func BuildView(g *game.Game) View {
 	for y := 0; y < l.H; y++ {
 		for x := 0; x < l.W; x++ {
 			t := l.At(game.Pos{X: x, Y: y})
+			def := t.Appears() // an unrevealed trap wears its disguise
 			switch {
 			case t.Visible:
-				*v.At(x, y) = Cell{Glyph: t.Def.Rune(), Color: t.Def.Color}
+				*v.At(x, y) = Cell{Glyph: def.Rune(), Color: def.Color}
 			case t.Seen:
-				*v.At(x, y) = Cell{Glyph: t.Def.Rune(), Color: t.Def.Color, Dim: true}
+				*v.At(x, y) = Cell{Glyph: def.Rune(), Color: def.Color, Dim: true}
 			default:
 				*v.At(x, y) = Cell{Glyph: ' ', Color: content.ColorNormal}
 			}

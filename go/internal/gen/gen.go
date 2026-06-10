@@ -425,7 +425,13 @@ func placeTraps(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, n 
 		if lvl.At(pos).Def.ID != "floor" {
 			continue // don't overwrite stairs, the altar, etc.
 		}
+		floor := lvl.At(pos).Def
 		lvl.Set(pos, trap)
+		// Traps go down hidden, disguised as the floor they replaced, with a
+		// 2d6 difficulty for passive spotting (C traps.c roll(2,6)).
+		t := lvl.At(pos)
+		t.Disguise = floor
+		t.TrapDifficulty = 2 + r.Intn(6) + r.Intn(6)
 	}
 }
 

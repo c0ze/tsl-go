@@ -51,10 +51,25 @@ func (d Direction) Delta() (int, int) {
 
 // Tile is a single map cell. Visible is true when currently in the player's
 // FOV; Seen is true once it has ever been visible (remembered/dimmed).
+// A tile with a Disguise renders as that def until Revealed — 0.40's hidden
+// traps (and a ready seam for secret doors); TrapDifficulty is the 2d6 score
+// passive spotting must beat (C traps.c).
 type Tile struct {
-	Def     *content.TileDef
-	Visible bool
-	Seen    bool
+	Def            *content.TileDef
+	Visible        bool
+	Seen           bool
+	Disguise       *content.TileDef
+	Revealed       bool
+	TrapDifficulty int
+}
+
+// Appears returns the def this tile shows: the Disguise while unrevealed,
+// otherwise the real thing.
+func (t *Tile) Appears() *content.TileDef {
+	if t.Disguise != nil && !t.Revealed {
+		return t.Disguise
+	}
+	return t.Def
 }
 
 // Level is a rectangular grid of tiles stored row-major.
