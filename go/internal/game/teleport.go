@@ -60,7 +60,9 @@ func (g *Game) Recall() bool {
 	if !g.recallSet {
 		return false
 	}
-	if g.recallLevel != g.Level.ID {
+	fromID := g.Level.ID
+	switched := false
+	if g.recallLevel != fromID {
 		if g.Dungeon == nil {
 			return false
 		}
@@ -70,22 +72,36 @@ func (g *Game) Recall() bool {
 		}
 		g.Level = g.Dungeon.Current()
 		g.Level.entered = true
+		switched = true
 	}
-	dst := g.recallPos
-	if g.Level.CreatureAt(dst) != nil {
-		nudged := false
-		for dy := -1; dy <= 1 && !nudged; dy++ {
-			for dx := -1; dx <= 1 && !nudged; dx++ {
-				p := Pos{X: dst.X + dx, Y: dst.Y + dy}
-				if p != dst && g.Level.Passable(p) && g.Level.CreatureAt(p) == nil {
-					dst, nudged = p, true
-				}
-			}
+	dst, ok := g.freeSpotNear(g.recallPos)
+	if !ok {
+		// The mark is buried in bodies. A fizzle must leave no trace, so
+		// undo the level switch (re-entering a cached level cannot fail).
+		if switched {
+			g.Dungeon.enter(fromID)
+			g.Level = g.Dungeon.Current()
+			g.Player = g.Level.Return
 		}
-		if !nudged {
-			return false // the mark is buried in bodies; nowhere to appear
-		}
+		return false
 	}
 	g.Player = dst
 	return true
+}
+
+// freeSpotNear returns p itself when unoccupied, else a free passable tile one
+// ring outward; ok is false when every candidate is taken.
+func (g *Game) freeSpotNear(p Pos) (Pos, bool) {
+	if g.Level.CreatureAt(p) == nil {
+		return p, true
+	}
+	for dy := -1; dy <= 1; dy++ {
+		for dx := -1; dx <= 1; dx++ {
+			q := Pos{X: p.X + dx, Y: p.Y + dy}
+			if q != p && g.Level.Passable(q) && g.Level.CreatureAt(q) == nil {
+				return q, true
+			}
+		}
+	}
+	return Pos{}, false
 }

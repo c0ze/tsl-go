@@ -194,3 +194,25 @@ func TestRecallNudgesOffOccupiedMark(t *testing.T) {
 		t.Errorf("expected a one-ring nudge, landed %d away", d)
 	}
 }
+
+func TestBuriedMarkRollsBackLevelSwitch(t *testing.T) {
+	g := fakeDungeon(t)
+	g.MarkRecall()
+	mark := g.Player
+	// Bury the mark and its whole ring in bodies on level A.
+	for dy := -1; dy <= 1; dy++ {
+		for dx := -1; dx <= 1; dx++ {
+			p := Pos{X: mark.X + dx, Y: mark.Y + dy}
+			g.Level.Creatures = append(g.Level.Creatures, &Creature{Def: &content.MonsterDef{ID: "rat", Glyph: "r", HP: 1}, Pos: p, HP: 1})
+		}
+	}
+	g.Player = Pos{3, 1}
+	g.Travel() // over to B
+	before := g.Player
+	if g.Recall() {
+		t.Fatal("a fully buried mark must fizzle")
+	}
+	if g.Dungeon.current != "b" || g.Player != before {
+		t.Errorf("a fizzled recall must leave no trace: on %q at %v", g.Dungeon.current, g.Player)
+	}
+}

@@ -400,7 +400,10 @@ func TestMarkAndRecallBehaviors(t *testing.T) {
 }
 
 func TestUnmarkedRecallBehaviorFizzles(t *testing.T) {
-	recall := Registry()["recall"]
+	recall, ok := Registry()["recall"]
+	if !ok {
+		t.Fatal("recall not registered")
+	}
 	floor := &content.TileDef{ID: "floor", Glyph: ".", Color: content.ColorNormal, Passable: true, Transparent: true}
 	g := &game.Game{Level: game.NewLevel(8, 3, floor), Player: game.Pos{X: 1, Y: 1}}
 	msgs := recall(g, &game.Item{Def: &content.ItemDef{Name: "recall scroll"}})
