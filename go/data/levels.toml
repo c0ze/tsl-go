@@ -47,6 +47,7 @@ width = 60
 height = 24
 links = ["dungeon", "laboratory"]
 monsters = 10
+boss = "necromancer"
 traps = 3
 [[level.catacombs.spawn]]
 monster = "ghoul"

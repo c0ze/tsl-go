@@ -503,3 +503,21 @@ dodge = 3
 damage = "2d4"
 speed = 60
 min_depth = 8
+
+# The Necromancer (13h, C unique.c:78): boss of the Catacombs. Glacial
+# (speed 10 — one move in ten player turns) but hurls bolts from afar
+# (force bolt/frost ray/fireball approximated as ranged) and his rare
+# cold touch drains your speed (virtual_cold_touch -> slow on hit).
+[monster.necromancer]
+name = "Necromancer"
+glyph = "N"
+color = "normal"
+hp = 30
+attack = 9
+dodge = 2
+damage = "2d6"
+speed = 10
+ranged = 7
+effect = "slow"
+effect_turns = 3
+min_depth = 99 # boss placement only
