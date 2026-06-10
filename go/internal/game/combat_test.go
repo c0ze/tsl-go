@@ -276,3 +276,19 @@ func TestFearedMonsterFleesInsteadOfAttacking(t *testing.T) {
 		t.Errorf("a frightened creature should increase its distance from the player (%d -> %d)", before, got)
 	}
 }
+
+func TestFlameHandsOverrideWeapon(t *testing.T) {
+	g := combatGame()
+	g.Weapon = &Item{Def: &content.ItemDef{Name: "dagger", Kind: "weapon", Damage: "1d4"}}
+	if got := g.playerDamageSpec(); got != "1d4" {
+		t.Fatalf("setup: wielded spec should be 1d4, got %q", got)
+	}
+	g.AddEffect("flame_hands", 22)
+	if got := g.playerDamageSpec(); got != flameHandsDamage {
+		t.Errorf("flame hands supersede the wielded weapon (C set_temp_weapon), got %q", got)
+	}
+	g.RemoveEffect("flame_hands")
+	if got := g.playerDamageSpec(); got != "1d4" {
+		t.Errorf("the dagger returns when the fire dies, got %q", got)
+	}
+}
