@@ -19,6 +19,9 @@ type Creature struct {
 	Faction Faction
 	Energy  int
 	Effects []Effect // timed afflictions (e.g. poison from a venom wand)
+
+	Ally     bool // charmed to the player's side (C attr_player_ally)
+	Lifetime int  // ticks before a summon disappears (0 = permanent)
 }
 
 // AddEffect applies a timed status effect to the creature, refreshing an
