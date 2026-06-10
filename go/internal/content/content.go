@@ -101,6 +101,7 @@ type ItemDef struct {
 	NoSpawn     bool   `toml:"nospawn"`      // exclude from random floor loot (e.g. corpses)
 	Weight      int    `toml:"weight"`       // carry weight (0 = kind default, C rules.h WEIGHT_*)
 	Breath      string `toml:"breath"`       // spellbook cone: "fire", "poison", or "" (#19)
+	Deathspell  bool   `toml:"deathspell"`   // the touch-range coin flip (C magic.c deathspell)
 }
 
 // kindWeights are the C's per-kind WEIGHT_* defaults (rules.h); an item with
@@ -468,8 +469,8 @@ func validateItem(i *ItemDef) error {
 	case "spellbook":
 		hasUse := strings.TrimSpace(i.Use) != ""
 		hasAttack := i.Ranged > 0 && i.Damage != ""
-		if !hasUse && !hasAttack && i.Breath == "" {
-			return fmt.Errorf("spellbook needs a use behavior, a ranged damage spec, or a breath")
+		if !hasUse && !hasAttack && i.Breath == "" && !i.Deathspell {
+			return fmt.Errorf("spellbook needs a use behavior, a ranged damage spec, a breath, or the deathspell")
 		}
 		if hasAttack && !validDamageSpec(i.Damage) {
 			return fmt.Errorf("spellbook damage %q is not a valid dice spec", i.Damage)

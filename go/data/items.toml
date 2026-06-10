@@ -496,3 +496,22 @@ color = "green"
 kind = "spellbook"
 breath = "poison"
 cost = 5
+
+# Two more books (15x). The Deathspell is the C's 1-EP coin flip — the target
+# dies, or you do; the manual ends potion roulette in one read. The C's
+# manual of camouflage is commented out in 0.40, so it is faithfully absent.
+[item.book_deathspell]
+name = "book of Deathspell"
+glyph = "+"
+color = "black"
+kind = "spellbook"
+deathspell = true
+cost = 1
+
+[item.manual_pharmacy]
+name = "manual of pharmacy"
+glyph = "+"
+color = "brown"
+kind = "spellbook"
+use = "pharmacy"
+cost = 2

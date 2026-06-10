@@ -145,3 +145,16 @@ func TestUnidentifiedInventoryFiltersAndDrops(t *testing.T) {
 		t.Error("IsIdentified should report the potion identified")
 	}
 }
+
+func TestIdentifyAllPotions(t *testing.T) {
+	g := identifyGame()
+	n := g.IdentifyAllPotions()
+	if n == 0 {
+		t.Fatal("expected some potions identified")
+	}
+	for id, def := range g.Content.Items {
+		if def.Kind == "potion" && !g.Identified[id] {
+			t.Errorf("potion %q should be identified (C manual of pharmacy)", id)
+		}
+	}
+}
