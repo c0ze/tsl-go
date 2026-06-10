@@ -102,9 +102,14 @@ func BuildView(g *game.Game) View {
 		}
 	}
 	for _, m := range l.Creatures {
-		if l.InBounds(m.Pos) && l.At(m.Pos).Visible {
-			*v.At(m.Pos.X, m.Pos.Y) = Cell{Glyph: m.Def.Rune(), Color: m.Def.Color}
+		if !l.InBounds(m.Pos) || !l.At(m.Pos).Visible {
+			continue
 		}
+		if m.Disguised && m.DisguiseAs != nil { // a mimic wears its loot glamour
+			*v.At(m.Pos.X, m.Pos.Y) = Cell{Glyph: m.DisguiseAs.Rune(), Color: m.DisguiseAs.Color}
+			continue
+		}
+		*v.At(m.Pos.X, m.Pos.Y) = Cell{Glyph: m.Def.Rune(), Color: m.Def.Color}
 	}
 	if l.InBounds(g.Player) {
 		*v.At(g.Player.X, g.Player.Y) = Cell{Glyph: PlayerGlyph, Color: PlayerColor}

@@ -878,3 +878,34 @@ func TestEmbeddedArrows(t *testing.T) {
 		t.Errorf("arrow def unexpected: %+v", a)
 	}
 }
+
+// TestEmbeddedMimic checks the last bestiary regular loaded (13i): rooted,
+// mimic-flagged, and lurking on every level at weight 1 (C places.c).
+func TestEmbeddedMimic(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	m := c.Monsters["mimic"]
+	if m == nil || !m.Mimic || m.Glyph != "m" || m.HP != 5 || m.Speed != 70 {
+		t.Fatalf("mimic def unexpected: %+v", m)
+	}
+	for id, l := range c.Levels {
+		if len(l.Spawn) == 0 {
+			continue
+		}
+		found := false
+		for _, s := range l.Spawn {
+			if s.Monster != "mimic" {
+				continue
+			}
+			found = true
+			if s.Weight != 1 {
+				t.Errorf("level %s mimic weight = %d, want 1 (C places.c)", id, s.Weight)
+			}
+		}
+		if !found {
+			t.Errorf("level %s should carry the mimic at weight 1 (C places.c)", id)
+		}
+	}
+}

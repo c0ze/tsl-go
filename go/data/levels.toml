@@ -40,6 +40,9 @@ weight = 2
 [[level.dungeon.spawn]]
 monster = "sludge_dweller"
 weight = 1
+[[level.dungeon.spawn]]
+monster = "mimic"
+weight = 1
 
 [level.catacombs]
 name = "the Catacombs"
@@ -76,6 +79,9 @@ weight = 1
 [[level.catacombs.spawn]]
 monster = "severed_hand"
 weight = 2
+[[level.catacombs.spawn]]
+monster = "mimic"
+weight = 1
 
 [level.ominous_cave]
 name = "the Ominous Cave"
@@ -107,6 +113,9 @@ monster = "sludge_dweller"
 weight = 2
 [[level.ominous_cave.spawn]]
 monster = "electric_snake"
+weight = 1
+[[level.ominous_cave.spawn]]
+monster = "mimic"
 weight = 1
 
 [level.laboratory]
@@ -147,6 +156,9 @@ weight = 2
 [[level.laboratory.spawn]]
 monster = "sludge_dweller"
 weight = 2
+[[level.laboratory.spawn]]
+monster = "mimic"
+weight = 1
 
 [level.comm_hub]
 name = "the Communications Hub"
@@ -181,6 +193,9 @@ monster = "technician"
 weight = 1
 [[level.comm_hub.spawn]]
 monster = "sludge_dweller"
+weight = 1
+[[level.comm_hub.spawn]]
+monster = "mimic"
 weight = 1
 
 [level.underpass]
@@ -218,6 +233,9 @@ weight = 1
 [[level.underpass.spawn]]
 monster = "electric_snake"
 weight = 1
+[[level.underpass.spawn]]
+monster = "mimic"
+weight = 1
 
 [level.drowned_city]
 name = "the Drowned City"
@@ -252,6 +270,9 @@ monster = "giant_slimy_toad"
 weight = 2
 [[level.drowned_city.spawn]]
 monster = "sludge_dweller"
+weight = 1
+[[level.drowned_city.spawn]]
+monster = "mimic"
 weight = 1
 
 [level.frozen_vault]
@@ -289,6 +310,9 @@ weight = 1
 [[level.frozen_vault.spawn]]
 monster = "floating_brain"
 weight = 2
+[[level.frozen_vault.spawn]]
+monster = "mimic"
+weight = 1
 
 [level.dragons_lair]
 name = "the Dragons Lair"
@@ -329,6 +353,9 @@ weight = 1
 [[level.dragons_lair.spawn]]
 monster = "flame_spirit"
 weight = 2
+[[level.dragons_lair.spawn]]
+monster = "mimic"
+weight = 1
 
 [level.chapel]
 name = "the Chapel of Fallen Stars"
@@ -365,4 +392,7 @@ monster = "chrome_angel"
 weight = 2
 [[level.chapel.spawn]]
 monster = "nameless_horror"
+weight = 1
+[[level.chapel.spawn]]
+monster = "mimic"
 weight = 1

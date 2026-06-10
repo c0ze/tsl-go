@@ -164,7 +164,21 @@ func (g *Game) playerDodgeStat() int {
 	return dodge
 }
 
+// revealMimic tears the glamour off a disguised mimic (C reveal_mimic). It
+// reports whether a reveal happened — the swing that finds out is wasted.
+func (g *Game) revealMimic(m *Creature) bool {
+	if !m.Disguised {
+		return false
+	}
+	m.Disguised = false
+	g.log("Wait! That is a small mimic!")
+	return true
+}
+
 func (g *Game) playerAttacks(m *Creature) {
+	if g.revealMimic(m) {
+		return // turn wasted! (C combat.c:237)
+	}
 	if !g.RNG.Chance(g.playerAttackStat(), m.Def.Dodge) {
 		g.log("You miss the %s.", m.Def.Name)
 		return
@@ -207,6 +221,7 @@ func (g *Game) ZapWand(it *Item, target Pos) {
 	it.Charges--
 	g.identify(it) // zapping a wand reveals its type
 	if m := g.Level.CreatureAt(target); m != nil {
+		g.revealMimic(m) // a bolt tears the glamour (C reveal_mimic)
 		if it.Def.Damage != "" {
 			dmg := g.RNG.RollSpec(it.Def.Damage)
 			m.HP -= dmg
@@ -434,6 +449,9 @@ func (g *Game) worldTick() {
 // monsterAct is a single monster action: attack the player if adjacent, else
 // step toward the player if within sense range.
 func (g *Game) monsterAct(m *Creature) {
+	if m.Disguised {
+		return // a mimic in its glamour does nothing at all (C ai_mimic)
+	}
 	if m.HasEffect("sleep") {
 		return // asleep: it loses the turn outright (C game.c effect_sleep skip)
 	}
@@ -508,6 +526,7 @@ func (g *Game) allyAct(m *Creature) {
 // hostile or the reverse — on the same attack-vs-dodge model as every other
 // melee in the port.
 func (g *Game) monsterFights(a, d *Creature) {
+	g.revealMimic(d)
 	if !g.RNG.Chance(a.Def.Attack, d.Def.Dodge) {
 		g.log("The %s misses the %s.", a.Def.Name, d.Def.Name)
 		return
@@ -527,6 +546,9 @@ func (g *Game) monsterFights(a, d *Creature) {
 func (g *Game) creatureCanEnter(m *Creature, dst Pos) bool {
 	if !g.Level.InBounds(dst) {
 		return false
+	}
+	if m.Def.Mimic {
+		return false // rooted in place (C attr_p_move)
 	}
 	if m.Def.Permaswim {
 		return g.Level.At(dst).Def.Water

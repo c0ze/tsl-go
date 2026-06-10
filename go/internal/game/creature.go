@@ -22,6 +22,9 @@ type Creature struct {
 
 	Ally     bool // charmed to the player's side (C attr_player_ally)
 	Lifetime int  // ticks before a summon disappears (0 = permanent)
+
+	Disguised  bool             // a mimic still wearing its glamour (C ai_mimic)
+	DisguiseAs *content.ItemDef // the loot it poses as while disguised
 }
 
 // AddEffect applies a timed status effect to the creature, refreshing an

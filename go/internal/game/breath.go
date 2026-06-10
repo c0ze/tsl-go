@@ -100,6 +100,7 @@ func (g *Game) breathe(m *Creature) {
 			continue
 		}
 		if c := g.Level.CreatureAt(p); c != nil && c != m {
+			g.revealMimic(c) // C breath.c calls reveal_mimic per target
 			if kind == "fire" {
 				c.HP -= g.RNG.RollSpec(breathFireDamage)
 			} else {
@@ -130,6 +131,7 @@ func (g *Game) playerBreathe(kind string, target Pos) {
 		if c == nil {
 			continue
 		}
+		g.revealMimic(c)
 		if kind == "fire" {
 			c.HP -= g.RNG.RollSpec(breathFireDamage)
 		} else {

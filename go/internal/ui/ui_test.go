@@ -469,3 +469,24 @@ func TestBuildViewHidesDisguisedTraps(t *testing.T) {
 		t.Errorf("a revealed trap should show itself, got %q", got)
 	}
 }
+
+func TestBuildViewShowsMimicGlamour(t *testing.T) {
+	g := testGame(t, []string{".@..."})
+	m := &game.Creature{
+		Def: &content.MonsterDef{ID: "mimic", Name: "mimic", Glyph: "m", Color: content.ColorNormal, HP: 5},
+		Pos: game.Pos{X: 3, Y: 0}, HP: 5,
+		Disguised:  true,
+		DisguiseAs: &content.ItemDef{ID: "healing_potion", Name: "healing potion", Glyph: "!", Color: content.ColorRed, Kind: "potion"},
+	}
+	g.Level.Creatures = append(g.Level.Creatures, m)
+	g.Level.At(game.Pos{X: 3, Y: 0}).Visible = true
+	v := BuildView(g)
+	if got := v.At(3, 0).Glyph; got != '!' {
+		t.Errorf("a disguised mimic renders as its loot, got %q", got)
+	}
+	m.Disguised = false
+	v = BuildView(g)
+	if got := v.At(3, 0).Glyph; got != 'm' {
+		t.Errorf("a revealed mimic shows itself, got %q", got)
+	}
+}

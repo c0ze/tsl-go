@@ -527,3 +527,18 @@ ranged = 7
 effect = "slow"
 effect_turns = 3
 min_depth = 99 # boss placement only
+
+# The mimic (13i, C monster.c:462): spawns wearing a random item's glamour,
+# does nothing until disturbed — and the swing that finds out is wasted.
+# Rooted in place (attr_p_move). Lurks on every level at weight 1 (places.c).
+[monster.mimic]
+name = "mimic"
+glyph = "m"
+color = "normal"
+hp = 5
+attack = 6
+dodge = 0
+damage = "1d4"
+speed = 70
+mimic = true
+min_depth = 1
