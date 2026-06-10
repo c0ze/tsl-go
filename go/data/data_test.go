@@ -776,3 +776,18 @@ func TestEmbeddedTrapDetection(t *testing.T) {
 		t.Errorf("scroll_trap_detection def unexpected: %+v", s)
 	}
 }
+
+// TestEmbeddedLava checks the molten half of the hazard pair loaded (18e):
+// only the Dragons Lair runs with lava (C places.c:352).
+func TestEmbeddedLava(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if l := c.Tiles["lava"]; l == nil || !l.Lava || l.Passable || !l.Transparent {
+		t.Errorf("lava tile def unexpected: %+v", l)
+	}
+	if l := c.Levels["dragons_lair"]; l == nil || l.Lava != 12 {
+		t.Errorf("dragons_lair should run with 12 lava pools, got %+v", l)
+	}
+}

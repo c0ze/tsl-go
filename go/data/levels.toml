@@ -296,6 +296,7 @@ width = 60
 height = 24
 links = ["chapel", "drowned_city", "frozen_vault"]
 monsters = 14
+lava = 12
 boss = "dragon"
 traps = 5
 [[level.dragons_lair.spawn]]

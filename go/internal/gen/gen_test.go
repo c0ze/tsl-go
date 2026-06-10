@@ -488,3 +488,31 @@ func TestPlacedTrapsAreDisguised(t *testing.T) {
 		t.Fatal("expected traps placed")
 	}
 }
+
+func TestLevelFromDefCarvesLavaPools(t *testing.T) {
+	c := levelDefContent()
+	c.Tiles["lava"] = &content.TileDef{ID: "lava", Glyph: "^", Color: content.ColorBrown, Transparent: true, Lava: true}
+	def := &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"}, Lava: 6}
+	for seed := uint32(1); seed <= 4; seed++ {
+		lvl, err := LevelFromDef(rng.NewWithSeed(seed), c, def)
+		if err != nil {
+			t.Fatal(err)
+		}
+		lava := 0
+		for y := 0; y < lvl.H; y++ {
+			for x := 0; x < lvl.W; x++ {
+				if lvl.At(game.Pos{X: x, Y: y}).Def.Lava {
+					lava++
+				}
+			}
+		}
+		if lava < 5 {
+			t.Errorf("seed %d: 6 lava pools should leave some lava, got %d tiles", seed, lava)
+		}
+		for _, p := range lvl.Portals {
+			if !reachable(lvl, lvl.Start, p.Pos) {
+				t.Errorf("seed %d: portal at %v unreachable after lava carving", seed, p.Pos)
+			}
+		}
+	}
+}
