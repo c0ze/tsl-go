@@ -35,7 +35,7 @@ func (g *Game) CastSpell(book *Item) {
 	} else {
 		g.log("The spell fizzles.")
 	}
-	g.monstersAct()
+	g.advanceWorld()
 }
 
 // CastSpellAt casts a targeted attack spell from book at target: it checks EP,
@@ -56,7 +56,7 @@ func (g *Game) CastSpellAt(book *Item, target Pos) {
 	if book.Def.Beam { // a beam fires in the aimed direction, hitting all in its path
 		g.EP -= book.Def.Cost
 		g.fireBeam(book, target)
-		g.monstersAct()
+		g.advanceWorld()
 		return
 	}
 	if chebyshev(g.Player, target) > book.Def.Ranged {
@@ -78,7 +78,7 @@ func (g *Game) CastSpellAt(book *Item, target Pos) {
 	} else {
 		g.log("The spell dissipates against nothing.")
 	}
-	g.monstersAct()
+	g.advanceWorld()
 }
 
 // FlashRadius is how far the flash spell's blinding light reaches.

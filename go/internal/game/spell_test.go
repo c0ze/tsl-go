@@ -183,7 +183,7 @@ func TestPoisonNearbyPoisonsAndDamages(t *testing.T) {
 	}
 	// poison is damage-over-time: the next turn costs the near creature HP
 	hp := near.HP
-	g.monstersAct()
+	g.worldTick()
 	if near.HP >= hp {
 		t.Errorf("poison should cost the near creature HP: %d -> %d", hp, near.HP)
 	}
@@ -215,7 +215,7 @@ func TestBlindMonsterHoldsAtRange(t *testing.T) {
 	rat.AddEffect("blind", 10)
 	before := rat.Pos
 
-	g.monstersAct()
+	g.worldTick()
 
 	if rat.Pos != before {
 		t.Errorf("a blinded monster should hold position at range, moved to %v", rat.Pos)
@@ -229,7 +229,7 @@ func TestBlindMonsterStillMeleesAdjacent(t *testing.T) {
 	g.Level.Creatures = append(g.Level.Creatures, rat)
 	rat.AddEffect("blind", 10)
 
-	g.monstersAct()
+	g.worldTick()
 
 	if g.PlayerHP >= 20 {
 		t.Error("a blinded monster should still attack an adjacent player")

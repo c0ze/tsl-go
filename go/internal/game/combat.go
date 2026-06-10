@@ -13,16 +13,34 @@ const senseRange = 8 // how close a monster must be to notice the player
 
 const (
 	turnCost     = 100 // energy needed for one action
-	defaultSpeed = 100 // energy per turn for a monster with no speed set
+	defaultSpeed = 100 // energy per tick for an average creature (C rules.h BASE_SPEED)
+	hasteBonus   = 30  // flat speed bonus while hasted (C rules.h HASTE_AMOUNT)
 )
 
-// speedOf is a monster's energy gain per turn (a non-positive def speed means
-// "average", matching the player's one action per turn).
+// speedOf is a monster's energy gain per tick (a non-positive def speed means
+// "average").
 func speedOf(m *Creature) int {
 	if m.Def.Speed > 0 {
 		return m.Def.Speed
 	}
 	return defaultSpeed
+}
+
+// playerSpeed is the player's energy gain per world tick (the C's attr_speed,
+// base BASE_SPEED): haste adds a flat bonus, slow halves — the same rule
+// monsters use (the C's literal -1 for slow is vestigial on a 100 scale).
+func (g *Game) playerSpeed() int {
+	speed := defaultSpeed
+	if g.HasEffect("haste") {
+		speed += hasteBonus
+	}
+	if g.HasEffect("slow") {
+		speed /= 2
+	}
+	if speed < 1 {
+		speed = 1
+	}
+	return speed
 }
 
 // log appends a message to the game log.
@@ -59,7 +77,7 @@ func (g *Game) PlayerStep(d Direction) {
 		acted = true
 	}
 	if acted { // a blocked move into a wall doesn't pass the turn
-		g.monstersAct()
+		g.advanceWorld()
 	}
 }
 
@@ -155,7 +173,7 @@ func (g *Game) ZapWand(it *Item, target Pos) {
 	} else {
 		g.log("The bolt fizzles against nothing.")
 	}
-	g.monstersAct()
+	g.advanceWorld()
 }
 
 func (g *Game) monsterAttacks(m *Creature) {
@@ -192,16 +210,34 @@ func (g *Game) HurtPlayer(dmg int, cause string) {
 	}
 }
 
-// monstersAct advances the world after the player's turn. Each living monster
-// gains energy equal to its speed and acts for every full turn's worth it
-// holds, so faster monsters act more often (the C's move_counter / TURN_TIME
-// model). Leftover energy carries to the next turn.
-func (g *Game) monstersAct() {
+// advanceWorld passes the player's turn. The per-turn bookkeeping (effect
+// clocks, EP regen) runs once — in the C these happen per creature-turn, not
+// per tick (game.c pass_time_on_effects/energy) — then the player pays for the
+// action and the world ticks until the player has banked the next turn.
+// playerEnergy holds the player's surplus beyond the turn just taken (the C's
+// move_counter minus TURN_TIME), so at base speed exactly one tick passes; a
+// slowed player owes two, and a hasted player sometimes none (a free action).
+func (g *Game) advanceWorld() {
 	g.tickEffects()
 	if g.Dead {
 		return // status effects (e.g. poison) killed the player
 	}
 	g.regenEP()
+	g.playerEnergy -= turnCost
+	for g.playerEnergy < 0 {
+		g.playerEnergy += g.playerSpeed()
+		g.worldTick()
+		if g.Dead {
+			return
+		}
+	}
+}
+
+// worldTick is one tick of world time. Each living monster gains energy equal
+// to its speed and acts for every full turn's worth it holds, so faster
+// monsters act more often (the C's move_counter / TURN_TIME model). Leftover
+// energy carries to the next tick.
+func (g *Game) worldTick() {
 	// snapshot to avoid mutation surprises when creatures are removed
 	snapshot := make([]*Creature, len(g.Level.Creatures))
 	copy(snapshot, g.Level.Creatures)

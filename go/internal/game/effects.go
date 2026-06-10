@@ -13,6 +13,7 @@ var effectLabels = map[string]string{
 	"poison":  "Poisoned",
 	"regen":   "Regenerating",
 	"slow":    "Slowed",
+	"haste":   "Hastened",
 	"blind":   "Blinded",
 	"confuse": "Confused",
 	"fear":    "Afraid",
@@ -97,7 +98,7 @@ func (g *Game) tickCreatureEffects(m *Creature) bool {
 }
 
 // tickEffects applies each active effect's per-turn outcome, then decrements and
-// expires them. Called once per player action (from monstersAct).
+// expires them. Called once per player turn (from advanceWorld).
 func (g *Game) tickEffects() {
 	if len(g.Effects) == 0 {
 		return
