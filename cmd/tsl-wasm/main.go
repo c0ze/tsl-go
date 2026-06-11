@@ -52,7 +52,10 @@ func play(sc *web.Screen) error {
 				g.Messages = append(g.Messages, "Couldn't save game!")
 				continue // never crash a live game over a failed save
 			}
-			localStorage().Call("setItem", saveKey, b.String())
+			if !putSave(b.String()) {
+				g.Messages = append(g.Messages, "Couldn't save game!")
+				continue // blocked storage (private mode etc.): keep playing
+			}
 			sc.Overlay("Game saved.\n\nReload the page to resume.")
 			return nil
 		}
@@ -75,20 +78,42 @@ func play(sc *web.Screen) error {
 // resume restores a localStorage save and deletes it (the no-scumming rule),
 // or returns nil for a fresh descent.
 func resume(c *content.Content) (*game.Game, error) {
-	raw := localStorage().Call("getItem", saveKey)
-	if raw.IsNull() || raw.String() == "" {
+	raw := getSave()
+	if raw == "" {
 		return nil, nil
 	}
 	var g *game.Game
 	build := func(def *content.LevelDef) (*game.Level, error) {
 		return gen.LevelFromDef(g.RNG, c, def)
 	}
-	g, err := game.LoadGame(strings.NewReader(raw.String()), c, behaviors.Registry(), build)
+	g, err := game.LoadGame(strings.NewReader(raw), c, behaviors.Registry(), build)
 	if err != nil {
 		return nil, err
 	}
-	localStorage().Call("removeItem", saveKey)
+	clearSave()
 	return g, nil
 }
 
-func localStorage() js.Value { return js.Global().Get("localStorage") }
+// The storage helpers recover from JS exceptions (blocked or full storage,
+// private browsing): syscall/js panics where a browser would throw, and a
+// missing save must never take the runtime down with it.
+
+func getSave() (out string) {
+	defer func() { _ = recover() }()
+	raw := js.Global().Get("localStorage").Call("getItem", saveKey)
+	if raw.IsNull() {
+		return ""
+	}
+	return raw.String()
+}
+
+func putSave(s string) (ok bool) {
+	defer func() { _ = recover() }()
+	js.Global().Get("localStorage").Call("setItem", saveKey, s)
+	return true
+}
+
+func clearSave() {
+	defer func() { _ = recover() }()
+	js.Global().Get("localStorage").Call("removeItem", saveKey)
+}
