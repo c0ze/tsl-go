@@ -478,10 +478,7 @@ func (g *Game) gasProtected() bool {
 // our mapping of the C's attr_stealth detection rolls. Floor 2: nothing
 // misses you at arm's length.
 func (g *Game) noticeRange() int {
-	r := senseRange
-	for _, it := range g.equippedGear() {
-		r -= it.Def.Stealth
-	}
+	r := senseRange - g.playerStealth()
 	if r < 2 {
 		r = 2
 	}

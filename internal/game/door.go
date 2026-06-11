@@ -125,7 +125,7 @@ func (g *Game) ForceDoor(p Pos) {
 	case g.HasCrowbar():
 		g.log("You break the door open with your crowbar!")
 		g.Level.Set(p, g.Content.Tiles["floor"])
-	case g.RNG.Intn(8) < 5:
+	case g.rollXN(5, 3):
 		g.log("You break the door open!")
 		g.Level.Set(p, g.Content.Tiles["floor"])
 	default:
@@ -159,5 +159,41 @@ func (g *Game) CloseDoor(p Pos) {
 		return
 	}
 	g.Level.Set(p, closed)
+	// The C rolls stealth vs DOOR_STEALTH (rules.h:139) for a quiet close;
+	// slamming it is loud.
+	if g.rollXN(g.playerStealth(), doorStealth) {
+		g.log("You silently close the door.")
+	} else {
+		g.log("You slam the door shut.")
+		g.loudNoise(p)
+	}
 	g.advanceWorld()
+}
+
+// doorStealth is the C's DOOR_STEALTH (rules.h:139): the difficulty side of
+// the quiet-close roll.
+const doorStealth = 2
+
+// rollXN is the C's roll_xn (rolls.c:70): true with probability x in x+n,
+// clamping either side up to 1 by shifting the shortfall to the other.
+func (g *Game) rollXN(x, n int) bool {
+	if x < 1 {
+		n += 1 - x
+		x = 1
+	}
+	if n < 1 {
+		x += 1 - n
+		n = 1
+	}
+	return g.RNG.Intn(x+n) < x
+}
+
+// playerStealth sums worn stealth (the C's attr_stealth): dark cloak, padded
+// boots.
+func (g *Game) playerStealth() int {
+	s := 0
+	for _, it := range g.equippedGear() {
+		s += it.Def.Stealth
+	}
+	return s
 }

@@ -165,15 +165,36 @@ func TestForceDoorBareHands(t *testing.T) {
 	}
 }
 
-// close_door (doors.c): an open door closes unless something is in the way.
+// close_door (doors.c): an open door closes unless something is in the way,
+// and the DOOR_STEALTH roll decides a silent close vs a loud slam.
 func TestCloseDoor(t *testing.T) {
-	g := chainGame(1)
-	g.Level.Set(Pos{2, 1}, g.Content.Tiles["door_open"])
+	silent, slammed := false, false
+	for seed := uint32(1); seed <= 30 && !(silent && slammed); seed++ {
+		g := chainGame(seed)
+		g.Level.Set(Pos{2, 1}, g.Content.Tiles["door_open"])
+		rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 3, Damage: "1d1"}, Pos: Pos{5, 3}, HP: 3}
+		rat.Effects = append(rat.Effects, Effect{Kind: "sleep", Turns: 99})
+		g.Level.Creatures = append(g.Level.Creatures, rat)
 
-	g.CloseDoor(Pos{2, 1})
+		g.CloseDoor(Pos{2, 1})
 
-	if g.Level.At(Pos{2, 1}).Def.ID != "door_closed" {
-		t.Errorf("closing an open door should yield door_closed, got %q", g.Level.At(Pos{2, 1}).Def.ID)
+		if g.Level.At(Pos{2, 1}).Def.ID != "door_closed" {
+			t.Fatalf("seed %d: closing an open door should yield door_closed, got %q", seed, g.Level.At(Pos{2, 1}).Def.ID)
+		}
+		switch {
+		case hasMsg(g, "You silently close the door."):
+			silent = true
+		case hasMsg(g, "You slam the door shut."):
+			if rat.HasEffect("sleep") {
+				t.Errorf("seed %d: a slam is loud and should wake the rat", seed)
+			}
+			slammed = true
+		default:
+			t.Fatalf("seed %d: a successful close must report itself, got %v", seed, g.Messages)
+		}
+	}
+	if !silent || !slammed {
+		t.Errorf("the DOOR_STEALTH roll should land both ways over 30 seeds: silent=%v slammed=%v", silent, slammed)
 	}
 }
 
