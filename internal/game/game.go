@@ -119,6 +119,7 @@ type Game struct {
 	recallLevel  string // level id pinned by a mark scroll (see MarkRecall/Recall)
 	recallPos    Pos
 	recallSet    bool
+	lockedBump   *Pos // locked door just bumped, awaiting the front-end's prompt chain
 	Messages     []string
 	Dead         bool
 	Inventory    []*Item

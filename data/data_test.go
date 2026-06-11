@@ -1026,3 +1026,24 @@ func TestEmbeddedGearSlots(t *testing.T) {
 		}
 	}
 }
+
+// TestEmbeddedDoorChain checks the 18g door kit: secret and locked doors,
+// a closable open door, and the key (C treasure.c WEIGHT_KEY 1).
+func TestEmbeddedDoorChain(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if d := c.Tiles["door_secret"]; d == nil || !d.Secret || d.Glyph != "#" || d.Passable {
+		t.Errorf("door_secret should be a wall-looking secret tile, got %+v", d)
+	}
+	if d := c.Tiles["door_locked"]; d == nil || !d.Locked || d.OpensTo != "" {
+		t.Errorf("door_locked should be locked and not plainly openable, got %+v", d)
+	}
+	if d := c.Tiles["door_open"]; d == nil || d.ClosesTo != "door_closed" {
+		t.Errorf("door_open should close back to door_closed, got %+v", d)
+	}
+	if k := c.Items["key"]; k == nil || k.Kind != "tool" || k.Weight != 1 || k.Glyph != "'" {
+		t.Errorf("key def unexpected: %+v", k)
+	}
+}

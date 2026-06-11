@@ -228,7 +228,7 @@ func LevelFromDef(r *rng.MT, c *content.Content, def *content.LevelDef) (*game.L
 		}
 	}
 	if def.Doors {
-		placeDoors(c, lvl, rooms)
+		placeDoors(r, c, lvl, rooms)
 	}
 	placeSpawnMonsters(r, c, lvl, rooms, def)
 	placeItems(r, c, lvl, rooms, lvl.Start)
@@ -363,11 +363,14 @@ func cutsOff(lvl *game.Level) bool {
 }
 
 // placeDoors converts each room's doorways — single-tile passages where a
-// corridor punched through the room's wall ring — into closed doors. Doorways
-// are detected on the original (door-free) layout so placement order can't
-// affect the result; stairs, the altar, traps, portals, and the start tile are
-// never overwritten.
-func placeDoors(c *content.Content, lvl *game.Level, rooms []rect) {
+// corridor punched through the room's wall ring — into doors, porting the
+// C's replace_doors (doors.c, called from level.c:363): every doorway starts
+// as a candidate, 3+1d5 per level stay secret, the rest convert 50% to bare
+// floor or a closed door, and half the closed doors lock (maybe_locked_door).
+// Doorways are detected on the original (door-free) layout so placement order
+// can't affect the result; stairs, the altar, traps, portals, and the start
+// tile are never overwritten.
+func placeDoors(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect) {
 	closed := c.Tiles["door_closed"]
 	if closed == nil {
 		return
@@ -386,8 +389,39 @@ func placeDoors(c *content.Content, lvl *game.Level, rooms []rect) {
 			}
 		}
 	}
+	spots := make([]game.Pos, 0, len(doorways))
 	for p := range doorways {
-		lvl.Set(p, closed)
+		spots = append(spots, p)
+	}
+	sort.Slice(spots, func(i, j int) bool { // deterministic order for the RNG stream
+		if spots[i].Y != spots[j].Y {
+			return spots[i].Y < spots[j].Y
+		}
+		return spots[i].X < spots[j].X
+	})
+	secret, locked := c.Tiles["door_secret"], c.Tiles["door_locked"]
+	if secret == nil || locked == nil { // content without the chain: plain doors
+		for _, p := range spots {
+			lvl.Set(p, closed)
+		}
+		return
+	}
+	for i := len(spots) - 1; i > 0; i-- { // who stays secret is the C's random pick
+		j := r.Intn(i + 1)
+		spots[i], spots[j] = spots[j], spots[i]
+	}
+	keep := 3 + r.Intn(5) + 1 // doors_to_keep = 3 + roll(1,5)
+	for i, p := range spots {
+		switch {
+		case i < keep:
+			lvl.Set(p, secret)
+		case r.Intn(2) == 0:
+			// converted to plain floor: a doorway with no door at all
+		case r.Intn(2) == 0:
+			lvl.Set(p, locked)
+		default:
+			lvl.Set(p, closed)
+		}
 	}
 }
 

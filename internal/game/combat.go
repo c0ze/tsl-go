@@ -116,6 +116,10 @@ func (g *Game) PlayerStep(d Direction) {
 			// already fired regardless, the C's trap_win exception.
 			g.springTrapAt(g.Player)
 		}
+	} else if g.revealSecretDoor(dst) { // the discovering bump costs the turn
+		acted = true
+	} else if g.bumpLockedDoor(dst) {
+		// The unlock/force prompts run in the front-end; no turn passes here.
 	} else if g.openDoor(dst) { // blocked by a closed door: open it (costs the turn)
 		g.log("You open the door.")
 		acted = true
