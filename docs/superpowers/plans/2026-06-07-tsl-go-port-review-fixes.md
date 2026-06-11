@@ -13,9 +13,9 @@
 
 ## Task 1: Embed data + load through `fs.FS` (`content`, `data`, `cmd`)
 
-**Files:** Create `go/data/data.go`; modify `go/internal/content/content.go`, `go/internal/content/content_test.go`, `go/cmd/tsl/main.go`
+**Files:** Create `data/data.go`; modify `internal/content/content.go`, `internal/content/content_test.go`, `cmd/tsl/main.go`
 
-- [ ] **Step 1** — create `go/data/data.go`:
+- [ ] **Step 1** — create `data/data.go`:
 ```go
 // Package data embeds the game's TOML content so the binary is self-contained
 // and runs from any working directory.
@@ -137,7 +137,7 @@ to:
 
 - [ ] **Step 6** — from `go/`: `export GOTOOLCHAIN=local && go test ./internal/content/ ./cmd/tsl/` → PASS. **Commit:**
 ```bash
-git add go/data/data.go go/internal/content/content.go go/internal/content/content_test.go go/cmd/tsl/main.go
+git add data/data.go internal/content/content.go internal/content/content_test.go cmd/tsl/main.go
 git commit -m "feat(content): embed data via fs.FS so the binary runs anywhere"
 ```
 
@@ -145,7 +145,7 @@ git commit -m "feat(content): embed data via fs.FS so the binary runs anywhere"
 
 ## Task 2: Validate dice specs at load (`content`)
 
-**Files:** Modify `go/internal/content/content.go`, `go/internal/content/content_test.go`
+**Files:** Modify `internal/content/content.go`, `internal/content/content_test.go`
 
 - [ ] **Step 1** — add a `validDamageSpec` helper at the end of `content.go`:
 ```go
@@ -209,7 +209,7 @@ func TestLoadRejectsBadMonsterDamage(t *testing.T) {
 
 - [ ] **Step 5** — `go test ./internal/content/` → PASS. **Commit:**
 ```bash
-git add go/internal/content/content.go go/internal/content/content_test.go
+git add internal/content/content.go internal/content/content_test.go
 git commit -m "feat(content): reject malformed dice specs at load"
 ```
 
@@ -217,7 +217,7 @@ git commit -m "feat(content): reject malformed dice specs at load"
 
 ## Task 3: Validate potion behavior references (`game`, `cmd`)
 
-**Files:** Modify `go/internal/game/item.go`, `go/internal/game/item_test.go`, `go/cmd/tsl/main.go`
+**Files:** Modify `internal/game/item.go`, `internal/game/item_test.go`, `cmd/tsl/main.go`
 
 - [ ] **Step 1** — add `ValidateItemUses` to `item.go` (add `"fmt"` and keep the existing `content` import):
 ```go
@@ -273,7 +273,7 @@ func TestValidateItemUsesRejectsUnknown(t *testing.T) {
 
 - [ ] **Step 4** — from `go/`: `go test ./internal/game/ ./cmd/tsl/` → PASS. **Commit:**
 ```bash
-git add go/internal/game/item.go go/internal/game/item_test.go go/cmd/tsl/main.go
+git add internal/game/item.go internal/game/item_test.go cmd/tsl/main.go
 git commit -m "feat(game): fail fast on unknown potion behavior references"
 ```
 
@@ -281,7 +281,7 @@ git commit -m "feat(game): fail fast on unknown potion behavior references"
 
 ## Task 4: Defensive bounds in rendering (`ui`)
 
-**Files:** Modify `go/internal/ui/ui.go`
+**Files:** Modify `internal/ui/ui.go`
 
 - [ ] **Step 1** — in `BuildView`, guard the item, creature, and player draws with `l.InBounds(...)` so a malformed game state skips instead of panicking. The item loop becomes:
 ```go
@@ -317,7 +317,7 @@ Expected: gofmt clean, all packages `ok`, vet clean, binary builds. (Running fro
 
 - [ ] **Step 3** — Commit:
 ```bash
-git add go/internal/ui/ui.go
+git add internal/ui/ui.go
 git commit -m "fix(ui): guard rendering against out-of-bounds positions"
 ```
 

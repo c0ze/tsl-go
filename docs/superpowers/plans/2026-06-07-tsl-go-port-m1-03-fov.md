@@ -6,7 +6,7 @@
 
 **Architecture:** New leaf package `internal/fov` exposing `Compute(grid, ox, oy, radius, visit)` via a `Grid` interface (no game/UI imports). `internal/game` tracks per-tile `Visible`/`Seen`, adapts `Level` to `fov.Grid`, and recomputes via `Game.UpdateFOV()`. `internal/ui` renders visible tiles bright, seen tiles dim, unseen as blank, and the loop calls `UpdateFOV` each turn. `internal/ui/tcell` applies a dim style.
 
-**FOV algorithm note:** This uses **recursive shadowcasting** (the standard roguelike algorithm), a deliberate, reversible divergence from `common/fov.c`'s idiosyncratic bouncing-ray + dilation approach. Same player experience (radius-limited circular sight, walls block LOS); clean and testable. The `fov.Compute` seam lets a bit-faithful port of `fov.c` replace it later without touching callers, should exact 0.40 FOV be wanted.
+**FOV algorithm note:** This uses **recursive shadowcasting** (the standard roguelike algorithm), a deliberate, reversible divergence from `tsl-0.40/common/fov.c`'s idiosyncratic bouncing-ray + dilation approach. Same player experience (radius-limited circular sight, walls block LOS); clean and testable. The `fov.Compute` seam lets a bit-faithful port of `fov.c` replace it later without touching callers, should exact 0.40 FOV be wanted.
 
 **Tech Stack:** Go 1.21 (`GOTOOLCHAIN=local`). No new dependencies.
 
@@ -36,9 +36,9 @@ go/
 
 ## Task 1: FOV package (`internal/fov`)
 
-**Files:** Create `go/internal/fov/fov.go`, `go/internal/fov/fov_test.go`
+**Files:** Create `internal/fov/fov.go`, `internal/fov/fov_test.go`
 
-- [ ] **Step 1: Failing tests** — `go/internal/fov/fov_test.go`:
+- [ ] **Step 1: Failing tests** — `internal/fov/fov_test.go`:
 ```go
 package fov
 
@@ -91,7 +91,7 @@ func TestComputeWallColumnBlocks(t *testing.T) {
 
 - [ ] **Step 2: Run → FAIL** (`undefined: Compute`): `export GOTOOLCHAIN=local && go test ./internal/fov/`
 
-- [ ] **Step 3: Implement** — `go/internal/fov/fov.go`:
+- [ ] **Step 3: Implement** — `internal/fov/fov.go`:
 ```go
 // Package fov computes field of view via recursive shadowcasting. It depends on
 // nothing but the caller-supplied Grid, so it is a pure leaf package.
@@ -171,7 +171,7 @@ func castLight(g Grid, cx, cy, radius, row int, start, end float64, xx, xy, yx, 
 
 - [ ] **Step 5: Commit**
 ```bash
-git add go/internal/fov/
+git add internal/fov/
 git commit -m "feat(fov): recursive shadowcasting field of view"
 ```
 
@@ -179,9 +179,9 @@ git commit -m "feat(fov): recursive shadowcasting field of view"
 
 ## Task 2: Per-tile visibility + UpdateFOV (`internal/game`)
 
-**Files:** Modify `go/internal/game/game.go`; create `go/internal/game/fov.go`, `go/internal/game/fov_test.go`
+**Files:** Modify `internal/game/game.go`; create `internal/game/fov.go`, `internal/game/fov_test.go`
 
-- [ ] **Step 1: Extend the Tile struct** in `go/internal/game/game.go` — replace:
+- [ ] **Step 1: Extend the Tile struct** in `internal/game/game.go` — replace:
 ```go
 // Tile is a single map cell.
 type Tile struct {
@@ -199,7 +199,7 @@ type Tile struct {
 }
 ```
 
-- [ ] **Step 2: Failing tests** — `go/internal/game/fov_test.go`:
+- [ ] **Step 2: Failing tests** — `internal/game/fov_test.go`:
 ```go
 package game
 
@@ -265,7 +265,7 @@ func TestUpdateFOVClearsStaleVisible(t *testing.T) {
 
 - [ ] **Step 3: Run → FAIL** (`undefined: UpdateFOV`): `export GOTOOLCHAIN=local && go test ./internal/game/`
 
-- [ ] **Step 4: Implement** — `go/internal/game/fov.go`:
+- [ ] **Step 4: Implement** — `internal/game/fov.go`:
 ```go
 package game
 
@@ -304,7 +304,7 @@ func (g *Game) UpdateFOV() {
 
 - [ ] **Step 6: Commit**
 ```bash
-git add go/internal/game/game.go go/internal/game/fov.go go/internal/game/fov_test.go
+git add internal/game/game.go internal/game/fov.go internal/game/fov_test.go
 git commit -m "feat(game): per-tile visibility/memory and UpdateFOV"
 ```
 
@@ -312,9 +312,9 @@ git commit -m "feat(game): per-tile visibility/memory and UpdateFOV"
 
 ## Task 3: Visibility-aware rendering (`internal/ui`)
 
-**Files:** Modify `go/internal/ui/ui.go`, `go/internal/ui/ui_test.go`
+**Files:** Modify `internal/ui/ui.go`, `internal/ui/ui_test.go`
 
-- [ ] **Step 1: Update tests** — in `go/internal/ui/ui_test.go`, (a) make `TestBuildViewPlacesPlayer` compute FOV first, and (b) add a visibility-states test. Replace the existing `TestBuildViewPlacesPlayer` with:
+- [ ] **Step 1: Update tests** — in `internal/ui/ui_test.go`, (a) make `TestBuildViewPlacesPlayer` compute FOV first, and (b) add a visibility-states test. Replace the existing `TestBuildViewPlacesPlayer` with:
 ```go
 func TestBuildViewPlacesPlayer(t *testing.T) {
 	g := testGame(t, []string{"...", ".@.", "..."})
@@ -363,7 +363,7 @@ func TestBuildViewVisibilityStates(t *testing.T) {
 
 - [ ] **Step 2: Run → FAIL** (Cell has no `Dim`): `export GOTOOLCHAIN=local && go test ./internal/ui/`
 
-- [ ] **Step 3: Implement** — in `go/internal/ui/ui.go`:
+- [ ] **Step 3: Implement** — in `internal/ui/ui.go`:
 
 (a) add `Dim` to `Cell`:
 ```go
@@ -425,7 +425,7 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 
 - [ ] **Step 5: Commit**
 ```bash
-git add go/internal/ui/ui.go go/internal/ui/ui_test.go
+git add internal/ui/ui.go internal/ui/ui_test.go
 git commit -m "feat(ui): render FOV — bright/dim/blank by visibility"
 ```
 
@@ -433,9 +433,9 @@ git commit -m "feat(ui): render FOV — bright/dim/blank by visibility"
 
 ## Task 4: Dim rendering in the tcell front-end (`internal/ui/tcell`)
 
-**Files:** Modify `go/internal/ui/tcell/screen.go`
+**Files:** Modify `internal/ui/tcell/screen.go`
 
-- [ ] **Step 1: Implement** — in `go/internal/ui/tcell/screen.go`, update `Render` to apply a dim style:
+- [ ] **Step 1: Implement** — in `internal/ui/tcell/screen.go`, update `Render` to apply a dim style:
 ```go
 // Render draws the view and flushes it to the screen.
 func (sc *Screen) Render(v ui.View) {
@@ -465,7 +465,7 @@ Expected: gofmt lists nothing, all packages `ok`, vet clean, binary builds. (`go
 
 - [ ] **Step 3: Commit**
 ```bash
-git add go/internal/ui/tcell/screen.go
+git add internal/ui/tcell/screen.go
 git commit -m "feat(ui/tcell): dim style for remembered tiles"
 ```
 
@@ -481,4 +481,4 @@ git commit -m "feat(ui/tcell): dim style for remembered tiles"
 ## Deferred
 - Per-creature/attribute-driven vision radius (arrives with creatures in Plan 4).
 - Light sources, see-through-able special tiles, telepathy/detection — later.
-- A bit-faithful port of `common/fov.c`'s bouncing-ray FOV remains an option behind `fov.Compute` if exact 0.40 parity is later desired.
+- A bit-faithful port of `tsl-0.40/common/fov.c`'s bouncing-ray FOV remains an option behind `fov.Compute` if exact 0.40 parity is later desired.

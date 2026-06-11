@@ -8,7 +8,7 @@ healing** (good) and a **potion of pain** (bad — now an unknown potion can hur
 you), a **scroll of identify** (closes the identify loop), and a **scroll of
 recharge** (refills a wand).
 
-## Faithful reference (`common/potions.c`)
+## Faithful reference (`tsl-0.40/common/potions.c`)
 - `treasure_p_instant_healing`: `heal(creature, 10 + rnd() % 15)` → restore 10–24.
 - `treasure_p_pain`: damages the creature.
 - scrolls of identify / recharge: identify an item / restore wand charges.

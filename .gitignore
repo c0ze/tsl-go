@@ -1,6 +1,13 @@
-/tsl
-/go/tsl
-tsl_console
-tsl_gui
-tsl_conf
+# Built binaries
+/tsl-go
+/tsl-go.exe
+/dist/
+
+# Original 0.40 build artifacts (built inside tsl-0.40/)
+tsl-0.40/tsl_console
+tsl-0.40/tsl_gui
+
+# Runtime artifacts
 morgue.txt
+.tsl-save.json
+tsl_conf

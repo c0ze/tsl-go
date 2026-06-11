@@ -19,7 +19,7 @@
 
 ## Task 1: Depth, descent, win, morgue (`game`)
 
-**Files:** Modify `go/internal/game/game.go`, `go/internal/game/combat.go`; create `go/internal/game/descend.go`, `go/internal/game/descend_test.go`
+**Files:** Modify `internal/game/game.go`, `internal/game/combat.go`; create `internal/game/descend.go`, `internal/game/descend_test.go`
 
 - [ ] **Step 1** — add fields to the `Game` struct in `game.go` (after the item fields `Inventory/Weapon/Armor/Behaviors`):
 ```go
@@ -39,7 +39,7 @@
 	}
 ```
 
-- [ ] **Step 3** — `go/internal/game/descend_test.go`:
+- [ ] **Step 3** — `internal/game/descend_test.go`:
 ```go
 package game
 
@@ -112,7 +112,7 @@ func TestMorgueTextOnDeath(t *testing.T) {
 }
 ```
 
-- [ ] **Step 4** — `go/internal/game/descend.go`:
+- [ ] **Step 4** — `internal/game/descend.go`:
 ```go
 package game
 
@@ -193,7 +193,7 @@ func (g *Game) MorgueText() string {
 
 - [ ] **Step 5** — `go test ./internal/game/` → PASS. **Commit:**
 ```bash
-git add go/internal/game/game.go go/internal/game/combat.go go/internal/game/descend.go go/internal/game/descend_test.go
+git add internal/game/game.go internal/game/combat.go internal/game/descend.go internal/game/descend_test.go
 git commit -m "feat(game): depth, descent, win condition, death cause, morgue text"
 ```
 
@@ -201,9 +201,9 @@ git commit -m "feat(game): depth, descent, win condition, death cause, morgue te
 
 ## Task 2: Descend action + endgame (`ui`, `ui/tcell`)
 
-**Files:** Modify `go/internal/ui/ui.go`, `go/internal/ui/ui_test.go`, `go/internal/ui/tcell/screen.go`
+**Files:** Modify `internal/ui/ui.go`, `internal/ui/ui_test.go`, `internal/ui/tcell/screen.go`
 
-- [ ] **Step 1** — append a test to `go/internal/ui/ui_test.go`:
+- [ ] **Step 1** — append a test to `internal/ui/ui_test.go`:
 ```go
 func TestRunDescendToWin(t *testing.T) {
 	g := testGame(t, []string{"...", ".@.", "..."})
@@ -219,7 +219,7 @@ func TestRunDescendToWin(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2** — in `go/internal/ui/ui.go`:
+- [ ] **Step 2** — in `internal/ui/ui.go`:
 
 (a) add `ActDescend` to the `ActionKind` constants (after `ActInventory`):
 ```go
@@ -239,7 +239,7 @@ func TestRunDescendToWin(t *testing.T) {
 			g.Descend()
 ```
 
-- [ ] **Step 3** — in `go/internal/ui/tcell/screen.go`, map `>` to descend in `keyToAction` (with the other rune cases):
+- [ ] **Step 3** — in `internal/ui/tcell/screen.go`, map `>` to descend in `keyToAction` (with the other rune cases):
 ```go
 	case '>':
 		return ui.Action{Kind: ui.ActDescend}, true
@@ -247,7 +247,7 @@ func TestRunDescendToWin(t *testing.T) {
 
 - [ ] **Step 4** — `go test ./internal/ui/ ./internal/ui/tcell/` → PASS. **Commit:**
 ```bash
-git add go/internal/ui/ui.go go/internal/ui/ui_test.go go/internal/ui/tcell/screen.go
+git add internal/ui/ui.go internal/ui/ui_test.go internal/ui/tcell/screen.go
 git commit -m "feat(ui): descend action and win/lose end-of-game"
 ```
 
@@ -255,9 +255,9 @@ git commit -m "feat(ui): descend action and win/lose end-of-game"
 
 ## Task 3: Wire descent + morgue + outcome (`cmd/tsl`)
 
-**Files:** Modify `go/cmd/tsl/main.go`, `go/cmd/tsl/main_test.go`
+**Files:** Modify `cmd/tsl/main.go`, `cmd/tsl/main_test.go`
 
-- [ ] **Step 1** — append to `go/cmd/tsl/main_test.go`:
+- [ ] **Step 1** — append to `cmd/tsl/main_test.go`:
 ```go
 func TestNewGameStartsAtDepthOne(t *testing.T) {
 	g, err := newGame(testTiles(), 1)
@@ -273,7 +273,7 @@ func TestNewGameStartsAtDepthOne(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2** — rewrite `go/cmd/tsl/main.go` so `run` returns an outcome string, `main` prints it after the screen closes, and a morgue is written on death. Replace `main`, `run`, and `newGame` with:
+- [ ] **Step 2** — rewrite `cmd/tsl/main.go` so `run` returns an outcome string, `main` prints it after the screen closes, and a morgue is written on death. Replace `main`, `run`, and `newGame` with:
 ```go
 func main() {
 	outcome, err := run()
@@ -355,7 +355,7 @@ Expected: gofmt clean, all packages `ok`, vet clean, binary builds. (`go run ./c
 
 - [ ] **Step 4** — Commit:
 ```bash
-git add go/cmd/tsl/
+git add cmd/tsl/
 git commit -m "feat(cmd): wire descent generator, write morgue, report outcome"
 ```
 

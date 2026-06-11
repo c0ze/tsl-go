@@ -2,12 +2,12 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Six more canonical 0.40 monsters (#13), drawn from `common/glyph.c`,
+**Goal:** Six more canonical 0.40 monsters (#13), drawn from `tsl-0.40/common/glyph.c`,
 leaning into the bestiary's sci-fi/horror streak — which the existing level
 names already support (the Laboratory, the Communications Hub). Free glyphs, no
 collisions with the current roster.
 
-## Monsters (names/glyphs verbatim from `common/glyph.c`)
+## Monsters (names/glyphs verbatim from `tsl-0.40/common/glyph.c`)
 
 | id | name | glyph | color | role | min_depth |
 |----|------|-------|-------|------|-----------|

@@ -10,7 +10,7 @@
 The Slimy Lichmummy (TSL) is a turn-based, ASCII roguelike by Ulf Åström
 (happyponyland.net), last released as **v0.40 (2012-09-26)**. This repo
 (`c0ze/tsl`) is a personal fork of the original C source: ~50k lines of C, ~43k
-of it game logic in `common/`, behind a narrow UI boundary (`common/ui.h`) with
+of it game logic in `tsl-0.40/common/`, behind a narrow UI boundary (`tsl-0.40/common/ui.h`) with
 two front-ends — curses (`console/`, ~480 LOC) and Allegro (`gui/`, ~1.8k LOC).
 
 Upstream is dormant: 0.40 is the last release and development stalled ~2017.
@@ -276,16 +276,16 @@ For the implementer, the C files to consult for behavior parity:
 
 | Go target | C reference |
 |---|---|
-| `rng` | `common/mt19937ar.c` |
-| `fov` | `common/fov.c` |
-| `combat` | `common/combat.c`, `common/rolls.c`, `common/wounds.c` |
-| `gen` | `common/modbuild.c`, `common/level.c`, `common/area.c` |
-| `ai` | `common/ai.c` |
-| `creature` / attributes | `common/creature.c`, `common/attrs.c`, `common/ability.c`, `main.h` (`attr_index_t`, `attr_info_t`) |
-| `item` | `common/item.c`, `common/itemprop.c`, `common/equip.c`, `common/inventory.c`, `common/treasure.c` |
-| `behaviors` (spells/abilities) | `common/magic.c`, `common/effect.c`, `common/balls.c`, `common/missile.c`, `common/teleport.c` |
-| `game` loop / actions | `common/game.c`, `common/actions.c` |
-| `ui` (View/Prompter) | `common/ui.h`, `common/ui.c`, `console/console.c`, `common/menuitem.c`, `common/select.c` |
-| `save` | `common/saveload.c` (semantics only; format is redesigned) |
-| config / keymap | `common/options.c`, `common/keymap.c`, `common/input.c`, `tsl_conf_example` |
+| `rng` | `tsl-0.40/common/mt19937ar.c` |
+| `fov` | `tsl-0.40/common/fov.c` |
+| `combat` | `tsl-0.40/common/combat.c`, `tsl-0.40/common/rolls.c`, `tsl-0.40/common/wounds.c` |
+| `gen` | `tsl-0.40/common/modbuild.c`, `tsl-0.40/common/level.c`, `tsl-0.40/common/area.c` |
+| `ai` | `tsl-0.40/common/ai.c` |
+| `creature` / attributes | `tsl-0.40/common/creature.c`, `tsl-0.40/common/attrs.c`, `tsl-0.40/common/ability.c`, `main.h` (`attr_index_t`, `attr_info_t`) |
+| `item` | `tsl-0.40/common/item.c`, `tsl-0.40/common/itemprop.c`, `tsl-0.40/common/equip.c`, `tsl-0.40/common/inventory.c`, `tsl-0.40/common/treasure.c` |
+| `behaviors` (spells/abilities) | `tsl-0.40/common/magic.c`, `tsl-0.40/common/effect.c`, `tsl-0.40/common/balls.c`, `tsl-0.40/common/missile.c`, `tsl-0.40/common/teleport.c` |
+| `game` loop / actions | `tsl-0.40/common/game.c`, `tsl-0.40/common/actions.c` |
+| `ui` (View/Prompter) | `tsl-0.40/common/ui.h`, `tsl-0.40/common/ui.c`, `console/console.c`, `tsl-0.40/common/menuitem.c`, `tsl-0.40/common/select.c` |
+| `save` | `tsl-0.40/common/saveload.c` (semantics only; format is redesigned) |
+| config / keymap | `tsl-0.40/common/options.c`, `tsl-0.40/common/keymap.c`, `tsl-0.40/common/input.c`, `tsl_conf_example` |
 ```

@@ -4,8 +4,8 @@
 
 **Goal:** Five more canonical 0.40 monsters (batch 6): **electric snake,
 sludge dweller, severed hand, floating brain, flame spirit** — all from
-`common/monster.c`, glyphs from `common/glyph.c`, spawn levels from
-`common/places.c` `std_enemy` tables. Advances #13. (The **mimic** waits: its
+`tsl-0.40/common/monster.c`, glyphs from `tsl-0.40/common/glyph.c`, spawn levels from
+`tsl-0.40/common/places.c` `std_enemy` tables. Advances #13. (The **mimic** waits: its
 essence is the item-disguise `ai_mimic` machinery, its own increment.)
 
 ## C grounding (stats `monster.c`, glyph `glyph.c`, levels `places.c`)

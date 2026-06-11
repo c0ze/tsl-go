@@ -6,7 +6,7 @@
 
 **Tech Stack:** Go 1.21 (`GOTOOLCHAIN=local`). Commands run from the `go/` directory at the repo root.
 
-## The map (faithful to `common/places.c`)
+## The map (faithful to `tsl-0.40/common/places.c`)
 
 | level (id) | links to | win |
 |---|---|---|
