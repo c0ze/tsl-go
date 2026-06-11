@@ -126,6 +126,9 @@ type Game struct {
 	Armor        *Item
 	Ring         *Item // worn accessory: passive attack/dodge bonus
 	Amulet       *Item // worn accessory: passive attack/dodge bonus
+	Boots        *Item // feet slot (C item_type_feet, #14)
+	Head         *Item // head slot (gas mask, blindfold)
+	Cloak        *Item // cloak slot
 	Behaviors    map[string]Behavior
 	Won          bool
 	DeathCause   string

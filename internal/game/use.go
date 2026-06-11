@@ -38,6 +38,21 @@ func (g *Game) PlayerPickup() {
 // (the faithful 0.40 default; it never auto-downgrades an equipped item).
 func (g *Game) autoEquip(it *Item) {
 	switch it.Def.Kind {
+	case "boots":
+		if g.Boots == nil {
+			g.Boots = it
+			g.log("You put on the %s.", it.Def.Name)
+		}
+	case "head":
+		if g.Head == nil {
+			g.Head = it
+			g.log("You put on the %s.", it.Def.Name)
+		}
+	case "cloak":
+		if g.Cloak == nil {
+			g.Cloak = it
+			g.log("You put on the %s.", it.Def.Name)
+		}
 	case "weapon":
 		if g.Weapon == nil {
 			g.Weapon = it
@@ -82,6 +97,15 @@ func (g *Game) PlayerUse(it *Item) {
 	case "armor":
 		g.Armor = it
 		g.log("You wear the %s.", it.Def.Name)
+	case "boots":
+		g.Boots = it
+		g.log("You put on the %s.", it.Def.Name)
+	case "head":
+		g.Head = it
+		g.log("You put on the %s.", it.Def.Name)
+	case "cloak":
+		g.Cloak = it
+		g.log("You put on the %s.", it.Def.Name)
 	case "ring":
 		g.Ring = it
 		g.log("You put on the %s.", it.Def.Name)
@@ -89,6 +113,10 @@ func (g *Game) PlayerUse(it *Item) {
 		g.Amulet = it
 		g.log("You put on the %s.", it.Def.Name)
 	case "potion", "food", "scroll":
+		if it.Def.Kind != "scroll" && g.gasProtected() {
+			g.log("You would have to remove your mask first.") // C: p_eat/p_drink while masked
+			return
+		}
 		g.identify(it) // using a consumable reveals what it was
 		if b, ok := g.Behaviors[it.Def.Use]; ok {
 			g.Messages = append(g.Messages, b(g, it)...)

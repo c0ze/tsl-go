@@ -90,6 +90,8 @@ func (g *Game) breathe(m *Creature) {
 			if kind == "fire" {
 				g.log("You get burned!")
 				g.HurtPlayer(g.RNG.RollSpec(breathFireDamage), m.Def.Name)
+			} else if g.gasProtected() {
+				g.log("Your mask filters out the fumes.") // C: gas_immunity skips the breath
 			} else {
 				g.log("You inhale the vile fumes!")
 				g.HurtPlayer(g.RNG.RollSpec(breathPoisonDamage), m.Def.Name)
