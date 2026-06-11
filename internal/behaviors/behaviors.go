@@ -5,7 +5,6 @@ package behaviors
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/c0ze/tsl-go/internal/game"
 )
@@ -50,17 +49,7 @@ func Registry() map[string]game.Behavior {
 // (C potions.c treasure_p_polymorph -> shapeshift_random: any shape in the
 // roster).
 func polymorph(g *game.Game, it *game.Item) []string {
-	ids := make([]string, 0, len(g.Content.Monsters))
-	for id := range g.Content.Monsters {
-		ids = append(ids, id)
-	}
-	if len(ids) == 0 {
-		return []string{"You feel briefly unlike yourself."}
-	}
-	sort.Strings(ids)
-	g.Shape = g.Content.Monsters[ids[g.RNG.Intn(len(ids))]]
-	g.AddEffect("polymorph", it.Def.Power)
-	return []string{fmt.Sprintf("You transform into a %s!", g.Shape.Name)}
+	return []string{g.PolymorphRandom(it.Def.Power)}
 }
 
 // pharmacy reveals the whole potion table at once (C reading.c: the manual

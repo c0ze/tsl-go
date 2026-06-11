@@ -970,3 +970,25 @@ func TestEmbeddedChainsawOgre(t *testing.T) {
 		}
 	}
 }
+
+// TestEmbeddedTrapVariants checks the 18f trap kit loaded: web (27, C
+// WEB_DURATION), flash (33, DEFAULT_BLIND_TIME), plate (1d4+1,
+// PLATE_DAMAGE), polymorph (85, SHAPESHIFT_DURATION).
+func TestEmbeddedTrapVariants(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if w := c.Tiles["web_trap"]; w == nil || w.Effect != "web" || w.EffectTurns != 27 {
+		t.Errorf("web_trap def unexpected: %+v", w)
+	}
+	if f := c.Tiles["flash_trap"]; f == nil || f.Effect != "blind" || f.EffectTurns != 33 {
+		t.Errorf("flash_trap def unexpected: %+v", f)
+	}
+	if p := c.Tiles["plate_trap"]; p == nil || p.Damage != "1d4+1" {
+		t.Errorf("plate_trap def unexpected: %+v", p)
+	}
+	if p := c.Tiles["polymorph_trap"]; p == nil || p.Effect != "polymorph" || p.EffectTurns != 85 {
+		t.Errorf("polymorph_trap def unexpected: %+v", p)
+	}
+}
