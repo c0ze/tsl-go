@@ -970,3 +970,37 @@ func TestEmbeddedChainsawOgre(t *testing.T) {
 		}
 	}
 }
+
+// TestEmbeddedGearSlots checks the feet/head/cloak gear loaded (14b): the
+// 40% of 0.40's armor table the port was missing.
+func TestEmbeddedGearSlots(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if b := c.Items["boots_of_speed"]; b == nil || b.Kind != "boots" || b.SpeedMod != 20 || b.Weight != 35 {
+		t.Errorf("boots_of_speed def unexpected: %+v", b)
+	}
+	if b := c.Items["lead_boots"]; b == nil || b.SpeedMod != -50 || b.SwimSkill != -2 || b.Weight != 80 {
+		t.Errorf("lead_boots def unexpected: %+v", b)
+	}
+	if f := c.Items["flippers"]; f == nil || f.SwimSkill != 3 {
+		t.Errorf("flippers def unexpected: %+v", f)
+	}
+	if m := c.Items["gas_mask"]; m == nil || m.Kind != "head" || !m.GasImmune || m.Weight != 20 {
+		t.Errorf("gas_mask def unexpected: %+v", m)
+	}
+	if b := c.Items["blindfold"]; b == nil || !b.Blindfold {
+		t.Errorf("blindfold def unexpected: %+v", b)
+	}
+	for _, id := range []string{"dark_cloak", "wool_cloak", "seaweed_cloak", "lab_coat"} {
+		if cl := c.Items[id]; cl == nil || cl.Kind != "cloak" || cl.Weight != 25 {
+			t.Errorf("%s should be a weight-25 cloak, got %+v", id, cl)
+		}
+	}
+	for _, id := range []string{"crowbar", "big_ugly_knife"} {
+		if w := c.Items[id]; w == nil || w.Kind != "weapon" {
+			t.Errorf("%s should be a weapon, got %+v", id, w)
+		}
+	}
+}

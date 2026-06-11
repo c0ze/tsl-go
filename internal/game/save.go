@@ -88,6 +88,9 @@ type savedGame struct {
 	Armor        int               `json:"armor"`
 	Ring         int               `json:"ring"`
 	Amulet       int               `json:"amulet"`
+	Boots        int               `json:"boots"`
+	Head         int               `json:"head"`
+	Cloak        int               `json:"cloak"`
 	RNG          []uint32          `json:"rng,omitempty"`
 	Current      string            `json:"current"` // the level the player is on
 	Levels       []savedLevel      `json:"levels"`
@@ -133,6 +136,8 @@ func (g *Game) Save(w io.Writer) error {
 		Identified: g.Identified, Known: g.Known, Appearances: g.appearances,
 		Weapon: slotIndex(g.Inventory, g.Weapon), Armor: slotIndex(g.Inventory, g.Armor),
 		Ring: slotIndex(g.Inventory, g.Ring), Amulet: slotIndex(g.Inventory, g.Amulet),
+		Boots: slotIndex(g.Inventory, g.Boots), Head: slotIndex(g.Inventory, g.Head),
+		Cloak: slotIndex(g.Inventory, g.Cloak),
 	}
 	if g.Shape != nil {
 		sg.Shape = g.Shape.ID
@@ -227,7 +232,7 @@ func LoadGame(r io.Reader, c *content.Content, behaviors map[string]Behavior,
 		}
 		g.Inventory = append(g.Inventory, it)
 	}
-	for slot, idx := range map[**Item]int{&g.Weapon: sg.Weapon, &g.Armor: sg.Armor, &g.Ring: sg.Ring, &g.Amulet: sg.Amulet} {
+	for slot, idx := range map[**Item]int{&g.Weapon: sg.Weapon, &g.Armor: sg.Armor, &g.Ring: sg.Ring, &g.Amulet: sg.Amulet, &g.Boots: sg.Boots, &g.Head: sg.Head, &g.Cloak: sg.Cloak} {
 		if idx >= 0 {
 			if idx >= len(g.Inventory) {
 				return nil, fmt.Errorf("load: equipped slot index %d out of range", idx)

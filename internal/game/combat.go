@@ -61,6 +61,9 @@ func (g *Game) playerSpeed() int {
 	if g.Shape != nil && g.Shape.Speed > 0 {
 		speed = g.Shape.Speed // the form's pace, modifiers on top
 	}
+	for _, it := range g.equippedGear() {
+		speed += it.Def.SpeedMod // boots of speed, the seaweed cloak, lead boots
+	}
 	if g.HasEffect("haste") {
 		speed += hasteBonus
 	}
@@ -110,7 +113,7 @@ func (g *Game) PlayerStep(d Direction) {
 		g.log("You open the door.")
 		acted = true
 	} else if g.Level.InBounds(dst) && (g.Level.At(dst).Def.Water || g.Level.At(dst).Def.Lava) &&
-		(g.HasEffect("blind") || g.HasEffect("levitate") ||
+		(g.playerBlinded() || g.HasEffect("levitate") ||
 			(g.Level.At(dst).Def.Water && g.Shape != nil && g.Shape.Swim)) {
 		// Deep water and lava turn away a sighted walker; the blinded blunder
 		// in and floaters drift across (C move_creature).
@@ -127,7 +130,7 @@ func (g *Game) PlayerStep(d Direction) {
 // stack into the combat stats below.
 func (g *Game) equippedGear() []*Item {
 	var worn []*Item
-	for _, it := range []*Item{g.Weapon, g.Armor, g.Ring, g.Amulet} {
+	for _, it := range []*Item{g.Weapon, g.Armor, g.Ring, g.Amulet, g.Boots, g.Head, g.Cloak} {
 		if it != nil && it.Def != nil {
 			worn = append(worn, it)
 		}
@@ -385,10 +388,51 @@ func (g *Game) lavaCheck() {
 	}
 }
 
-// playerSwimming is the player's swimming skill — how many turns of deep water
-// are free before fatigue bites (C attr_swimming, base 0; gear may raise it
-// when the attribute lands).
-const playerSwimming = 0
+// playerSwimming is the player's swimming skill — how many turns of deep
+// water are free before fatigue bites (C attr_swimming, base 0 plus worn
+// gear: flippers +3, lead boots -2).
+func (g *Game) playerSwimming() int {
+	skill := 0
+	for _, it := range g.equippedGear() {
+		skill += it.Def.SwimSkill
+	}
+	return skill
+}
+
+// playerBlinded reports whether the player cannot see — the blind effect or
+// a worn blindfold (C attr_blindness as an item mod).
+func (g *Game) playerBlinded() bool {
+	if g.HasEffect("blind") {
+		return true
+	}
+	return g.Head != nil && g.Head.Def != nil && g.Head.Def.Blindfold
+}
+
+// gasProtected reports whether worn gear seals the player's lungs
+// (C attr_gas_immunity — the gas mask).
+func (g *Game) gasProtected() bool {
+	for _, it := range g.equippedGear() {
+		if it.Def.GasImmune {
+			return true
+		}
+	}
+	return false
+}
+
+// noticeRange is how close a monster must be to notice the player: the
+// global sense range shrunk by worn stealth (dark cloak, padded boots) —
+// our mapping of the C's attr_stealth detection rolls. Floor 2: nothing
+// misses you at arm's length.
+func (g *Game) noticeRange() int {
+	r := senseRange
+	for _, it := range g.equippedGear() {
+		r -= it.Def.Stealth
+	}
+	if r < 2 {
+		r = 2
+	}
+	return r
+}
 
 // swimCheck is the C's swim() for the player, run right after each turn's
 // action: a turn spent in deep water adds fatigue, and past the swimming skill
@@ -405,7 +449,7 @@ func (g *Game) swimCheck() {
 		return
 	}
 	g.swimFatigue++
-	if g.swimFatigue <= playerSwimming {
+	if g.swimFatigue <= g.playerSwimming() {
 		return
 	}
 	g.PlayerHP--
@@ -510,7 +554,7 @@ func (g *Game) monsterAct(m *Creature) {
 		g.rangedAttack(m)
 		return
 	}
-	if dist <= senseRange {
+	if dist <= g.noticeRange() {
 		g.stepToward(m, g.Player)
 	}
 }

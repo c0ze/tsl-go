@@ -104,13 +104,18 @@ type ItemDef struct {
 	Weight      int    `toml:"weight"`       // carry weight (0 = kind default, C rules.h WEIGHT_*)
 	Breath      string `toml:"breath"`       // spellbook cone: "fire", "poison", or "" (#19)
 	Deathspell  bool   `toml:"deathspell"`   // the touch-range coin flip (C magic.c deathspell)
+	SpeedMod    int    `toml:"speed_mod"`    // worn speed bonus/penalty (C attr_speed mods, #14)
+	SwimSkill   int    `toml:"swim_skill"`   // worn swimming skill (C attr_swimming mods)
+	GasImmune   bool   `toml:"gas_immune"`   // blocks gases — and eating/drinking (C gas mask)
+	Blindfold   bool   `toml:"blindfold"`    // the wearer is simply blind (C attr_blindness)
+	Stealth     int    `toml:"stealth"`      // shrinks monster notice range (C attr_stealth, approx.)
 }
 
 // kindWeights are the C's per-kind WEIGHT_* defaults (rules.h); an item with
 // no explicit weight inherits its kind's.
 var kindWeights = map[string]int{
 	"potion": 7, "scroll": 4, "wand": 21, "food": 8, "light": 12,
-	"spellbook": 12, "ring": 5, "amulet": 5, "weapon": 22, "armor": 40, "ammo": 1,
+	"spellbook": 12, "ring": 5, "amulet": 5, "weapon": 22, "armor": 40, "ammo": 1, "boots": 35, "head": 20, "cloak": 25,
 }
 
 // Rune returns the item's glyph as a rune.
@@ -119,7 +124,7 @@ func (i *ItemDef) Rune() rune {
 	return r
 }
 
-var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true, "food": true, "wand": true, "scroll": true, "light": true, "spellbook": true, "ring": true, "amulet": true, "ammo": true}
+var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true, "food": true, "wand": true, "scroll": true, "light": true, "spellbook": true, "ring": true, "amulet": true, "ammo": true, "boots": true, "head": true, "cloak": true}
 
 // SpawnEntry is one weighted entry in a level's monster spawn table.
 type SpawnEntry struct {

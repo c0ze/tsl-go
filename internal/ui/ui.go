@@ -208,7 +208,7 @@ func statusLine(g *game.Game) string {
 // "" when neither slot is filled (so the HUD omits the segment entirely).
 func wornAccessories(g *game.Game) string {
 	var names []string
-	for _, it := range []*game.Item{g.Ring, g.Amulet} {
+	for _, it := range []*game.Item{g.Ring, g.Amulet, g.Boots, g.Head, g.Cloak} {
 		if it != nil && it.Def != nil {
 			names = append(names, g.DisplayName(it))
 		}

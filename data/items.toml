@@ -534,3 +534,104 @@ color = "normal"
 kind = "potion"
 use = "polymorph"
 power = 85
+
+# Feet/head/cloak gear (14b, C treasure.c) — 40% of 0.40's armor drops were
+# cloaks and boots. Stealth shrinks monster notice range (our mapping of
+# attr_stealth); cold/acid resistance are unported attrs, so those pieces
+# carry slot and weight only.
+[item.dark_cloak]
+name = "dark cloak"
+glyph = "("
+color = "black"
+kind = "cloak"
+stealth = 2
+
+[item.wool_cloak]
+name = "wool cloak"
+glyph = "("
+color = "normal"
+kind = "cloak"
+
+[item.seaweed_cloak]
+name = "seaweed cloak"
+glyph = "("
+color = "green"
+kind = "cloak"
+speed_mod = 20
+
+[item.lab_coat]
+name = "lab coat"
+glyph = "("
+color = "cyan"
+kind = "cloak"
+
+[item.padded_boots]
+name = "padded boots"
+glyph = "["
+color = "brown"
+kind = "boots"
+stealth = 2
+
+[item.lead_boots]
+name = "lead boots"
+glyph = "["
+color = "normal"
+kind = "boots"
+speed_mod = -50
+swim_skill = -2
+weight = 80
+
+[item.fur_boots]
+name = "fur boots"
+glyph = "["
+color = "brown"
+kind = "boots"
+
+[item.boots_of_speed]
+name = "boots of speed"
+glyph = "["
+color = "cyan"
+kind = "boots"
+speed_mod = 20
+
+[item.flippers]
+name = "lizardskin flippers"
+glyph = "["
+color = "green"
+kind = "boots"
+swim_skill = 3
+
+[item.gas_mask]
+name = "gas mask"
+glyph = "]"
+color = "normal"
+kind = "head"
+gas_immune = true
+
+[item.blindfold]
+name = "blindfold"
+glyph = "]"
+color = "black"
+kind = "head"
+blindfold = true
+weight = 12
+
+# Weapon stragglers from the #14 audit (dice by family, the established
+# approximation).
+[item.crowbar]
+name = "crowbar"
+glyph = ")"
+color = "normal"
+kind = "weapon"
+attack = 2
+damage = "1d6+1"
+weight = 28
+
+[item.big_ugly_knife]
+name = "big ugly knife"
+glyph = ")"
+color = "normal"
+kind = "weapon"
+attack = 2
+damage = "1d5"
+weight = 18

@@ -59,9 +59,11 @@ func savedWorld(t *testing.T) *Game {
 	g.epTurn = 1
 	dagger := &Item{Def: c.Items["dagger"]}
 	arrows := &Item{Def: c.Items["arrow"], Charges: 13}
-	g.Inventory = append(g.Inventory, dagger, arrows)
+	boots := &Item{Def: &content.ItemDef{ID: "dagger", Name: "spare dagger as boots stand-in", Kind: "weapon"}}
+	g.Inventory = append(g.Inventory, dagger, arrows, boots)
 	g.Weapon = dagger
-	g.MarkRecall() // pinned on level a at the start tile
+	g.Boots = boots // a filled new slot must survive the round-trip
+	g.MarkRecall()  // pinned on level a at the start tile
 	lvl := d.Current()
 	lvl.Set(Pos{4, 2}, c.Tiles["trap"])
 	tr := lvl.At(Pos{4, 2})
