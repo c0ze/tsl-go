@@ -635,3 +635,12 @@ kind = "weapon"
 attack = 2
 damage = "1d5"
 weight = 18
+
+# The key (C treasure.c:343): weight 1, opens locked doors, consumed on use.
+# Floor loot — the C deals them from item_table_supply at 6 in 20.
+[item.key]
+name = "key"
+glyph = "'"
+color = "normal"
+kind = "tool"
+weight = 1

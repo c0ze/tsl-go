@@ -500,3 +500,11 @@ func TestRunSurfacesSaveRequest(t *testing.T) {
 		t.Errorf("Run should surface the save sentinel, got %v", err)
 	}
 }
+
+func TestCloseKeyBinding(t *testing.T) {
+	// 'O' is the C's own default binding for action_close (keymap.c:219).
+	a, ok := ActionForRune('O')
+	if !ok || a.Kind != ActClose {
+		t.Errorf("ActionForRune('O') = %+v, %v; want ActClose", a, ok)
+	}
+}

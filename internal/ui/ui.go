@@ -48,6 +48,7 @@ const (
 	ActCast
 	ActTalk
 	ActSave
+	ActClose
 )
 
 // Action is a decoded player intent. Dir is meaningful only when Kind==ActMove.
@@ -114,6 +115,8 @@ func ActionForRune(r rune) (Action, bool) {
 		return Action{Kind: ActTalk}, true
 	case 'S':
 		return Action{Kind: ActSave}, true
+	case 'O': // the C's own default keymap binds action_close here (keymap.c:219)
+		return Action{Kind: ActClose}, true
 	case '>':
 		return Action{Kind: ActTravel}, true
 	}
@@ -241,6 +244,9 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			return nil
 		case ActMove:
 			g.PlayerStep(a.Dir)
+			if pos, ok := g.TakeLockedBump(); ok {
+				promptLockedDoor(g, p, pos)
+			}
 		case ActPickup:
 			g.PlayerPickup()
 		case ActInventory:
@@ -257,6 +263,8 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			g.Travel()
 		case ActTalk:
 			g.Talk()
+		case ActClose:
+			closeDoorPrompt(g, p)
 		case ActSave:
 			return ErrSaveRequested
 		case ActEat:
@@ -332,6 +340,74 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			} else {
 				g.CastSpell(spell)
 			}
+		}
+	}
+}
+
+// promptLockedDoor drives the C's locked-door bump chain (doors.c:275): offer
+// to spend a key, then offer to break the door; declining both is the C's
+// "Never mind, then." (and costs nothing).
+func promptLockedDoor(g *game.Game, p Prompter, pos game.Pos) {
+	if n := g.KeyCount(); n > 0 {
+		word := "keys"
+		if n == 1 {
+			word = "key"
+		}
+		if idx, ok := p.Menu(MenuSpec{Title: fmt.Sprintf("Unlock it (%d %s)?", n, word), Items: []string{"Yes", "No"}}); ok && idx == 0 {
+			g.UnlockDoor(pos)
+			return
+		}
+	}
+	title := "Attempt to break it?"
+	if g.HasCrowbar() {
+		title = "Attempt to break it with your crowbar?"
+	}
+	if idx, ok := p.Menu(MenuSpec{Title: title, Items: []string{"Yes", "No"}}); ok && idx == 0 {
+		g.ForceDoor(pos)
+		return
+	}
+	g.Messages = append(g.Messages, "Never mind, then.")
+}
+
+// closeDirs orders the close-door menu the way the C's direction prompt reads.
+var closeDirs = []struct {
+	name   string
+	dx, dy int
+}{
+	{"North", 0, -1}, {"South", 0, 1}, {"West", -1, 0}, {"East", 1, 0},
+	{"Northwest", -1, -1}, {"Northeast", 1, -1}, {"Southwest", -1, 1}, {"Southeast", 1, 1},
+}
+
+// closeDoorPrompt is the close verb (the C's close_door): close the adjacent
+// open door, asking "Close which door?" only when several qualify.
+func closeDoorPrompt(g *game.Game, p Prompter) {
+	var names []string
+	var spots []game.Pos
+	alreadyClosed := false
+	for _, d := range closeDirs {
+		pos := game.Pos{X: g.Player.X + d.dx, Y: g.Player.Y + d.dy}
+		if !g.Level.InBounds(pos) {
+			continue
+		}
+		def := g.Level.At(pos).Def
+		switch {
+		case def.ClosesTo != "":
+			names = append(names, d.name)
+			spots = append(spots, pos)
+		case def.OpensTo != "":
+			alreadyClosed = true
+		}
+	}
+	switch {
+	case len(spots) == 0 && alreadyClosed:
+		g.Messages = append(g.Messages, "It is already closed.")
+	case len(spots) == 0:
+		g.Messages = append(g.Messages, "There is no door there.")
+	case len(spots) == 1:
+		g.CloseDoor(spots[0])
+	default:
+		if idx, ok := p.Menu(MenuSpec{Title: "Close which door?", Items: names}); ok && idx >= 0 && idx < len(spots) {
+			g.CloseDoor(spots[idx])
 		}
 	}
 }

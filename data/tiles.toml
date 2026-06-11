@@ -49,6 +49,7 @@ glyph = "'"
 color = "brown"
 passable = true
 transparent = true
+closes_to = "door_closed"
 
 # Deep water (#18, C tiles.c): impassable on foot — only the blinded stumble in
 # (later: levitation floats over) — and each turn spent in it drains the wader.
@@ -101,3 +102,20 @@ passable = true
 transparent = true
 effect = "polymorph"
 effect_turns = 85
+
+# The door chain (18g, C doors.c). Secret doors wear the wall glyph until a
+# bump finds them; maybe_locked_door then makes them locked or closed at
+# 50/50. replace_doors locks half of all ordinary closed doors at gen, too.
+[tile.door_secret]
+glyph = "#"
+color = "normal"
+passable = false
+transparent = false
+secret = true
+
+[tile.door_locked]
+glyph = "+"
+color = "brown"
+passable = false
+transparent = false
+locked = true

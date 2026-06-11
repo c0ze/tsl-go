@@ -541,3 +541,41 @@ func TestMimicSpawnsDisguised(t *testing.T) {
 		t.Skip("no mimic placed this seed")
 	}
 }
+
+func TestLevelFromDefDealsDoorChain(t *testing.T) {
+	// With the chain tiles defined, placeDoors ports replace_doors: 3+1d5
+	// doorways stay secret, the rest split floor/closed, half the closed lock.
+	c := levelDefContent()
+	c.Tiles["door_open"] = &content.TileDef{ID: "door_open", Glyph: "'", Color: content.ColorBrown, Passable: true, Transparent: true, ClosesTo: "door_closed"}
+	c.Tiles["door_closed"] = &content.TileDef{ID: "door_closed", Glyph: "+", Color: content.ColorBrown, OpensTo: "door_open"}
+	c.Tiles["door_secret"] = &content.TileDef{ID: "door_secret", Glyph: "#", Color: content.ColorNormal, Secret: true}
+	c.Tiles["door_locked"] = &content.TileDef{ID: "door_locked", Glyph: "+", Color: content.ColorBrown, Locked: true}
+	def := &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"}, Doors: true}
+	sawSecret, sawLocked, sawClosed := false, false, false
+	for seed := uint32(1); seed <= 8; seed++ {
+		lvl, err := LevelFromDef(rng.NewWithSeed(seed), c, def)
+		if err != nil {
+			t.Fatal(err)
+		}
+		secrets := 0
+		for y := 0; y < lvl.H; y++ {
+			for x := 0; x < lvl.W; x++ {
+				switch lvl.At(game.Pos{X: x, Y: y}).Def.ID {
+				case "door_secret":
+					secrets++
+					sawSecret = true
+				case "door_locked":
+					sawLocked = true
+				case "door_closed":
+					sawClosed = true
+				}
+			}
+		}
+		if secrets > 8 { // doors_to_keep caps at 3 + 5
+			t.Errorf("seed %d: %d secret doors, the C keeps at most 8", seed, secrets)
+		}
+	}
+	if !sawSecret || !sawLocked || !sawClosed {
+		t.Errorf("over 8 seeds the deal should produce every kind: secret=%v locked=%v closed=%v", sawSecret, sawLocked, sawClosed)
+	}
+}

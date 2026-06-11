@@ -45,6 +45,9 @@ type TileDef struct {
 	EffectTurns int    `toml:"effect_turns"` // duration of Effect
 	Damage      string `toml:"damage"`       // straight trap damage dice (the electrified plate, #18)
 	OpensTo     string `toml:"opens_to"`     // tile id this becomes when opened ("" = not a door)
+	ClosesTo    string `toml:"closes_to"`    // tile id this becomes when closed ("" = not closable)
+	Secret      bool   `toml:"secret"`       // looks like a wall until bumped (C tile_door_secret_*)
+	Locked      bool   `toml:"locked"`       // a key, a crowbar, or force opens it (C tile_door_locked)
 }
 
 // Rune returns the tile's glyph as a rune. Glyph is guaranteed by validateTile
@@ -116,7 +119,7 @@ type ItemDef struct {
 // no explicit weight inherits its kind's.
 var kindWeights = map[string]int{
 	"potion": 7, "scroll": 4, "wand": 21, "food": 8, "light": 12,
-	"spellbook": 12, "ring": 5, "amulet": 5, "weapon": 22, "armor": 40, "ammo": 1, "boots": 35, "head": 20, "cloak": 25,
+	"spellbook": 12, "ring": 5, "amulet": 5, "weapon": 22, "armor": 40, "ammo": 1, "boots": 35, "head": 20, "cloak": 25, "tool": 1,
 }
 
 // Rune returns the item's glyph as a rune.
@@ -125,7 +128,7 @@ func (i *ItemDef) Rune() rune {
 	return r
 }
 
-var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true, "food": true, "wand": true, "scroll": true, "light": true, "spellbook": true, "ring": true, "amulet": true, "ammo": true, "boots": true, "head": true, "cloak": true}
+var validItemKinds = map[string]bool{"potion": true, "weapon": true, "armor": true, "food": true, "wand": true, "scroll": true, "light": true, "spellbook": true, "ring": true, "amulet": true, "ammo": true, "boots": true, "head": true, "cloak": true, "tool": true}
 
 // SpawnEntry is one weighted entry in a level's monster spawn table.
 type SpawnEntry struct {
@@ -254,15 +257,19 @@ func Load(fsys fs.FS) (*Content, error) {
 	return c, nil
 }
 
-// validateTileRefs checks that every tile's opens_to (when set) names a defined
-// tile, so a door always has an open state to become.
+// validateTileRefs checks that every tile's opens_to / closes_to (when set)
+// names a defined tile, so a door always has a state to become.
 func validateTileRefs(c *Content) error {
 	for id, t := range c.Tiles {
-		if t.OpensTo == "" {
-			continue
+		if t.OpensTo != "" {
+			if _, ok := c.Tiles[t.OpensTo]; !ok {
+				return fmt.Errorf("tile %q: opens_to %q is not a defined tile", id, t.OpensTo)
+			}
 		}
-		if _, ok := c.Tiles[t.OpensTo]; !ok {
-			return fmt.Errorf("tile %q: opens_to %q is not a defined tile", id, t.OpensTo)
+		if t.ClosesTo != "" {
+			if _, ok := c.Tiles[t.ClosesTo]; !ok {
+				return fmt.Errorf("tile %q: closes_to %q is not a defined tile", id, t.ClosesTo)
+			}
 		}
 	}
 	return nil

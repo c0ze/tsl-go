@@ -112,6 +112,22 @@ func (g *Game) PlayerUse(it *Item) {
 	case "amulet":
 		g.Amulet = it
 		g.log("You put on the %s.", it.Def.Name)
+	case "tool":
+		// Keys are the C's key_open (doors.c:420): applying one unlocks an
+		// adjacent locked door. Nothing else is an applicable tool yet.
+		if it.Def.ID == "key" {
+			for dy := -1; dy <= 1; dy++ {
+				for dx := -1; dx <= 1; dx++ {
+					q := Pos{g.Player.X + dx, g.Player.Y + dy}
+					if (dx != 0 || dy != 0) && g.Level.InBounds(q) && g.Level.At(q).Def.Locked {
+						g.UnlockDoor(q) // consumes a key and charges the turn
+						return
+					}
+				}
+			}
+		}
+		g.log("There is nothing there to unlock.")
+		return // a cancelled apply costs nothing (C key_open returns false)
 	case "potion", "food", "scroll":
 		if it.Def.Kind != "scroll" && g.gasProtected() {
 			g.log("You would have to remove your mask first.") // C: p_eat/p_drink while masked
