@@ -11,3 +11,4 @@ tsl-0.40/tsl_gui
 morgue.txt
 .tsl-save.json
 tsl_conf
+/tsl-wasm
