@@ -15,18 +15,18 @@
 
 ## Task 1: Monster speed in content (`content`, `data`)
 
-**Files:** Modify `go/internal/content/content.go`, `go/data/monsters.toml`
+**Files:** Modify `internal/content/content.go`, `data/monsters.toml`
 
 - [ ] **Step 1** — add a `Speed` field to `MonsterDef` in `content.go` (after `Damage`):
 ```go
 	Speed  int    `toml:"speed"` // energy gained per turn; <= 0 defaults to 100
 ```
 
-- [ ] **Step 2** — give the data monsters distinct speeds in `go/data/monsters.toml`: add `speed = 130` to the `[monster.rat]` table and `speed = 80` to the `[monster.ghoul]` table (rats are quick, ghouls shamble).
+- [ ] **Step 2** — give the data monsters distinct speeds in `data/monsters.toml`: add `speed = 130` to the `[monster.rat]` table and `speed = 80` to the `[monster.ghoul]` table (rats are quick, ghouls shamble).
 
 - [ ] **Step 3** — from `go/`: `export GOTOOLCHAIN=local && go build ./... && go test ./internal/content/` → PASS (the field is plain data; existing tests still pass). **Commit:**
 ```bash
-git add go/internal/content/content.go go/data/monsters.toml
+git add internal/content/content.go data/monsters.toml
 git commit -m "feat(content): MonsterDef speed (rat fast, ghoul slow)"
 ```
 
@@ -34,7 +34,7 @@ git commit -m "feat(content): MonsterDef speed (rat fast, ghoul slow)"
 
 ## Task 2: Energy-based turn scheduler (`game`)
 
-**Files:** Modify `go/internal/game/creature.go`, `go/internal/game/combat.go`, `go/internal/game/combat_test.go`
+**Files:** Modify `internal/game/creature.go`, `internal/game/combat.go`, `internal/game/combat_test.go`
 
 - [ ] **Step 1** — add an `Energy` field to the `Creature` struct in `creature.go`:
 ```go
@@ -49,7 +49,7 @@ type Creature struct {
 }
 ```
 
-- [ ] **Step 2** — append a test to `go/internal/game/combat_test.go`:
+- [ ] **Step 2** — append a test to `internal/game/combat_test.go`:
 ```go
 func TestFasterMonsterActsMultipleTimes(t *testing.T) {
 	g := combatGame() // 10x3 floor, player at (1,1)
@@ -136,7 +136,7 @@ func (g *Game) monsterAct(m *Creature) {
 
 - [ ] **Step 4** — from `go/`: `export GOTOOLCHAIN=local && gofmt -l . && go build ./... && go test ./... -count=1 && go vet ./...` → all clean (existing combat tests still pass; the two new tests pass). **Commit:**
 ```bash
-git add go/internal/game/creature.go go/internal/game/combat.go go/internal/game/combat_test.go
+git add internal/game/creature.go internal/game/combat.go internal/game/combat_test.go
 git commit -m "feat(game): energy/speed scheduler — faster monsters act more often"
 ```
 

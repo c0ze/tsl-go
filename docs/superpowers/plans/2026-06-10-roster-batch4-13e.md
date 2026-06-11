@@ -3,11 +3,11 @@
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Six more canonical 0.40 monsters (#13), drawn straight from the
-bestiary glyphs in `common/glyph.c` — broadening the mid-to-deep tiers. The
+bestiary glyphs in `tsl-0.40/common/glyph.c` — broadening the mid-to-deep tiers. The
 0.40 bestiary is much larger than what's ported so far; this batch adds beasts
 with free glyphs (no collisions with the current roster).
 
-## Monsters (names/glyphs verbatim from `common/glyph.c`)
+## Monsters (names/glyphs verbatim from `tsl-0.40/common/glyph.c`)
 
 | id | name | glyph | color | role | min_depth |
 |----|------|-------|-------|------|-----------|

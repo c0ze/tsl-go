@@ -19,9 +19,9 @@
 
 ## Task 1: Item content (`content`)
 
-**Files:** Modify `go/internal/content/content.go`; create `go/data/items.toml`; modify `go/internal/content/content_test.go`
+**Files:** Modify `internal/content/content.go`; create `data/items.toml`; modify `internal/content/content_test.go`
 
-- [ ] **Step 1** — create `go/data/items.toml`:
+- [ ] **Step 1** — create `data/items.toml`:
 ```toml
 # Item definitions. [item.<id>] → ItemDef keyed by <id>.
 [item.healing_potion]
@@ -48,7 +48,7 @@ kind = "armor"
 dodge = 2
 ```
 
-- [ ] **Step 2** — append to `go/internal/content/content_test.go`:
+- [ ] **Step 2** — append to `internal/content/content_test.go`:
 ```go
 func TestLoadItems(t *testing.T) {
 	dir := t.TempDir()
@@ -96,7 +96,7 @@ func TestLoadRejectsBadItemKind(t *testing.T) {
 }
 ```
 
-- [ ] **Step 3** — in `go/internal/content/content.go`: add the `ItemDef` type, the `Items` map on `Content`, `itemsFile`, optional loading mirroring monsters, and `validateItem`.
+- [ ] **Step 3** — in `internal/content/content.go`: add the `ItemDef` type, the `Items` map on `Content`, `itemsFile`, optional loading mirroring monsters, and `validateItem`.
 
 Add after `MonsterDef`'s `Rune`:
 ```go
@@ -174,7 +174,7 @@ func validateItem(i *ItemDef) error {
 
 - [ ] **Step 4** — `go test ./internal/content/` → PASS. **Commit:**
 ```bash
-git add go/internal/content/ go/data/items.toml
+git add internal/content/ data/items.toml
 git commit -m "feat(content): ItemDef + optional items.toml loading"
 ```
 
@@ -182,7 +182,7 @@ git commit -m "feat(content): ItemDef + optional items.toml loading"
 
 ## Task 2: Item type, inventory state, behavior type (`game`)
 
-**Files:** Create `go/internal/game/item.go`, `go/internal/game/item_test.go`; modify `go/internal/game/game.go`
+**Files:** Create `internal/game/item.go`, `internal/game/item_test.go`; modify `internal/game/game.go`
 
 - [ ] **Step 1** — extend the `Game` struct in `game.go` to add item fields (after `Dead`):
 ```go
@@ -201,7 +201,7 @@ type Level struct {
 }
 ```
 
-- [ ] **Step 2** — `go/internal/game/item_test.go`:
+- [ ] **Step 2** — `internal/game/item_test.go`:
 ```go
 package game
 
@@ -228,7 +228,7 @@ func TestItemAtAndRemove(t *testing.T) {
 }
 ```
 
-- [ ] **Step 3** — `go/internal/game/item.go`:
+- [ ] **Step 3** — `internal/game/item.go`:
 ```go
 package game
 
@@ -268,7 +268,7 @@ func (l *Level) RemoveItem(it *Item) {
 
 - [ ] **Step 4** — `go test ./internal/game/` → PASS. **Commit:**
 ```bash
-git add go/internal/game/item.go go/internal/game/item_test.go go/internal/game/game.go
+git add internal/game/item.go internal/game/item_test.go internal/game/game.go
 git commit -m "feat(game): Item type, ground-item list, Behavior func, inventory fields"
 ```
 
@@ -276,7 +276,7 @@ git commit -m "feat(game): Item type, ground-item list, Behavior func, inventory
 
 ## Task 3: Pickup, use/equip, equipment-aware combat (`game`)
 
-**Files:** Modify `go/internal/game/combat.go`; create `go/internal/game/use.go`, `go/internal/game/use_test.go`
+**Files:** Modify `internal/game/combat.go`; create `internal/game/use.go`, `internal/game/use_test.go`
 
 - [ ] **Step 1** — in `combat.go`, make the player's melee read equipped gear. Add helpers and use them in `playerAttacks`/`monsterAttacks`:
 ```go
@@ -303,7 +303,7 @@ func (g *Game) playerDodgeStat() int {
 ```
 Then change `playerAttacks` to use `g.playerAttackStat()` and `g.playerDamageSpec()` (replace the `playerAttack` and `playerDamage` references in that function), and change `monsterAttacks` to use `g.playerDodgeStat()` (replace `playerDodge` there).
 
-- [ ] **Step 2** — `go/internal/game/use_test.go`:
+- [ ] **Step 2** — `internal/game/use_test.go`:
 ```go
 package game
 
@@ -371,7 +371,7 @@ func TestUsePotionHealsAndIsConsumed(t *testing.T) {
 }
 ```
 
-- [ ] **Step 3** — `go/internal/game/use.go`:
+- [ ] **Step 3** — `internal/game/use.go`:
 ```go
 package game
 
@@ -427,7 +427,7 @@ func (g *Game) removeInventory(it *Item) {
 
 - [ ] **Step 4** — `go test ./internal/game/` → PASS. **Commit:**
 ```bash
-git add go/internal/game/combat.go go/internal/game/use.go go/internal/game/use_test.go
+git add internal/game/combat.go internal/game/use.go internal/game/use_test.go
 git commit -m "feat(game): pickup, use/equip, and equipment-aware combat"
 ```
 
@@ -435,9 +435,9 @@ git commit -m "feat(game): pickup, use/equip, and equipment-aware combat"
 
 ## Task 4: Behavior registry (`behaviors`)
 
-**Files:** Create `go/internal/behaviors/behaviors.go`, `go/internal/behaviors/behaviors_test.go`
+**Files:** Create `internal/behaviors/behaviors.go`, `internal/behaviors/behaviors_test.go`
 
-- [ ] **Step 1** — `go/internal/behaviors/behaviors_test.go`:
+- [ ] **Step 1** — `internal/behaviors/behaviors_test.go`:
 ```go
 package behaviors
 
@@ -466,7 +466,7 @@ func TestHealCapsAtMax(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2** — `go/internal/behaviors/behaviors.go`:
+- [ ] **Step 2** — `internal/behaviors/behaviors.go`:
 ```go
 // Package behaviors implements named item/ability effects as game.Behaviors and
 // exposes them via Registry(). It imports game (to act on the world); game does
@@ -498,7 +498,7 @@ func heal(g *game.Game, it *game.Item) []string {
 
 - [ ] **Step 3** — `go test ./internal/behaviors/` → PASS. **Commit:**
 ```bash
-git add go/internal/behaviors/
+git add internal/behaviors/
 git commit -m "feat(behaviors): registry with heal effect"
 ```
 
@@ -506,9 +506,9 @@ git commit -m "feat(behaviors): registry with heal effect"
 
 ## Task 5: Place items during generation (`gen`)
 
-**Files:** Modify `go/internal/gen/gen.go`, `go/internal/gen/gen_test.go`
+**Files:** Modify `internal/gen/gen.go`, `internal/gen/gen_test.go`
 
-- [ ] **Step 1** — append to `go/internal/gen/gen_test.go`:
+- [ ] **Step 1** — append to `internal/gen/gen_test.go`:
 ```go
 func TestRoomsPlacesItems(t *testing.T) {
 	c := testContent()
@@ -558,7 +558,7 @@ func placeItems(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, st
 
 - [ ] **Step 3** — `go test ./internal/gen/` → PASS. **Commit:**
 ```bash
-git add go/internal/gen/
+git add internal/gen/
 git commit -m "feat(gen): scatter items in generated rooms"
 ```
 
@@ -566,9 +566,9 @@ git commit -m "feat(gen): scatter items in generated rooms"
 
 ## Task 6: Inventory menu + item rendering (`ui`)
 
-**Files:** Modify `go/internal/ui/ui.go`, `go/internal/ui/ui_test.go`
+**Files:** Modify `internal/ui/ui.go`, `internal/ui/ui_test.go`
 
-- [ ] **Step 1** — append to `go/internal/ui/ui_test.go` (and note: the existing `scriptPrompter` must gain a `Menu` method — add it):
+- [ ] **Step 1** — append to `internal/ui/ui_test.go` (and note: the existing `scriptPrompter` must gain a `Menu` method — add it):
 ```go
 // Add to scriptPrompter (existing type) a Menu method via this helper type used
 // in the new test; if scriptPrompter lacks Menu, add: func (s *scriptPrompter) Menu(MenuSpec) (int, bool) { return 0, false }
@@ -624,7 +624,7 @@ Also add a `Menu` method to the existing `scriptPrompter` so it still satisfies 
 func (s *scriptPrompter) Menu(MenuSpec) (int, bool) { return 0, false }
 ```
 
-- [ ] **Step 2** — in `go/internal/ui/ui.go`:
+- [ ] **Step 2** — in `internal/ui/ui.go`:
 
 (a) add `MenuSpec` and extend `Prompter`:
 ```go
@@ -679,7 +679,7 @@ const (
 
 - [ ] **Step 3** — `go test ./internal/ui/` → PASS. **Commit:**
 ```bash
-git add go/internal/ui/ui.go go/internal/ui/ui_test.go
+git add internal/ui/ui.go internal/ui/ui_test.go
 git commit -m "feat(ui): inventory menu prompt, pickup/inventory actions, item rendering"
 ```
 
@@ -687,7 +687,7 @@ git commit -m "feat(ui): inventory menu prompt, pickup/inventory actions, item r
 
 ## Task 7: Menu + keys in the tcell front-end (`ui/tcell`)
 
-**Files:** Modify `go/internal/ui/tcell/screen.go`
+**Files:** Modify `internal/ui/tcell/screen.go`
 
 - [ ] **Step 1** — add `'g'`→`ActPickup` and `'i'`→`ActInventory` to `keyToAction` (alongside the existing rune cases):
 ```go
@@ -748,7 +748,7 @@ Expected: gofmt clean, all packages `ok`, vet clean, binary builds.
 
 - [ ] **Step 4** — Commit:
 ```bash
-git add go/internal/ui/tcell/screen.go
+git add internal/ui/tcell/screen.go
 git commit -m "feat(ui/tcell): inventory menu and pickup/inventory keys"
 ```
 
@@ -756,9 +756,9 @@ git commit -m "feat(ui/tcell): inventory menu and pickup/inventory keys"
 
 ## Task 8: Wire the behavior registry (`cmd/tsl`)
 
-**Files:** Modify `go/cmd/tsl/main.go`, `go/cmd/tsl/main_test.go`
+**Files:** Modify `cmd/tsl/main.go`, `cmd/tsl/main_test.go`
 
-- [ ] **Step 1** — append to `go/cmd/tsl/main_test.go`:
+- [ ] **Step 1** — append to `cmd/tsl/main_test.go`:
 ```go
 func TestNewGameHasBehaviors(t *testing.T) {
 	g, err := newGame(testTiles(), 1)
@@ -780,7 +780,7 @@ func TestNewGameHasBehaviors(t *testing.T) {
 
 - [ ] **Step 3** — Whole module green from `go/`: `export GOTOOLCHAIN=local && go build ./... && go test ./... -count=1 && go vet ./...`. **Commit:**
 ```bash
-git add go/cmd/tsl/
+git add cmd/tsl/
 git commit -m "feat(cmd): inject the behavior registry into the game"
 ```
 

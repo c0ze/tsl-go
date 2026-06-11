@@ -14,7 +14,7 @@
 - TDD: write the failing test, watch it fail, implement, watch it pass, commit. One concern per commit.
 - Branch: `eating-corpses` off `master`. Do **not** commit to `master`.
 
-**Faithfulness note (C reference):** `common/eat.c` heals corpse/carcass +1, butchered food (meat/bread/cheese) +3, red mushroom +4 then poison. `common/monster.c` sets `creature->corpse`; `common/creature.c:494` drops it via `build_item`. We port the heal-on-eat + corpse-drop core; the mushroom's **poison** and joke-eats (sword→death) are deferred to the status-effect work in #15/#18.
+**Faithfulness note (C reference):** `tsl-0.40/common/eat.c` heals corpse/carcass +1, butchered food (meat/bread/cheese) +3, red mushroom +4 then poison. `tsl-0.40/common/monster.c` sets `creature->corpse`; `tsl-0.40/common/creature.c:494` drops it via `build_item`. We port the heal-on-eat + corpse-drop core; the mushroom's **poison** and joke-eats (sword→death) are deferred to the status-effect work in #15/#18.
 
 ---
 
@@ -709,7 +709,7 @@ Implements #12.
 - Chore: gitignore `morgue.txt`.
 
 ## Faithfulness
-Ports the heal-on-eat + corpse-drop core from `common/eat.c` / `common/monster.c`. The red mushroom's **poison** and joke-eats (sword→death) are deferred to the status-effect work (#15/#18).
+Ports the heal-on-eat + corpse-drop core from `tsl-0.40/common/eat.c` / `tsl-0.40/common/monster.c`. The red mushroom's **poison** and joke-eats (sword→death) are deferred to the status-effect work (#15/#18).
 
 ## Tests
 Content (food kind, corpse refs, validation), behaviors (eat clamp), engine (corpse drop on kill, eat via PlayerUse, food-use validation), gen (nospawn excluded), UI (`e` eats / "nothing to eat", keymap). Closes #12.

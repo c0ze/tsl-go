@@ -6,7 +6,7 @@
 
 **Architecture:** `content` gains `MonsterDef` + optional `monsters.toml`. `rng` gains the C roll system (`Roll`, `Chance`=roll_xn, `RollSpec`). `game` gains a `Creature` type (monsters), a per-game `RNG`, player HP, a message log, monster turns/AI, and stat-based melee combat. `gen` places monsters. `ui`/`tcell` render visible monsters and a message line. The engine still imports no UI.
 
-**Combat fidelity:** hit chance uses the C's `roll_xn(attack, dodge)` (`rng.Chance`); damage is a dice roll (`rng.RollSpec`). This is the faithful melee core; weapon damage-sequences/wounds/ranged (the rest of `common/combat.c`) arrive with items in a later plan.
+**Combat fidelity:** hit chance uses the C's `roll_xn(attack, dodge)` (`rng.Chance`); damage is a dice roll (`rng.RollSpec`). This is the faithful melee core; weapon damage-sequences/wounds/ranged (the rest of `tsl-0.40/common/combat.c`) arrive with items in a later plan.
 
 **Player model note:** the player stays a `Pos` + HP/stat fields on `Game` (monsters are `Creature`s); combat is stat-based so it works across both without a unified type. Unifying player-as-`Creature` is a deferred refactor.
 
@@ -19,9 +19,9 @@
 
 ## Task 1: Monster content (`content`)
 
-**Files:** Modify `go/internal/content/content.go`; create `go/data/monsters.toml`; modify `go/internal/content/content_test.go`
+**Files:** Modify `internal/content/content.go`; create `data/monsters.toml`; modify `internal/content/content_test.go`
 
-- [ ] **Step 1** — create `go/data/monsters.toml`:
+- [ ] **Step 1** — create `data/monsters.toml`:
 ```toml
 # Monster definitions. [monster.<id>] → MonsterDef keyed by <id>.
 [monster.rat]
@@ -43,7 +43,7 @@ dodge = 2
 damage = "1d4"
 ```
 
-- [ ] **Step 2** — append tests to `go/internal/content/content_test.go`:
+- [ ] **Step 2** — append tests to `internal/content/content_test.go`:
 ```go
 func TestLoadMonsters(t *testing.T) {
 	dir := t.TempDir()
@@ -99,7 +99,7 @@ transparent = true
 }
 ```
 
-- [ ] **Step 3** — in `go/internal/content/content.go`: add `"os"` to imports; add the `MonsterDef` type, the `Monsters` map on `Content`, and optional monster loading.
+- [ ] **Step 3** — in `internal/content/content.go`: add `"os"` to imports; add the `MonsterDef` type, the `Monsters` map on `Content`, and optional monster loading.
 
 Add after `TileDef`:
 ```go
@@ -174,7 +174,7 @@ func validateMonster(m *MonsterDef) error {
 
 - [ ] **Step 4** — `export GOTOOLCHAIN=local && go test ./internal/content/` → PASS. **Commit:**
 ```bash
-git add go/internal/content/ go/data/monsters.toml
+git add internal/content/ data/monsters.toml
 git commit -m "feat(content): MonsterDef + optional monsters.toml loading"
 ```
 
@@ -182,9 +182,9 @@ git commit -m "feat(content): MonsterDef + optional monsters.toml loading"
 
 ## Task 2: Dice & odds in `rng`
 
-**Files:** Create `go/internal/rng/dice.go`, `go/internal/rng/dice_test.go`
+**Files:** Create `internal/rng/dice.go`, `internal/rng/dice_test.go`
 
-- [ ] **Step 1** — `go/internal/rng/dice_test.go`:
+- [ ] **Step 1** — `internal/rng/dice_test.go`:
 ```go
 package rng
 
@@ -239,7 +239,7 @@ func TestRollSpec(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2** — Run → FAIL. **Step 3** — `go/internal/rng/dice.go`:
+- [ ] **Step 2** — Run → FAIL. **Step 3** — `internal/rng/dice.go`:
 ```go
 package rng
 
@@ -320,7 +320,7 @@ func indexAnySign(s string) int {
 
 - [ ] **Step 4** — `go test ./internal/rng/` → PASS. **Commit:**
 ```bash
-git add go/internal/rng/dice.go go/internal/rng/dice_test.go
+git add internal/rng/dice.go internal/rng/dice_test.go
 git commit -m "feat(rng): dice rolls and roll_xn odds (Roll/Chance/RollSpec)"
 ```
 
@@ -328,9 +328,9 @@ git commit -m "feat(rng): dice rolls and roll_xn odds (Roll/Chance/RollSpec)"
 
 ## Task 3: Creatures on the level (`game`)
 
-**Files:** Create `go/internal/game/creature.go`, `go/internal/game/creature_test.go`
+**Files:** Create `internal/game/creature.go`, `internal/game/creature_test.go`
 
-- [ ] **Step 1** — `go/internal/game/creature_test.go`:
+- [ ] **Step 1** — `internal/game/creature_test.go`:
 ```go
 package game
 
@@ -358,7 +358,7 @@ func TestCreatureAtAndRemove(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2** — Run → FAIL. **Step 3** — `go/internal/game/creature.go`:
+- [ ] **Step 2** — Run → FAIL. **Step 3** — `internal/game/creature.go`:
 ```go
 package game
 
@@ -414,7 +414,7 @@ type Level struct {
 
 - [ ] **Step 4** — `go test ./internal/game/` → PASS. **Commit:**
 ```bash
-git add go/internal/game/creature.go go/internal/game/creature_test.go go/internal/game/game.go
+git add internal/game/creature.go internal/game/creature_test.go internal/game/game.go
 git commit -m "feat(game): Creature type and level creature list"
 ```
 
@@ -422,9 +422,9 @@ git commit -m "feat(game): Creature type and level creature list"
 
 ## Task 4: Turns, AI, and melee combat (`game`)
 
-**Files:** Modify `go/internal/game/game.go` (Game fields); create `go/internal/game/combat.go`, `go/internal/game/combat_test.go`
+**Files:** Modify `internal/game/game.go` (Game fields); create `internal/game/combat.go`, `internal/game/combat_test.go`
 
-- [ ] **Step 1** — extend the `Game` struct in `go/internal/game/game.go` to:
+- [ ] **Step 1** — extend the `Game` struct in `internal/game/game.go` to:
 ```go
 // Game is the whole game state.
 type Game struct {
@@ -440,7 +440,7 @@ type Game struct {
 ```
 and add the import `"github.com/c0ze/tsl/internal/rng"` to `game.go`.
 
-- [ ] **Step 2** — `go/internal/game/combat_test.go`:
+- [ ] **Step 2** — `internal/game/combat_test.go`:
 ```go
 package game
 
@@ -506,7 +506,7 @@ func TestMonsterMovesTowardPlayer(t *testing.T) {
 }
 ```
 
-- [ ] **Step 3** — `go/internal/game/combat.go`:
+- [ ] **Step 3** — `internal/game/combat.go`:
 ```go
 package game
 
@@ -634,7 +634,7 @@ func chebyshev(a, b Pos) int {
 
 - [ ] **Step 4** — `go test ./internal/game/` → PASS. **Commit:**
 ```bash
-git add go/internal/game/game.go go/internal/game/combat.go go/internal/game/combat_test.go
+git add internal/game/game.go internal/game/combat.go internal/game/combat_test.go
 git commit -m "feat(game): monster turns, hunt AI, and bump-to-attack melee"
 ```
 
@@ -642,9 +642,9 @@ git commit -m "feat(game): monster turns, hunt AI, and bump-to-attack melee"
 
 ## Task 5: Place monsters during generation (`gen`)
 
-**Files:** Modify `go/internal/gen/gen.go`, `go/internal/gen/gen_test.go`
+**Files:** Modify `internal/gen/gen.go`, `internal/gen/gen_test.go`
 
-- [ ] **Step 1** — append a test to `go/internal/gen/gen_test.go`:
+- [ ] **Step 1** — append a test to `internal/gen/gen_test.go`:
 ```go
 func TestRoomsPlacesMonsters(t *testing.T) {
 	c := testContent()
@@ -670,7 +670,7 @@ func TestRoomsPlacesMonsters(t *testing.T) {
 ```
 (Note: the existing `testContent()` in gen_test has no Monsters; this test sets them. Other gen tests with empty Monsters must still pass — placement is skipped when no monsters exist.)
 
-- [ ] **Step 2** — Run → FAIL. **Step 3** — in `go/internal/gen/gen.go`, after the rooms loop and after computing `start`/`down` (before `return`), add monster placement, and add the helper. Insert before `return lvl, start, down, nil`:
+- [ ] **Step 2** — Run → FAIL. **Step 3** — in `internal/gen/gen.go`, after the rooms loop and after computing `start`/`down` (before `return`), add monster placement, and add the helper. Insert before `return lvl, start, down, nil`:
 ```go
 	placeMonsters(r, c, lvl, rooms, start)
 ```
@@ -706,7 +706,7 @@ Add `"sort"` to the imports in `gen.go`.
 
 - [ ] **Step 4** — `go test ./internal/gen/` → PASS. **Commit:**
 ```bash
-git add go/internal/gen/
+git add internal/gen/
 git commit -m "feat(gen): place monsters in generated rooms"
 ```
 
@@ -714,9 +714,9 @@ git commit -m "feat(gen): place monsters in generated rooms"
 
 ## Task 6: Render monsters + messages (`ui`, `ui/tcell`)
 
-**Files:** Modify `go/internal/ui/ui.go`, `go/internal/ui/ui_test.go`, `go/internal/ui/tcell/screen.go`
+**Files:** Modify `internal/ui/ui.go`, `internal/ui/ui_test.go`, `internal/ui/tcell/screen.go`
 
-- [ ] **Step 1** — append a test to `go/internal/ui/ui_test.go`:
+- [ ] **Step 1** — append a test to `internal/ui/ui_test.go`:
 ```go
 func TestBuildViewShowsVisibleMonsterAndMessages(t *testing.T) {
 	g := testGame(t, []string{".....", ".@...", "....."})
@@ -735,7 +735,7 @@ func TestBuildViewShowsVisibleMonsterAndMessages(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2** — Run → FAIL. **Step 3** — in `go/internal/ui/ui.go`:
+- [ ] **Step 2** — Run → FAIL. **Step 3** — in `internal/ui/ui.go`:
 
 (a) add `Messages` to `View`:
 ```go
@@ -792,7 +792,7 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 }
 ```
 
-- [ ] **Step 4** — in `go/internal/ui/tcell/screen.go`, render the message lines under the map. Replace `Render` with:
+- [ ] **Step 4** — in `internal/ui/tcell/screen.go`, render the message lines under the map. Replace `Render` with:
 ```go
 // Render draws the view (map then message lines) and flushes it.
 func (sc *Screen) Render(v ui.View) {
@@ -831,7 +831,7 @@ Expected: gofmt clean, all packages `ok`, vet clean, binary builds.
 
 - [ ] **Step 6** — Commit:
 ```bash
-git add go/internal/ui/
+git add internal/ui/
 git commit -m "feat(ui): render visible monsters and a message log line"
 ```
 
@@ -839,9 +839,9 @@ git commit -m "feat(ui): render visible monsters and a message log line"
 
 ## Task 7: Wire HP + RNG into the game (`cmd/tsl`)
 
-**Files:** Modify `go/cmd/tsl/main.go`, `go/cmd/tsl/main_test.go`
+**Files:** Modify `cmd/tsl/main.go`, `cmd/tsl/main_test.go`
 
-- [ ] **Step 1** — update `go/cmd/tsl/main_test.go`'s `newGame` expectations: the `testTiles()` content has no monsters, so `newGame` still works; assert the game is initialised with HP and an RNG. Append:
+- [ ] **Step 1** — update `cmd/tsl/main_test.go`'s `newGame` expectations: the `testTiles()` content has no monsters, so `newGame` still works; assert the game is initialised with HP and an RNG. Append:
 ```go
 func TestNewGameHasPlayerHPAndRNG(t *testing.T) {
 	c := testTiles()
@@ -858,7 +858,7 @@ func TestNewGameHasPlayerHPAndRNG(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2** — update `newGame` in `go/cmd/tsl/main.go` to seed an RNG, share it with generation, and set HP:
+- [ ] **Step 2** — update `newGame` in `cmd/tsl/main.go` to seed an RNG, share it with generation, and set HP:
 ```go
 // newGame builds a fresh, procedurally generated dungeon level seeded by seed.
 func newGame(c *content.Content, seed uint32) (*game.Game, error) {
@@ -882,7 +882,7 @@ func newGame(c *content.Content, seed uint32) (*game.Game, error) {
 
 - [ ] **Step 3** — Whole module green from `go/`: `export GOTOOLCHAIN=local && go build ./... && go test ./... -count=1 && go vet ./...`. **Commit:**
 ```bash
-git add go/cmd/tsl/
+git add cmd/tsl/
 git commit -m "feat(cmd): seed a shared RNG and give the player HP"
 ```
 
@@ -898,5 +898,5 @@ git commit -m "feat(cmd): seed a shared RNG and give the player HP"
 
 ## Deferred
 - Speed/energy scheduler (monsters currently act once per player turn); sleep/wake state machine; LOS-based detection.
-- Weapon damage-sequences, wounds, ranged, gore — the rest of `common/combat.c`, with items.
+- Weapon damage-sequences, wounds, ranged, gore — the rest of `tsl-0.40/common/combat.c`, with items.
 - Player-as-`Creature` unification; status bar (HP display) beyond the message line.

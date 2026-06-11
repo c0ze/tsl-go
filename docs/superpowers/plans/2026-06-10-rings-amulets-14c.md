@@ -6,7 +6,7 @@
 worn slots, *separate* from weapon and armor, whose bonuses **stack** onto your
 hit and defense. The new mechanic is "two more equip slots," faithful to 0.40
 where items have an `equipped` flag and `item_type` covers body/feet/head/cloak
-plus rings and amulets (`common/item.h`, `common/gent.h: gent_amulet/gent_ring`).
+plus rings and amulets (`tsl-0.40/common/item.h`, `tsl-0.40/common/gent.h: gent_amulet/gent_ring`).
 
 ## Design
 - **Content:** two new item kinds, `ring` and `amulet`. Each carries passive

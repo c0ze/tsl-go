@@ -6,7 +6,7 @@
 
 **Architecture:** Pure content — the engine already supports arbitrary monsters, corpse drops, and eating (shipped in #12). This adds TOML data + a golden-data test that validates the shipped roster. No engine code changes.
 
-**Tech Stack:** Go 1.21 (`GOTOOLCHAIN=local`), TOML data under `go/data/`.
+**Tech Stack:** Go 1.21 (`GOTOOLCHAIN=local`), TOML data under `data/`.
 
 **Scope decisions (documented for review):**
 - **Faithful-ish, not 1:1.** The C combat is attribute-based (`attr_health`, `attr_speed`, skills, equipment); our model is hp/attack/dodge/damage/speed. So HP≈`attr_health`, speed≈`attr_speed` (compatible scale, ~100 = normal), and attack/dodge/damage are assigned by role. Tunable later.
@@ -14,7 +14,7 @@
 - **Canon fixes (#13):** rename `rat`→`ratman` (glyph `r` unchanged); change `ghoul` glyph `g`→`Z` (frees `g` for graveling).
 - **Bestiary descriptions + an inspect command are deferred** (no inspect UI yet) — roster/stats now, flavour text later.
 
-**Roster after this batch** (glyphs/HP/speed from `common/glyph.c` + `common/monster.c`):
+**Roster after this batch** (glyphs/HP/speed from `tsl-0.40/common/glyph.c` + `tsl-0.40/common/monster.c`):
 
 | id | name | glyph | color | hp | atk | dodge | dmg | speed | corpse |
 |----|------|-------|-------|----|----|-------|-----|-------|--------|
@@ -34,7 +34,7 @@ Already on `monster-roster` (off `master`).
 
 ## Task 1: Golden-roster test (failing first)
 
-**Files:** Create `go/data/data_test.go`
+**Files:** Create `data/data_test.go`
 
 **Step 1: Write the test.**
 ```go
@@ -78,7 +78,7 @@ Expected: FAIL (`rat` still present, `ratman`/new monsters missing).
 
 ## Task 2: Update the data
 
-**Files:** `go/data/monsters.toml`, `go/data/items.toml`
+**Files:** `data/monsters.toml`, `data/items.toml`
 
 **Step 1:** Rewrite `monsters.toml` so `[monster.ratman]` replaces `[monster.rat]` (glyph `r`, corpse `ratman_corpse`), `[monster.ghoul]` glyph becomes `Z`, and add `graveling`, `gnoblin`, `crypt_vermin`, `merman` per the table above.
 

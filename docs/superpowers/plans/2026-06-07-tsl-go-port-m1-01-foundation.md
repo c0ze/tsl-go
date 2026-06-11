@@ -62,13 +62,13 @@ Responsibilities are one-per-file; `game` has zero UI imports; `ui/tcell` is the
 
 **Files:**
 - Create: `go/go.mod`, `go/go.sum` (via tooling)
-- Create: `go/data/tiles.toml`
+- Create: `data/tiles.toml`
 
 - [ ] **Step 1: Create directories**
 
 Run (from repo root):
 ```bash
-mkdir -p go/cmd/tsl go/internal/content go/internal/game go/internal/ui/tcell go/data
+mkdir -p cmd/tsl internal/content internal/game internal/ui/tcell data
 ```
 
 - [ ] **Step 2: Initialize the module and add dependencies**
@@ -85,7 +85,7 @@ Expected: `go.mod` and `go.sum` created; `go.mod` lists both requires.
 
 - [ ] **Step 3: Create the real tile content file**
 
-Create `go/data/tiles.toml`:
+Create `data/tiles.toml`:
 ```toml
 # Tile definitions. Each [tile.<id>] table becomes a TileDef keyed by <id>.
 # glyph: exactly one character. color: one of normal/brown/blue/red/green/cyan/magenta/black.
@@ -113,7 +113,7 @@ Expected: no output, exit 0 (no packages to build yet, but the module resolves).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add go/go.mod go/go.sum go/data/tiles.toml
+git add go/go.mod go/go.sum data/tiles.toml
 git commit -m "chore(go): scaffold Go module and tile content"
 ```
 
@@ -122,12 +122,12 @@ git commit -m "chore(go): scaffold Go module and tile content"
 ## Task 2: Content loader (`content` package)
 
 **Files:**
-- Create: `go/internal/content/content.go`
-- Test: `go/internal/content/content_test.go`
+- Create: `internal/content/content.go`
+- Test: `internal/content/content_test.go`
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `go/internal/content/content_test.go`:
+Create `internal/content/content_test.go`:
 ```go
 package content
 
@@ -219,7 +219,7 @@ Expected: FAIL — `undefined: Load` (build error).
 
 - [ ] **Step 3: Write the implementation**
 
-Create `go/internal/content/content.go`:
+Create `internal/content/content.go`:
 ```go
 // Package content loads validated game content (data) from TOML files.
 package content
@@ -320,7 +320,7 @@ Expected: PASS (`ok github.com/c0ze/tsl/internal/content`).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add go/internal/content/ go/go.mod go/go.sum
+git add internal/content/ go/go.mod go/go.sum
 git commit -m "feat(content): TOML tile loader with validation"
 ```
 
@@ -329,13 +329,13 @@ git commit -m "feat(content): TOML tile loader with validation"
 ## Task 3: Engine core model (`game` package)
 
 **Files:**
-- Create: `go/internal/game/game.go`
-- Create: `go/internal/game/parse.go`
-- Test: `go/internal/game/game_test.go`
+- Create: `internal/game/game.go`
+- Create: `internal/game/parse.go`
+- Test: `internal/game/game_test.go`
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `go/internal/game/game_test.go`:
+Create `internal/game/game_test.go`:
 ```go
 package game
 
@@ -429,7 +429,7 @@ Expected: FAIL — `undefined: ParseLevel`, `undefined: Game`, etc.
 
 - [ ] **Step 3: Write the core model**
 
-Create `go/internal/game/game.go`:
+Create `internal/game/game.go`:
 ```go
 // Package game holds the core world model and turn logic. It performs no I/O
 // and never imports a UI.
@@ -527,7 +527,7 @@ func (g *Game) Move(d Direction) bool {
 
 - [ ] **Step 4: Write the level parser**
 
-Create `go/internal/game/parse.go`:
+Create `internal/game/parse.go`:
 ```go
 package game
 
@@ -584,7 +584,7 @@ Expected: PASS (`ok github.com/c0ze/tsl/internal/game`).
 - [ ] **Step 6: Commit**
 
 ```bash
-git add go/internal/game/
+git add internal/game/
 git commit -m "feat(game): world model, movement, and ASCII level parser"
 ```
 
@@ -593,12 +593,12 @@ git commit -m "feat(game): world model, movement, and ASCII level parser"
 ## Task 4: UI boundary (`ui` package)
 
 **Files:**
-- Create: `go/internal/ui/ui.go`
-- Test: `go/internal/ui/ui_test.go`
+- Create: `internal/ui/ui.go`
+- Test: `internal/ui/ui_test.go`
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `go/internal/ui/ui_test.go`:
+Create `internal/ui/ui_test.go`:
 ```go
 package ui
 
@@ -685,7 +685,7 @@ Expected: FAIL — `undefined: BuildView`, `undefined: Run`, etc.
 
 - [ ] **Step 3: Write the implementation**
 
-Create `go/internal/ui/ui.go`:
+Create `internal/ui/ui.go`:
 ```go
 // Package ui defines the rendering/input boundary between the engine and any
 // front-end. The engine never imports a concrete UI; front-ends implement
@@ -786,7 +786,7 @@ Expected: PASS (`ok github.com/c0ze/tsl/internal/ui`).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add go/internal/ui/ui.go go/internal/ui/ui_test.go
+git add internal/ui/ui.go internal/ui/ui_test.go
 git commit -m "feat(ui): View/Prompter/Renderer boundary and game loop"
 ```
 
@@ -795,12 +795,12 @@ git commit -m "feat(ui): View/Prompter/Renderer boundary and game loop"
 ## Task 5: tcell front-end (`ui/tcell` package)
 
 **Files:**
-- Create: `go/internal/ui/tcell/screen.go`
-- Test: `go/internal/ui/tcell/screen_test.go`
+- Create: `internal/ui/tcell/screen.go`
+- Test: `internal/ui/tcell/screen_test.go`
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `go/internal/ui/tcell/screen_test.go`:
+Create `internal/ui/tcell/screen_test.go`:
 ```go
 package tcell
 
@@ -870,7 +870,7 @@ Expected: FAIL — `undefined: NewWith`, `undefined: keyToAction`.
 
 - [ ] **Step 3: Write the implementation**
 
-Create `go/internal/ui/tcell/screen.go`:
+Create `internal/ui/tcell/screen.go`:
 ```go
 // Package tcell renders the game to a terminal using gdamore/tcell and maps
 // key events to UI actions. It is the only package that imports tcell.
@@ -991,7 +991,7 @@ Expected: PASS (`ok github.com/c0ze/tsl/internal/ui/tcell`).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add go/internal/ui/tcell/
+git add internal/ui/tcell/
 git commit -m "feat(ui/tcell): terminal renderer and key mapping"
 ```
 
@@ -1000,12 +1000,12 @@ git commit -m "feat(ui/tcell): terminal renderer and key mapping"
 ## Task 6: Wiring + headless smoke test (`cmd/tsl`)
 
 **Files:**
-- Create: `go/cmd/tsl/main.go`
-- Test: `go/cmd/tsl/main_test.go`
+- Create: `cmd/tsl/main.go`
+- Test: `cmd/tsl/main_test.go`
 
 - [ ] **Step 1: Write the failing test**
 
-Create `go/cmd/tsl/main_test.go`:
+Create `cmd/tsl/main_test.go`:
 ```go
 package main
 
@@ -1070,7 +1070,7 @@ Expected: FAIL — `undefined: demoGame`.
 
 - [ ] **Step 3: Write main.go**
 
-Create `go/cmd/tsl/main.go`:
+Create `cmd/tsl/main.go`:
 ```go
 // Command tsl is the console front-end for the Go port of The Slimy Lichmummy.
 package main
@@ -1159,7 +1159,7 @@ Expected: a terminal shows the room with `@`; `h/j/k/l` and arrows move it, wall
 - [ ] **Step 7: Commit**
 
 ```bash
-git add go/cmd/tsl/
+git add cmd/tsl/
 git commit -m "feat(cmd): wire walking skeleton with headless smoke test"
 ```
 

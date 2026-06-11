@@ -15,7 +15,7 @@
 - Go module is in `go/`; run all `go` commands from there with `export GOTOOLCHAIN=local`.
 - Branch: `plan2-rng-gen` (already created). Commit directly to it.
 - Do NOT run `go mod tidy` or `go get` (no new deps; pins must stay).
-- The C reference for the RNG is `common/mt19937ar.c` (the canonical MT19937; its commented `main()` documents the test vector used below).
+- The C reference for the RNG is `tsl-0.40/common/mt19937ar.c` (the canonical MT19937; its commented `main()` documents the test vector used below).
 
 ## File structure (this plan)
 
@@ -43,20 +43,20 @@ go/
 ## Task 1: Mersenne Twister RNG (`internal/rng`)
 
 **Files:**
-- Create: `go/internal/rng/mt.go`
-- Test: `go/internal/rng/mt_test.go`
+- Create: `internal/rng/mt.go`
+- Test: `internal/rng/mt_test.go`
 
-- [ ] **Step 1: Write the failing tests** — create `go/internal/rng/mt_test.go`:
+- [ ] **Step 1: Write the failing tests** — create `internal/rng/mt_test.go`:
 ```go
 package rng
 
 import "testing"
 
 // Canonical MT19937 output for init_by_array({0x123,0x234,0x345,0x456})
-// (see the commented main() in common/mt19937ar.c / the reference mt19937ar.out).
+// (see the commented main() in tsl-0.40/common/mt19937ar.c / the reference mt19937ar.out).
 func TestKnownVector(t *testing.T) {
 	g := NewWithKey([]uint32{0x123, 0x234, 0x345, 0x456})
-	// Verified against the reference C (common/mt19937ar.c) compiled and run.
+	// Verified against the reference C (tsl-0.40/common/mt19937ar.c) compiled and run.
 	want := []uint32{
 		1067595299, 955945823, 477289528, 4107218783, 4228976476,
 		3344332714, 3355579695, 227628506,
@@ -109,11 +109,11 @@ func TestNewWithKeyPanicsOnEmptyKey(t *testing.T) {
 
 - [ ] **Step 2: Run to verify they fail** — from `go/`: `export GOTOOLCHAIN=local && go test ./internal/rng/` → FAIL (`undefined: NewWithKey`).
 
-- [ ] **Step 3: Write the implementation** — create `go/internal/rng/mt.go`:
+- [ ] **Step 3: Write the implementation** — create `internal/rng/mt.go`:
 ```go
 // Package rng is a faithful Go port of the Mersenne Twister MT19937 PRNG
 // (mt19937ar.c by Matsumoto & Nishimura), used so dungeon generation is
-// reproducible from a seed. Ported from common/mt19937ar.c; Uint32 reproduces
+// reproducible from a seed. Ported from tsl-0.40/common/mt19937ar.c; Uint32 reproduces
 // genrand_int32 bit-for-bit. Not safe for concurrent use.
 package rng
 
@@ -240,7 +240,7 @@ func (g *MT) Intn(nn int) int {
 
 - [ ] **Step 5: Commit**
 ```bash
-git add go/internal/rng/
+git add internal/rng/
 git commit -m "feat(rng): faithful MT19937 port with known-vector test"
 ```
 
@@ -249,11 +249,11 @@ git commit -m "feat(rng): faithful MT19937 port with known-vector test"
 ## Task 2: Level-building API + stairs tile (`internal/game`, `data`)
 
 **Files:**
-- Create: `go/internal/game/build.go`
-- Test: `go/internal/game/build_test.go`
-- Modify: `go/data/tiles.toml`
+- Create: `internal/game/build.go`
+- Test: `internal/game/build_test.go`
+- Modify: `data/tiles.toml`
 
-- [ ] **Step 1: Add the stairs-down tile** — append to `go/data/tiles.toml`:
+- [ ] **Step 1: Add the stairs-down tile** — append to `data/tiles.toml`:
 ```toml
 
 [tile.stairs_down]
@@ -263,7 +263,7 @@ passable = true
 transparent = true
 ```
 
-- [ ] **Step 2: Write the failing tests** — create `go/internal/game/build_test.go`:
+- [ ] **Step 2: Write the failing tests** — create `internal/game/build_test.go`:
 ```go
 package game
 
@@ -307,7 +307,7 @@ func TestSetReplacesTile(t *testing.T) {
 
 - [ ] **Step 3: Run to verify they fail** — from `go/`: `export GOTOOLCHAIN=local && go test ./internal/game/` → FAIL (`undefined: NewLevel`).
 
-- [ ] **Step 4: Write the implementation** — create `go/internal/game/build.go`:
+- [ ] **Step 4: Write the implementation** — create `internal/game/build.go`:
 ```go
 package game
 
@@ -332,7 +332,7 @@ func (l *Level) Set(p Pos, def *content.TileDef) {
 
 - [ ] **Step 6: Commit**
 ```bash
-git add go/internal/game/build.go go/internal/game/build_test.go go/data/tiles.toml
+git add internal/game/build.go internal/game/build_test.go data/tiles.toml
 git commit -m "feat(game): NewLevel/Set level-building API + stairs_down tile"
 ```
 
@@ -341,10 +341,10 @@ git commit -m "feat(game): NewLevel/Set level-building API + stairs_down tile"
 ## Task 3: Rooms-and-corridors generator (`internal/gen`)
 
 **Files:**
-- Create: `go/internal/gen/gen.go`
-- Test: `go/internal/gen/gen_test.go`
+- Create: `internal/gen/gen.go`
+- Test: `internal/gen/gen_test.go`
 
-- [ ] **Step 1: Write the failing tests** — create `go/internal/gen/gen_test.go`:
+- [ ] **Step 1: Write the failing tests** — create `internal/gen/gen_test.go`:
 ```go
 package gen
 
@@ -441,7 +441,7 @@ func TestRoomsConnectivityAndPlacement(t *testing.T) {
 
 - [ ] **Step 2: Run to verify they fail** — from `go/`: `export GOTOOLCHAIN=local && go test ./internal/gen/` → FAIL (`undefined: Rooms`).
 
-- [ ] **Step 3: Write the implementation** — create `go/internal/gen/gen.go`:
+- [ ] **Step 3: Write the implementation** — create `internal/gen/gen.go`:
 ```go
 // Package gen builds dungeon levels procedurally from a seeded *rng.MT, so a
 // given seed always yields the same level.
@@ -559,7 +559,7 @@ func carveV(lvl *game.Level, y0, y1, x int, floor *content.TileDef) {
 
 - [ ] **Step 5: Commit**
 ```bash
-git add go/internal/gen/
+git add internal/gen/
 git commit -m "feat(gen): seeded rooms-and-corridors dungeon generator"
 ```
 
@@ -568,10 +568,10 @@ git commit -m "feat(gen): seeded rooms-and-corridors dungeon generator"
 ## Task 4: Wire generated dungeons into `cmd/tsl`
 
 **Files:**
-- Modify: `go/cmd/tsl/main.go`
-- Modify: `go/cmd/tsl/main_test.go`
+- Modify: `cmd/tsl/main.go`
+- Modify: `cmd/tsl/main_test.go`
 
-- [ ] **Step 1: Replace the smoke test** — replace the entire contents of `go/cmd/tsl/main_test.go` with:
+- [ ] **Step 1: Replace the smoke test** — replace the entire contents of `cmd/tsl/main_test.go` with:
 ```go
 package main
 
@@ -630,7 +630,7 @@ func TestNewGameDeterministic(t *testing.T) {
 
 - [ ] **Step 2: Run to verify it fails** — from `go/`: `export GOTOOLCHAIN=local && go test ./cmd/tsl/` → FAIL (`undefined: newGame`).
 
-- [ ] **Step 3: Update main.go** — replace the entire contents of `go/cmd/tsl/main.go` with:
+- [ ] **Step 3: Update main.go** — replace the entire contents of `cmd/tsl/main.go` with:
 ```go
 // Command tsl is the console front-end for the Go port of The Slimy Lichmummy.
 package main
@@ -702,7 +702,7 @@ Expected: all packages `ok`, vet clean, binary builds. (Interactive `go run ./cm
 
 - [ ] **Step 6: Commit**
 ```bash
-git add go/cmd/tsl/
+git add cmd/tsl/
 git commit -m "feat(cmd): generate dungeons via gen instead of a static room"
 ```
 
