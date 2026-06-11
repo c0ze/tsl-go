@@ -6,6 +6,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"syscall/js"
 	"time"
@@ -20,7 +21,10 @@ import (
 	"github.com/c0ze/tsl-go/internal/ui/web"
 )
 
-const saveKey = "tsl-go-save"
+const (
+	saveKey       = "tsl-go-save"
+	quarantineKey = "tsl-go-save-corrupt" // a bad payload parks here for inspection
+)
 
 func main() {
 	sc := web.New()
@@ -88,9 +92,17 @@ func resume(c *content.Content) (*game.Game, error) {
 	}
 	g, err := game.LoadGame(strings.NewReader(raw), c, behaviors.Registry(), build)
 	if err != nil {
-		return nil, err
+		// Quarantine, don't destroy: the live slot is freed so a reload
+		// starts fresh instead of hitting the same fatal overlay forever,
+		// while the payload survives under the debug key (#78's rule that a
+		// failed load must not silently lose the save).
+		quarantineSave(raw)
+		return nil, fmt.Errorf("savefile was corrupt (preserved as %q): %w", quarantineKey, err)
 	}
-	clearSave()
+	if !clearSave() {
+		// Broken storage: play on, but say the single-use rule is at risk.
+		g.Messages = append(g.Messages, "The old savefile could not be removed.")
+	}
 	return g, nil
 }
 
@@ -113,7 +125,18 @@ func putSave(s string) (ok bool) {
 	return true
 }
 
-func clearSave() {
+func clearSave() (ok bool) {
 	defer func() { _ = recover() }()
 	js.Global().Get("localStorage").Call("removeItem", saveKey)
+	return true
+}
+
+// quarantineSave parks a payload under the debug key and frees the live slot;
+// best-effort on both counts (storage may be the thing that is broken).
+func quarantineSave(raw string) {
+	func() {
+		defer func() { _ = recover() }()
+		js.Global().Get("localStorage").Call("setItem", quarantineKey, raw)
+	}()
+	clearSave()
 }
