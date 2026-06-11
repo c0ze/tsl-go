@@ -22,6 +22,7 @@ var effectLabels = map[string]string{
 	"flame_hands": "Flaming hands",
 	"hungry_book": "Hungry book",
 	"polymorph":   "Polymorphed",
+	"web":         "Webbed",
 }
 
 // HasEffect reports whether a timed effect of the given kind is active on the
@@ -171,7 +172,7 @@ func (g *Game) land() {
 		return
 	}
 	g.log("You land on the ground.")
-	if tile.Effect != "" {
+	if isTrapTile(tile) {
 		g.springTrapAt(g.Player)
 	}
 }

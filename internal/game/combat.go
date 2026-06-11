@@ -1,6 +1,10 @@
 package game
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/c0ze/tsl-go/internal/content"
+)
 
 // Player melee stats (constant until the player becomes attribute-driven).
 const (
@@ -94,7 +98,10 @@ func (g *Game) PlayerStep(d Direction) {
 	dst := Pos{g.Player.X + dx, g.Player.Y + dy}
 	acted := false
 	if m := g.Level.CreatureAt(dst); m != nil {
-		g.playerAttacks(m)
+		g.playerAttacks(m) // the C checks enemies before the web: you can still fight
+		acted = true
+	} else if g.HasEffect("web") {
+		g.struggleWeb() // a move attempt becomes the struggle (C struggle_web)
 		acted = true
 	} else if g.Move(d) {
 		acted = true
@@ -104,7 +111,7 @@ func (g *Game) PlayerStep(d Direction) {
 			g.log("You ascend to demigodhood. You win!")
 			return // winning ends the turn immediately
 		}
-		if tile.Effect != "" && !g.HasEffect("levitate") {
+		if isTrapTile(tile) && !g.HasEffect("levitate") {
 			// A floater glides over floor traps (C activate_trap); Win above
 			// already fired regardless, the C's trap_win exception.
 			g.springTrapAt(g.Player)
@@ -325,14 +332,57 @@ func (g *Game) advanceWorld() {
 // only traps flimsier than it betray themselves on sight.
 const playerPerception = 3
 
-// springTrapAt reveals the trap at p and inflicts its effect — the one
-// trigger path shared by stepping, landing, and blinking (C activate_trap).
+// isTrapTile reports whether stepping on def springs something: a status
+// effect or straight damage (the electrified plate).
+func isTrapTile(def *content.TileDef) bool {
+	return def.Effect != "" || def.Damage != ""
+}
+
+// springTrapAt reveals the trap at p and inflicts it — the one trigger path
+// shared by stepping, landing, and blinking (C activate_trap), dispatching
+// per trap kind.
 func (g *Game) springTrapAt(p Pos) {
 	tile := g.Level.At(p)
 	tile.Revealed = true
-	if tile.Def.Effect != "" {
-		g.AddEffect(tile.Def.Effect, tile.Def.EffectTurns)
+	def := tile.Def
+	switch {
+	case def.Damage != "": // the electrified plate (C PLATE_DAMAGE)
+		g.log("You step on an electrified plate!")
+		g.HurtPlayer(g.RNG.RollSpec(def.Damage), "electricity")
+	case def.Effect == "polymorph": // the trap rolls the potion's dice
+		g.log("You step on a polymorph trap!")
+		g.log("%s", g.PolymorphRandom(def.EffectTurns))
+	case def.Effect == "web":
+		g.log("You get stuck in a web!")
+		g.AddEffect("web", def.EffectTurns)
+	case def.Effect == "blind":
+		if !g.playerBlinded() { // a flash means nothing to covered (or blindfolded) eyes (C)
+			g.log("You are blinded by a bright flash!")
+			g.AddEffect("blind", def.EffectTurns)
+		}
+	case def.Effect != "":
+		g.AddEffect(def.Effect, def.EffectTurns)
 		g.log("You trigger a trap!")
+	}
+}
+
+// webStruggle is the C's struggle_web: a move attempt while webbed tears
+// WEB_STRUGGLE (6) off the clock instead of moving; under that, you're out.
+const webStruggle = 6
+
+func (g *Game) struggleWeb() {
+	for i := range g.Effects {
+		if g.Effects[i].Kind != "web" {
+			continue
+		}
+		if g.Effects[i].Turns < webStruggle {
+			g.RemoveEffect("web")
+			g.log("You break free of the web.")
+		} else {
+			g.Effects[i].Turns -= webStruggle
+			g.log("You struggle in the web!")
+		}
+		return
 	}
 }
 
@@ -515,6 +565,20 @@ func (g *Game) worldTick() {
 func (g *Game) monsterAct(m *Creature) {
 	if m.Disguised {
 		return // a mimic in its glamour does nothing at all (C ai_mimic)
+	}
+	if m.HasEffect("web") {
+		// The monster's turn is its struggle (C struggle_web).
+		for i := range m.Effects {
+			if m.Effects[i].Kind == "web" {
+				if m.Effects[i].Turns < webStruggle {
+					m.RemoveEffect("web")
+				} else {
+					m.Effects[i].Turns -= webStruggle
+				}
+				break
+			}
+		}
+		return
 	}
 	if m.HasEffect("sleep") {
 		return // asleep: it loses the turn outright (C game.c effect_sleep skip)

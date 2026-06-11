@@ -43,6 +43,7 @@ type TileDef struct {
 	Lava        bool   `toml:"lava"`         // molten rock: impassable on foot, burns per turn (#18)
 	Effect      string `toml:"effect"`       // status effect applied when stepped on ("" = none)
 	EffectTurns int    `toml:"effect_turns"` // duration of Effect
+	Damage      string `toml:"damage"`       // straight trap damage dice (the electrified plate, #18)
 	OpensTo     string `toml:"opens_to"`     // tile id this becomes when opened ("" = not a door)
 }
 
@@ -409,6 +410,9 @@ func validateTile(t *TileDef) error {
 	}
 	if t.Effect != "" && t.EffectTurns <= 0 {
 		return fmt.Errorf("tile effect %q needs effect_turns > 0", t.Effect)
+	}
+	if t.Damage != "" && !validDamageSpec(t.Damage) {
+		return fmt.Errorf("tile damage %q is not a valid dice spec", t.Damage)
 	}
 	return nil
 }

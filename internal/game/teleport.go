@@ -20,7 +20,7 @@ func (g *Game) Teleport() bool {
 	g.Player = candidates[g.RNG.Intn(len(candidates))]
 	// A blink springs whatever waits at the destination (C cast_blink's
 	// activate_trap) — unless the traveller is floating above it.
-	if tile := g.Level.At(g.Player).Def; tile.Effect != "" && !g.HasEffect("levitate") {
+	if tile := g.Level.At(g.Player).Def; isTrapTile(tile) && !g.HasEffect("levitate") {
 		g.springTrapAt(g.Player)
 	}
 	return true

@@ -416,11 +416,21 @@ func isDoorway(lvl *game.Level, p game.Pos) bool {
 	return horizontal || vertical
 }
 
-// placeTraps scatters up to n dart_trap tiles onto plain floor tiles, avoiding
-// the start, portals, and other special tiles.
+// trapTileIDs are the trap varieties placeTraps deals from, uniformly when
+// defined (the C weights these per level in places.c encounter tables — the
+// uniform deal is the documented approximation).
+var trapTileIDs = []string{"dart_trap", "web_trap", "flash_trap", "plate_trap", "polymorph_trap"}
+
+// placeTraps scatters up to n trap tiles onto plain floor, avoiding the
+// start, portals, and other special tiles; traps go down hidden.
 func placeTraps(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, n int) {
-	trap := c.Tiles["dart_trap"]
-	if trap == nil {
+	var kinds []*content.TileDef
+	for _, id := range trapTileIDs {
+		if t := c.Tiles[id]; t != nil {
+			kinds = append(kinds, t)
+		}
+	}
+	if len(kinds) == 0 {
 		return
 	}
 	for k := 0; k < n; k++ {
@@ -433,7 +443,7 @@ func placeTraps(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, n 
 			continue // don't overwrite stairs, the altar, etc.
 		}
 		floor := lvl.At(pos).Def
-		lvl.Set(pos, trap)
+		lvl.Set(pos, kinds[r.Intn(len(kinds))])
 		// Traps go down hidden, disguised as the floor they replaced, with a
 		// 2d6 difficulty for passive spotting (C traps.c roll(2,6)).
 		t := lvl.At(pos)

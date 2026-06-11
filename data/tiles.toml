@@ -67,3 +67,37 @@ color = "brown"
 passable = false
 transparent = true
 lava = true
+
+# Trap variants (18f, C traps.c) — the audited #18 remainder, all live in
+# 0.40 (flash at encounter weight 12, web at 10; our gen deals uniformly,
+# a documented approximation). All spawn hidden like darts.
+[tile.web_trap]
+glyph = "^"
+color = "normal"
+passable = true
+transparent = true
+effect = "web"
+effect_turns = 27
+
+[tile.flash_trap]
+glyph = "^"
+color = "cyan"
+passable = true
+transparent = true
+effect = "blind"
+effect_turns = 33
+
+[tile.plate_trap]
+glyph = "^"
+color = "blue"
+passable = true
+transparent = true
+damage = "1d4+1"
+
+[tile.polymorph_trap]
+glyph = "^"
+color = "magenta"
+passable = true
+transparent = true
+effect = "polymorph"
+effect_turns = 85
