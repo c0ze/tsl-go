@@ -104,47 +104,7 @@ func keyToAction(ev *tc.EventKey) (ui.Action, bool) {
 	case tc.KeyRight:
 		return ui.Action{Kind: ui.ActMove, Dir: game.DirE}, true
 	}
-	switch ev.Rune() {
-	case 'h':
-		return ui.Action{Kind: ui.ActMove, Dir: game.DirW}, true
-	case 'j':
-		return ui.Action{Kind: ui.ActMove, Dir: game.DirS}, true
-	case 'k':
-		return ui.Action{Kind: ui.ActMove, Dir: game.DirN}, true
-	case 'l':
-		return ui.Action{Kind: ui.ActMove, Dir: game.DirE}, true
-	case 'y':
-		return ui.Action{Kind: ui.ActMove, Dir: game.DirNW}, true
-	case 'u':
-		return ui.Action{Kind: ui.ActMove, Dir: game.DirNE}, true
-	case 'b':
-		return ui.Action{Kind: ui.ActMove, Dir: game.DirSW}, true
-	case 'n':
-		return ui.Action{Kind: ui.ActMove, Dir: game.DirSE}, true
-	case 'q':
-		return ui.Action{Kind: ui.ActQuit}, true
-	case 'g':
-		return ui.Action{Kind: ui.ActPickup}, true
-	case 'i':
-		return ui.Action{Kind: ui.ActInventory}, true
-	case 'z':
-		return ui.Action{Kind: ui.ActZap}, true
-	case 'e':
-		return ui.Action{Kind: ui.ActEat}, true
-	case 'r':
-		return ui.Action{Kind: ui.ActRead}, true
-	case 'f':
-		return ui.Action{Kind: ui.ActFire}, true
-	case 'c':
-		return ui.Action{Kind: ui.ActCast}, true
-	case 't':
-		return ui.Action{Kind: ui.ActTalk}, true
-	case 'S':
-		return ui.Action{Kind: ui.ActSave}, true
-	case '>':
-		return ui.Action{Kind: ui.ActTravel}, true
-	}
-	return ui.Action{}, false
+	return ui.ActionForRune(ev.Rune())
 }
 
 // Menu presents a blocking list; arrows/jk move, Enter/letter selects, Esc/q cancels.

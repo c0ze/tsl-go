@@ -74,6 +74,52 @@ type Renderer interface {
 	Render(View)
 }
 
+// ActionForRune decodes a key rune into a player action — the single binding
+// table shared by every front-end (the terminal adds arrows/Enter on top).
+func ActionForRune(r rune) (Action, bool) {
+	switch r {
+	case 'h':
+		return Action{Kind: ActMove, Dir: game.DirW}, true
+	case 'l':
+		return Action{Kind: ActMove, Dir: game.DirE}, true
+	case 'k':
+		return Action{Kind: ActMove, Dir: game.DirN}, true
+	case 'j':
+		return Action{Kind: ActMove, Dir: game.DirS}, true
+	case 'y':
+		return Action{Kind: ActMove, Dir: game.DirNW}, true
+	case 'u':
+		return Action{Kind: ActMove, Dir: game.DirNE}, true
+	case 'b':
+		return Action{Kind: ActMove, Dir: game.DirSW}, true
+	case 'n':
+		return Action{Kind: ActMove, Dir: game.DirSE}, true
+	case 'q':
+		return Action{Kind: ActQuit}, true
+	case 'g':
+		return Action{Kind: ActPickup}, true
+	case 'i':
+		return Action{Kind: ActInventory}, true
+	case 'z':
+		return Action{Kind: ActZap}, true
+	case 'e':
+		return Action{Kind: ActEat}, true
+	case 'r':
+		return Action{Kind: ActRead}, true
+	case 'f':
+		return Action{Kind: ActFire}, true
+	case 'c':
+		return Action{Kind: ActCast}, true
+	case 't':
+		return Action{Kind: ActTalk}, true
+	case 'S':
+		return Action{Kind: ActSave}, true
+	case '>':
+		return Action{Kind: ActTravel}, true
+	}
+	return Action{}, false
+}
+
 // ErrSaveRequested is returned by Run when the player asks to save: the ui
 // layer never touches files, so the front-end's owner (cmd) saves and quits
 // — the C's save-is-quitting (saveload.c try_to_save_game).
