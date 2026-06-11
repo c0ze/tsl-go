@@ -23,6 +23,9 @@ manual of camouflage) is deliberately absent, catalogued for a possible 0.41.
 
 ## Play
 
+**In the browser: <https://tsl.arda.tr>** — the same engine compiled to
+WebAssembly, saves in localStorage. Or natively:
+
 ```sh
 go run ./cmd/tsl          # or grab a release binary, no install needed
 ```

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>tsl-go — The Slimy Lichmummy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { background: #000; color: #ddd; margin: 0; height: 100%; }
+  body { display: flex; flex-direction: column; align-items: center;
+         font-family: "DejaVu Sans Mono", Menlo, Consolas, monospace; }
+  main { position: relative; margin-top: 1rem; }
+  pre { margin: 0; font-size: 16px; line-height: 1.15; }
+  #status { margin-top: .4rem; color: #9ad; white-space: pre; font-size: 13px; }
+  #messages { margin-top: .2rem; color: #bbb; white-space: pre; min-height: 4.6em; font-size: 13px; }
+  #overlay { position: absolute; top: 0; left: 0; right: 0;
+             background: rgba(0,0,0,.92); border: 1px solid #555; padding: 1em;
+             white-space: pre-wrap; }
+  #loading { margin-top: 2rem; color: #888; }
+  .c-normal  { color: #ddd; }
+  .c-brown   { color: #b8860b; }
+  .c-blue    { color: #6699ff; }
+  .c-red     { color: #ff5555; }
+  .c-green   { color: #55cc55; }
+  .c-cyan    { color: #55cccc; }
+  .c-magenta { color: #cc66cc; }
+  .c-black   { color: #666; }
+  .dim       { opacity: .45; }
+  .cursor    { background: #ddd; color: #000; }
+  footer { margin-top: auto; padding: .6rem; color: #555; font-size: 12px; }
+  footer a { color: #779; }
+</style>
+</head>
+<body>
+<main>
+  <pre id="screen"></pre>
+  <div id="status"></div>
+  <div id="messages"></div>
+  <pre id="overlay" hidden></pre>
+</main>
+<div id="loading">summoning the dungeon&hellip;</div>
+<footer>
+  tsl-go — a faithful Go port of <em>The Slimy Lichmummy 0.40</em> by Ulf Åström
+  &middot; <a href="https://github.com/c0ze/tsl-go">source</a>
+  &middot; keys: hjklyubn move, g get, i inventory, e eat, r read, z zap,
+  f fire, c cast, t talk, &gt; stairs, S save
+</footer>
+<script src="wasm_exec.js"></script>
+<script>
+  const go = new Go();
+  WebAssembly.instantiateStreaming(fetch("tsl-go.wasm"), go.importObject)
+    .then((result) => {
+      document.getElementById("loading").remove();
+      go.run(result.instance);
+    })
+    .catch((err) => {
+      document.getElementById("loading").textContent = "failed to load: " + err;
+    });
+</script>
+</body>
+</html>
