@@ -562,3 +562,20 @@ damage = "1d4"
 speed = 10
 chat = "He keeps the wisdom that you need, the password that you want."
 min_depth = 99 # boss placement only
+
+# The chainsaw ogre (13k, C monster.c:408): fast, loud, and the lead enemy of
+# the worm caves (places.c). The 3/3/5/5/7/7 chainsaw chain ≈ 1d5+2 (avg 5,
+# max 7, exact). Grenades/aimed shot/wound rider out of scope (explode and
+# wound subsystems unported). 'O' is shared with the filler ogre by color —
+# the C reuses glyphs itself.
+[monster.chainsaw_ogre]
+name = "chainsaw ogre"
+glyph = "O"
+color = "red"
+hp = 8
+attack = 8
+dodge = 1
+damage = "1d5+2"
+speed = 120
+corpse = "corpse"
+min_depth = 3

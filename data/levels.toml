@@ -118,6 +118,9 @@ weight = 1
 [[level.ominous_cave.spawn]]
 monster = "mimic"
 weight = 1
+[[level.ominous_cave.spawn]]
+monster = "chainsaw_ogre"
+weight = 2
 
 [level.laboratory]
 name = "the Laboratory"
@@ -237,6 +240,9 @@ weight = 1
 [[level.underpass.spawn]]
 monster = "mimic"
 weight = 1
+[[level.underpass.spawn]]
+monster = "chainsaw_ogre"
+weight = 2
 
 [level.drowned_city]
 name = "the Drowned City"

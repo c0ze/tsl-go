@@ -946,3 +946,27 @@ func TestEmbeddedPolymorph(t *testing.T) {
 		t.Errorf("potion_polymorph def unexpected: %+v", p)
 	}
 }
+
+// TestEmbeddedChainsawOgre checks the last 0.40 bestiary regular loaded (13k):
+// found auditing issue #13 — fast, loud, and at home in the worm caves.
+func TestEmbeddedChainsawOgre(t *testing.T) {
+	c, err := content.Load(Files)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	m := c.Monsters["chainsaw_ogre"]
+	if m == nil || m.Glyph != "O" || m.HP != 8 || m.Speed != 120 || m.Damage != "1d5+2" {
+		t.Fatalf("chainsaw_ogre def unexpected: %+v", m)
+	}
+	for _, lvl := range []string{"ominous_cave", "underpass"} {
+		found := false
+		for _, s := range c.Levels[lvl].Spawn {
+			if s.Monster == "chainsaw_ogre" {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("%s should spawn the chainsaw ogre (C places.c lead std_enemy)", lvl)
+		}
+	}
+}
