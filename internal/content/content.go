@@ -403,7 +403,7 @@ func validateTile(t *TileDef) error {
 	if !validColors[t.Color] {
 		return fmt.Errorf("invalid color %q", t.Color)
 	}
-	if t.Effect != "" && t.Effect != "polymorph" && t.EffectTurns <= 0 {
+	if t.Effect != "" && t.EffectTurns <= 0 {
 		return fmt.Errorf("tile effect %q needs effect_turns > 0", t.Effect)
 	}
 	if t.Damage != "" && !validDamageSpec(t.Damage) {
