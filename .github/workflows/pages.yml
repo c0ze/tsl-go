@@ -21,11 +21,11 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
           fetch-depth: 0 # need full history + tags to build /original from v0.40.1
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version-file: go.mod
       - name: Build the wasm front-end
@@ -44,10 +44,11 @@ jobs:
           GOOS=js GOARCH=wasm go build -C "$RUNNER_TEMP/orig" -trimpath -ldflags "-s -w" \
             -o "$GITHUB_WORKSPACE/_site/original/tsl-go.wasm" ./cmd/tsl-wasm
           cp "$RUNNER_TEMP/orig/web/index.html" _site/original/index.html
+          sed -i 's#>source</a>#>source</a>\n  \&middot; <a href="/">play the enhanced version</a>#' _site/original/index.html
           cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" _site/original/
           ls -l _site/original/
-      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: _site
       - id: deployment
-        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
