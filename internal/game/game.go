@@ -121,6 +121,7 @@ type Game struct {
 	recallSet    bool
 	lockedBump   *Pos // locked door just bumped, awaiting the front-end's prompt chain
 	Messages     []string
+	Sounds       []string // transient per-turn sound-effect cues for the front-end (web SFX); see Sound
 	Dead         bool
 	Inventory    []*Item
 	Weapon       *Item
@@ -151,3 +152,9 @@ func (g *Game) Move(d Direction) bool {
 	g.Player = dst
 	return true
 }
+
+// Sound queues a sound-effect cue (an abstract event label like "hit" or
+// "splash") for the front-end to play. It is a transient, per-turn presentation
+// hint — drained each turn by the ui loop and rendered only by the web front-end
+// — so the engine stays unaware of how, or whether, it is played.
+func (g *Game) Sound(id string) { g.Sounds = append(g.Sounds, id) }

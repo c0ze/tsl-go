@@ -7,7 +7,6 @@ import (
 
 	tc "github.com/gdamore/tcell/v2"
 
-	"github.com/c0ze/tsl-go/internal/content"
 	"github.com/c0ze/tsl-go/internal/game"
 	"github.com/c0ze/tsl-go/internal/ui"
 )
@@ -36,15 +35,16 @@ func NewWith(s tc.Screen) *Screen { return &Screen{s: s} }
 // Close restores the terminal.
 func (sc *Screen) Close() { sc.s.Fini() }
 
-var colorMap = map[content.Color]tc.Color{
-	content.ColorNormal:  tc.ColorWhite,
-	content.ColorBrown:   tc.ColorMaroon,
-	content.ColorBlue:    tc.ColorBlue,
-	content.ColorRed:     tc.ColorRed,
-	content.ColorGreen:   tc.ColorGreen,
-	content.ColorCyan:    tc.ColorTeal,
-	content.ColorMagenta: tc.ColorFuchsia,
-	content.ColorBlack:   tc.ColorBlack,
+// cellColor resolves a cell's final 24-bit terminal colour: a remembered tile
+// shows in the cool, dark colour of memory; a visible one takes its palette hue
+// scaled by the tile's torch-light level.
+func cellColor(c ui.Cell) tc.Color {
+	base := ui.ColorRGB(c.Color)
+	out := ui.Lit(base, c.Light)
+	if c.Dim {
+		out = ui.Remembered(base)
+	}
+	return tc.NewRGBColor(int32(out.R), int32(out.G), int32(out.B))
 }
 
 // Render draws the view (map then message lines) and flushes it.
@@ -60,10 +60,7 @@ func (sc *Screen) drawView(v ui.View) {
 	for y := 0; y < v.H; y++ {
 		for x := 0; x < v.W; x++ {
 			c := v.At(x, y)
-			st := tc.StyleDefault.Foreground(colorMap[c.Color])
-			if c.Dim {
-				st = st.Dim(true)
-			}
+			st := tc.StyleDefault.Foreground(cellColor(*c))
 			sc.s.SetContent(x, y, c.Glyph, nil, st)
 		}
 	}

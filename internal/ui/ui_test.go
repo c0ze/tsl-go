@@ -140,8 +140,8 @@ func TestBuildViewPlacesPlayer(t *testing.T) {
 	if got := v.At(1, 1).Glyph; got != '@' {
 		t.Errorf("center glyph = %q, want '@'", got)
 	}
-	if got := v.At(0, 0).Glyph; got != '.' {
-		t.Errorf("corner glyph = %q, want '.'", got)
+	if got := v.At(0, 0).Glyph; got != '·' {
+		t.Errorf("corner glyph = %q, want '·'", got)
 	}
 }
 
@@ -163,11 +163,11 @@ func TestBuildViewVisibilityStates(t *testing.T) {
 	if c := v.At(1, 1); c.Glyph != '@' {
 		t.Errorf("player cell = %q, want '@'", c.Glyph)
 	}
-	if c := v.At(0, 1); c.Glyph != '.' || c.Dim {
-		t.Errorf("visible floor = %q dim=%v, want '.' bright", c.Glyph, c.Dim)
+	if c := v.At(0, 1); c.Glyph != '·' || c.Dim {
+		t.Errorf("visible floor = %q dim=%v, want '·' bright", c.Glyph, c.Dim)
 	}
-	if c := v.At(0, 0); c.Glyph != '.' || !c.Dim {
-		t.Errorf("remembered floor = %q dim=%v, want '.' dim", c.Glyph, c.Dim)
+	if c := v.At(0, 0); c.Glyph != '·' || !c.Dim {
+		t.Errorf("remembered floor = %q dim=%v, want '·' dim", c.Glyph, c.Dim)
 	}
 	if c := v.At(2, 2); c.Glyph != ' ' {
 		t.Errorf("unseen cell = %q, want blank space", c.Glyph)
@@ -462,7 +462,7 @@ func TestBuildViewHidesDisguisedTraps(t *testing.T) {
 	tile.Disguise = floor
 	tile.Visible = true
 	v := BuildView(g)
-	if got := v.At(2, 0).Glyph; got != '.' {
+	if got := v.At(2, 0).Glyph; got != '·' {
 		t.Errorf("an unrevealed trap should render as floor, got %q", got)
 	}
 	tile.Revealed = true

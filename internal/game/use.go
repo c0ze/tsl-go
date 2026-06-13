@@ -17,6 +17,7 @@ func (g *Game) PlayerPickup() {
 			if held.Def == it.Def {
 				held.Charges += it.Charges
 				g.log("You pick up the %s.", it.Def.Name)
+				g.Sound(pickupSound(it.Def.Kind))
 				if !wasBurdened && g.burdened() {
 					g.log("You stagger under your load!")
 				}
@@ -27,6 +28,7 @@ func (g *Game) PlayerPickup() {
 	}
 	g.Inventory = append(g.Inventory, it)
 	g.log("You pick up the %s.", it.Def.Name)
+	g.Sound(pickupSound(it.Def.Kind))
 	if !wasBurdened && g.burdened() {
 		g.log("You stagger under your load!")
 	}
@@ -90,6 +92,10 @@ func (g *Game) PlayerUse(it *Item) {
 		g.readBook(it)
 		return
 	}
+	switch it.Def.Kind { // a cue for the action about to happen (web SFX)
+	case "weapon", "armor", "boots", "head", "cloak", "ring", "amulet":
+		g.Sound("equip")
+	}
 	switch it.Def.Kind {
 	case "weapon":
 		g.Weapon = it
@@ -133,6 +139,7 @@ func (g *Game) PlayerUse(it *Item) {
 			g.log("You would have to remove your mask first.") // C: p_eat/p_drink while masked
 			return
 		}
+		g.Sound(consumeSound(it.Def.Kind))
 		g.identify(it) // using a consumable reveals what it was
 		if b, ok := g.Behaviors[it.Def.Use]; ok {
 			g.Messages = append(g.Messages, b(g, it)...)
@@ -199,4 +206,29 @@ func (g *Game) ReadableInventory() []*Item {
 		}
 	}
 	return scrolls
+}
+
+// pickupSound maps an item kind to its pickup cue, so potions and weapons get
+// their own flavour and everything else a generic chime (web SFX).
+func pickupSound(kind string) string {
+	switch kind {
+	case "weapon":
+		return "pickup_weapon"
+	case "potion":
+		return "pickup_potion"
+	default:
+		return "pickup"
+	}
+}
+
+// consumeSound maps a consumable kind to the cue for using it (web SFX).
+func consumeSound(kind string) string {
+	switch kind {
+	case "food":
+		return "eat"
+	case "potion":
+		return "quaff"
+	default: // scroll
+		return "read"
+	}
 }

@@ -17,6 +17,7 @@ func (g *Game) openDoor(p Pos) bool {
 		return false
 	}
 	g.Level.Set(p, open)
+	g.Sound("door")
 	return true
 }
 
@@ -159,6 +160,7 @@ func (g *Game) CloseDoor(p Pos) {
 		return
 	}
 	g.Level.Set(p, closed)
+	g.Sound("door")
 	// The C rolls stealth vs DOOR_STEALTH (rules.h:139) for a quiet close;
 	// slamming it is loud.
 	if g.rollXN(g.playerStealth(), doorStealth) {

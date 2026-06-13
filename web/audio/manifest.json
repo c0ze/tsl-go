@@ -1,0 +1,42 @@
+{
+  "catacombs": [
+    "catacombs-1.mp3",
+    "catacombs-2.mp3"
+  ],
+  "chapel": [
+    "chapel-1.mp3",
+    "chapel-2.mp3"
+  ],
+  "comm_hub": [
+    "comm_hub-1.mp3",
+    "comm_hub-2.mp3"
+  ],
+  "dragons_lair": [
+    "dragons_lair-1.mp3",
+    "dragons_lair-2.mp3"
+  ],
+  "drowned_city": [
+    "drowned_city-1.mp3",
+    "drowned_city-2.mp3"
+  ],
+  "dungeon": [
+    "dungeon-1.mp3",
+    "dungeon-2.mp3"
+  ],
+  "frozen_vault": [
+    "frozen_vault-1.mp3",
+    "frozen_vault-2.mp3"
+  ],
+  "laboratory": [
+    "laboratory-1.mp3",
+    "laboratory-2.mp3"
+  ],
+  "ominous_cave": [
+    "ominous_cave-1.mp3",
+    "ominous_cave-2.mp3"
+  ],
+  "underpass": [
+    "underpass-1.mp3",
+    "underpass-2.mp3"
+  ]
+}

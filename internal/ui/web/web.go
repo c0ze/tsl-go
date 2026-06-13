@@ -13,13 +13,14 @@ import (
 // blocking Prompter calls drain it (Go's wasm scheduler yields to the JS
 // event loop while goroutines block), Render writes innerHTML.
 type Screen struct {
-	keys   chan string
-	last   ui.View
-	doc    js.Value
-	screen js.Value // <pre id="screen">
-	status js.Value // <div id="status">
-	msgs   js.Value // <div id="messages">
-	over   js.Value // <pre id="overlay">
+	keys      chan string
+	last      ui.View
+	lastLevel string // level id last announced to the JS music controller
+	doc       js.Value
+	screen    js.Value // <pre id="screen">
+	status    js.Value // <div id="status">
+	msgs      js.Value // <div id="messages">
+	over      js.Value // <pre id="overlay">
 }
 
 // New wires the DOM and the key listener.
@@ -79,6 +80,36 @@ func (sc *Screen) Render(v ui.View) {
 		msgs += m + "\n"
 	}
 	sc.msgs.Set("textContent", msgs)
+	sc.announceLevel(v.LevelID)
+	sc.playSounds(v.Sounds)
+}
+
+// playSounds fires each queued sound-effect cue at the JS synth
+// (window.tslPlaySfx); a no-op if the page hasn't defined it.
+func (sc *Screen) playSounds(ids []string) {
+	if len(ids) == 0 {
+		return
+	}
+	fn := js.Global().Get("tslPlaySfx")
+	if fn.Type() != js.TypeFunction {
+		return
+	}
+	for _, id := range ids {
+		fn.Invoke(id)
+	}
+}
+
+// announceLevel tells the JS music controller (window.tslSetLevel) which level
+// is on screen, but only when it changes — so the per-level loop keeps playing
+// across ordinary frames and only switches on travel.
+func (sc *Screen) announceLevel(id string) {
+	if id == sc.lastLevel {
+		return
+	}
+	sc.lastLevel = id
+	if fn := js.Global().Get("tslSetLevel"); fn.Type() == js.TypeFunction {
+		fn.Invoke(id)
+	}
 }
 
 // Menu mirrors the terminal: j/k/arrows move, Enter/letter picks, Esc/q cancels.

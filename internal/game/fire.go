@@ -41,6 +41,7 @@ func (g *Game) FireWeapon(target Pos) {
 		dmg := g.RNG.RollSpec(g.Weapon.Def.Damage)
 		m.HP -= dmg
 		g.log("You shoot the %s for %d.", m.Def.Name, dmg)
+		g.Sound("hit")
 		if m.HP <= 0 {
 			g.killCreature(m)
 		}

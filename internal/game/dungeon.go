@@ -96,6 +96,7 @@ func (g *Game) Travel() {
 	}
 	def := g.Dungeon.defs[g.Level.ID]
 	g.log("You enter %s.", def.Name)
+	g.Sound("descend")
 }
 
 // EnterStart places the player on the current (start) level's entry tile and

@@ -27,6 +27,10 @@ func (g *Game) visionRadius() int {
 	return r
 }
 
+// VisionRadius is the player's current sight radius, exported for the render
+// layer's light-falloff calculation.
+func (g *Game) VisionRadius() int { return g.visionRadius() }
+
 // carriedLight returns the largest light radius among the items the player is
 // carrying — a torch glows passively while held.
 func (g *Game) carriedLight() int {

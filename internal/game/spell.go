@@ -37,7 +37,7 @@ func (g *Game) CastSpell(book *Item) {
 		g.log("You lack the energy to cast %s.", book.Def.Name)
 		return
 	}
-	g.EP -= book.Def.Cost
+	g.castSpend(book.Def.Cost)
 	if b, ok := g.Behaviors[book.Def.Use]; ok {
 		g.Messages = append(g.Messages, b(g, book)...)
 	} else {
@@ -69,7 +69,7 @@ func (g *Game) CastSpellAt(book *Item, target Pos) {
 			g.log("No one is there!")
 			return
 		}
-		g.EP -= book.Def.Cost
+		g.castSpend(book.Def.Cost)
 		g.log("Death...")
 		if g.RNG.Intn(2) == 0 {
 			g.log("Yours!")
@@ -85,13 +85,13 @@ func (g *Game) CastSpellAt(book *Item, target Pos) {
 		return
 	}
 	if book.Def.Breath != "" { // a breath book exhales a cone toward the target
-		g.EP -= book.Def.Cost
+		g.castSpend(book.Def.Cost)
 		g.playerBreathe(book.Def.Breath, target)
 		g.advanceWorld()
 		return
 	}
 	if book.Def.Beam { // a beam fires in the aimed direction, hitting all in its path
-		g.EP -= book.Def.Cost
+		g.castSpend(book.Def.Cost)
 		g.fireBeam(book, target)
 		g.advanceWorld()
 		return
@@ -104,7 +104,7 @@ func (g *Game) CastSpellAt(book *Item, target Pos) {
 		g.log("You don't have a clear shot.")
 		return
 	}
-	g.EP -= book.Def.Cost
+	g.castSpend(book.Def.Cost)
 	if m := g.Level.CreatureAt(target); m != nil {
 		dmg := g.RNG.RollSpec(book.Def.Damage)
 		m.HP -= dmg
@@ -116,6 +116,14 @@ func (g *Game) CastSpellAt(book *Item, target Pos) {
 		g.log("The spell dissipates against nothing.")
 	}
 	g.advanceWorld()
+}
+
+// castSpend deducts a spell's EP cost and cues the cast sound — the single
+// commit point shared by every spell path, so the cue fires exactly when a
+// cast actually happens.
+func (g *Game) castSpend(cost int) {
+	g.EP -= cost
+	g.Sound("cast")
 }
 
 // FlashRadius is how far the flash spell's blinding light reaches.

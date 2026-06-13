@@ -31,6 +31,7 @@ jobs:
         run: |
           mkdir -p _site
           cp web/index.html web/CNAME _site/
+          cp -r web/audio _site/
           cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" _site/
           GOOS=js GOARCH=wasm go build -trimpath -ldflags "-s -w" \
             -o _site/tsl-go.wasm ./cmd/tsl-wasm

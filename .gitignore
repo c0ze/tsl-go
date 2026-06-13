@@ -12,3 +12,15 @@ morgue.txt
 .tsl-save.json
 tsl_conf
 /tsl-wasm
+
+# Music: keep the original WAVs locally but out of git. The committed, deployed
+# assets are web/audio/*.mp3 (regenerate with scripts/encode-audio.sh).
+/assets/audio/src/
+
+# Local web build artifacts — CI rebuilds these (.github/workflows/pages.yml).
+/web/tsl-go.wasm
+/web/wasm_exec.js
+
+# Local tooling and OS cruft
+.DS_Store
+/.claude/

@@ -16,7 +16,8 @@ import (
 type Cell struct {
 	Glyph rune
 	Color content.Color
-	Dim   bool // render dimmed (remembered-but-not-currently-visible)
+	Dim   bool    // render dimmed (remembered-but-not-currently-visible)
+	Light float64 // 0..1 brightness of a visible tile; renderers scale Colour by it for the torch-lit falloff
 }
 
 // View is a read-only snapshot the front-end draws.
@@ -25,6 +26,8 @@ type View struct {
 	Cells    []Cell // len W*H, row-major
 	Status   string // HUD line (HP, depth, gear)
 	Messages []string
+	LevelID  string   // current level id; front-ends that key off it (web music) use this
+	Sounds   []string // per-turn sound-effect cues; front-ends that support it (web SFX) play them
 }
 
 // At returns a pointer to the cell at (x, y), which must be in bounds
@@ -139,15 +142,16 @@ const PlayerColor = content.ColorNormal
 func BuildView(g *game.Game) View {
 	l := g.Level
 	v := View{W: l.W, H: l.H, Cells: make([]Cell, l.W*l.H)}
+	radius := g.VisionRadius()
 	for y := 0; y < l.H; y++ {
 		for x := 0; x < l.W; x++ {
 			t := l.At(game.Pos{X: x, Y: y})
 			def := t.Appears() // an unrevealed trap wears its disguise
 			switch {
 			case t.Visible:
-				*v.At(x, y) = Cell{Glyph: def.Rune(), Color: def.Color}
+				*v.At(x, y) = Cell{Glyph: displayGlyph(l, x, y, def), Color: def.Color, Light: tileLight(g.Player.X, g.Player.Y, x, y, radius)}
 			case t.Seen:
-				*v.At(x, y) = Cell{Glyph: def.Rune(), Color: def.Color, Dim: true}
+				*v.At(x, y) = Cell{Glyph: displayGlyph(l, x, y, def), Color: def.Color, Dim: true}
 			default:
 				*v.At(x, y) = Cell{Glyph: ' ', Color: content.ColorNormal}
 			}
@@ -155,7 +159,7 @@ func BuildView(g *game.Game) View {
 	}
 	for _, it := range l.Items {
 		if l.InBounds(it.Pos) && l.At(it.Pos).Visible {
-			*v.At(it.Pos.X, it.Pos.Y) = Cell{Glyph: it.Def.Rune(), Color: it.Def.Color}
+			paint(v.At(it.Pos.X, it.Pos.Y), it.Def.Rune(), it.Def.Color)
 		}
 	}
 	for _, m := range l.Creatures {
@@ -163,21 +167,30 @@ func BuildView(g *game.Game) View {
 			continue
 		}
 		if m.Disguised && m.DisguiseAs != nil { // a mimic wears its loot glamour
-			*v.At(m.Pos.X, m.Pos.Y) = Cell{Glyph: m.DisguiseAs.Rune(), Color: m.DisguiseAs.Color}
+			paint(v.At(m.Pos.X, m.Pos.Y), m.DisguiseAs.Rune(), m.DisguiseAs.Color)
 			continue
 		}
-		*v.At(m.Pos.X, m.Pos.Y) = Cell{Glyph: m.Def.Rune(), Color: m.Def.Color}
+		paint(v.At(m.Pos.X, m.Pos.Y), m.Def.Rune(), m.Def.Color)
 	}
 	if l.InBounds(g.Player) {
 		if g.Shape != nil { // a polymorphed player wears the form's glyph
-			*v.At(g.Player.X, g.Player.Y) = Cell{Glyph: g.Shape.Rune(), Color: g.Shape.Color}
+			paint(v.At(g.Player.X, g.Player.Y), g.Shape.Rune(), g.Shape.Color)
 		} else {
-			*v.At(g.Player.X, g.Player.Y) = Cell{Glyph: PlayerGlyph, Color: PlayerColor}
+			paint(v.At(g.Player.X, g.Player.Y), PlayerGlyph, PlayerColor)
 		}
 	}
 	v.Status = statusLine(g)
 	v.Messages = lastN(g.Messages, 4)
+	v.LevelID = l.ID
+	v.Sounds = g.Sounds
 	return v
+}
+
+// paint overlays a glyph and colour onto an already-built cell, keeping the
+// light the underlying visible tile carries so items, creatures, and the player
+// dim with the torchlight like the floor they stand on.
+func paint(c *Cell, glyph rune, color content.Color) {
+	c.Glyph, c.Color = glyph, color
 }
 
 // statusLine summarises the player's vitals and gear for the HUD.
@@ -232,6 +245,7 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 	for {
 		g.UpdateFOV()
 		r.Render(BuildView(g))
+		g.Sounds = nil // cues were drained into the rendered View; reset for the next turn
 		if g.Dead || g.Won {
 			return nil
 		}

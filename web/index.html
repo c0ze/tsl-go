@@ -16,16 +16,22 @@
              background: rgba(0,0,0,.92); border: 1px solid #555; padding: 1em;
              white-space: pre-wrap; }
   #loading { margin-top: 2rem; color: #888; }
-  .c-normal  { color: #ddd; }
-  .c-brown   { color: #b8860b; }
-  .c-blue    { color: #6699ff; }
-  .c-red     { color: #ff5555; }
-  .c-green   { color: #55cc55; }
-  .c-cyan    { color: #55cccc; }
-  .c-magenta { color: #cc66cc; }
-  .c-black   { color: #666; }
+  /* Mirror of internal/ui.Palette — keep these in sync. */
+  .c-normal  { color: #c8bea5; }
+  .c-brown   { color: #b07a3a; }
+  .c-blue    { color: #4a90d9; }
+  .c-red     { color: #d6504a; }
+  .c-green   { color: #6fae4a; }
+  .c-cyan    { color: #3fb6c4; }
+  .c-magenta { color: #c060c0; }
+  .c-black   { color: #282c30; }
   .dim       { opacity: .45; }
   .cursor    { background: #ddd; color: #000; }
+  #audioctl { position: fixed; top: .6rem; right: .8rem; display: flex; align-items: center; gap: .5rem; }
+  #vol { width: 80px; accent-color: #c8bea5; cursor: pointer; }
+  #mute { background: transparent; color: #888; border: 1px solid #444;
+          border-radius: 4px; padding: .2rem .55rem; font: 13px/1 inherit; cursor: pointer; }
+  #mute.on { color: #c8bea5; border-color: #6a6450; }
   footer { margin-top: auto; padding: .6rem; color: #555; font-size: 12px; }
   footer a { color: #779; }
 </style>
@@ -37,6 +43,10 @@
   <div id="messages"></div>
   <pre id="overlay" hidden></pre>
 </main>
+<div id="audioctl">
+  <input id="vol" type="range" min="0" max="100" step="1" aria-label="Music volume" title="Music volume">
+  <button id="mute" type="button">&#9834; on</button>
+</div>
 <div id="loading">summoning the dungeon&hellip;</div>
 <footer>
   tsl-go — a faithful Go port of <em>The Slimy Lichmummy 0.40</em> by Ulf Åström
@@ -44,6 +54,173 @@
   &middot; keys: hjklyubn move, g get, i inventory, e eat, r read, z zap,
   f fire, c cast, t talk, &gt; stairs, S save
 </footer>
+<script>
+/* Background-music controller: streams each level's tracks (web/audio/manifest.json)
+   in succession on a loop, switching when the wasm reports a new level via
+   window.tslSetLevel. Playback waits for the first key/click (autoplay policy). */
+(function () {
+  const audio = new Audio();
+  audio.preload = "auto";
+  const btn = document.getElementById("mute");
+  const vol = document.getElementById("vol");
+  let manifest = {}, playlist = [], idx = 0, level = null, unlocked = false;
+  let muted = localStorage.getItem("tsl-muted") === "1";
+  let musicVol = parseFloat(localStorage.getItem("tsl-vol"));
+  if (!(musicVol >= 0 && musicVol <= 1)) musicVol = 0.5;
+  audio.volume = musicVol;
+  if (vol) vol.value = String(Math.round(musicVol * 100));
+
+  fetch("audio/manifest.json")
+    .then(r => (r.ok ? r.json() : {}))
+    .then(m => { manifest = m; if (level) apply(level); })
+    .catch(() => {});
+
+  function play() {
+    if (muted || !playlist.length) return;
+    const p = audio.play();
+    if (p && p.catch) p.catch(() => {}); // blocked until a user gesture
+  }
+  function apply(id) {
+    playlist = manifest[id] || [];
+    idx = 0;
+    if (!playlist.length) { audio.pause(); audio.removeAttribute("src"); return; }
+    audio.src = "audio/" + playlist[0];
+    play();
+  }
+  audio.addEventListener("ended", () => {
+    if (!playlist.length) return;
+    idx = (idx + 1) % playlist.length;        // next track, looping back to the first
+    audio.src = "audio/" + playlist[idx];
+    play();
+  });
+
+  let fadeTimer = null;
+  function fadeTo(target, ms, done) {            // ramp audio.volume, then run done
+    if (fadeTimer) clearInterval(fadeTimer);
+    const from = audio.volume, t0 = performance.now();
+    fadeTimer = setInterval(() => {
+      const k = Math.min(1, (performance.now() - t0) / ms);
+      audio.volume = Math.max(0, Math.min(1, from + (target - from) * k));
+      if (k >= 1) { clearInterval(fadeTimer); fadeTimer = null; if (done) done(); }
+    }, 30);
+  }
+
+  window.tslSetLevel = function (id) {
+    if (id === level) return;                    // only act on a real level change
+    const first = level === null;
+    level = id;
+    if (first) { apply(id); return; }            // game start: just begin, no descent
+    // the engine cues the "descend" sound on the stairs action itself; here we
+    // just cross-fade the music between levels.
+    fadeTo(0, 700, () => { apply(id); if (!muted) fadeTo(musicVol, 900); });
+  };
+
+  function unlock() { if (!unlocked) { unlocked = true; play(); } resumeSfx(); }
+  document.addEventListener("keydown", unlock);
+  document.addEventListener("click", unlock);
+
+  function render() {
+    btn.textContent = muted ? "♪ off" : "♪ on";
+    btn.classList.toggle("on", !muted);
+  }
+  function toggle() {
+    muted = !muted;
+    localStorage.setItem("tsl-muted", muted ? "1" : "0");
+    if (muted) audio.pause(); else { unlocked = true; audio.volume = musicVol; play(); }
+    render();
+  }
+  if (vol) vol.addEventListener("input", () => {
+    musicVol = (parseInt(vol.value, 10) || 0) / 100;
+    localStorage.setItem("tsl-vol", String(musicVol));
+    if (!fadeTimer) audio.volume = musicVol;     // don't fight an in-progress fade
+  });
+  // ---- sound effects (Web Audio synthesis; no asset files) ---------------
+  let actx = null;
+  function audioCtx() {
+    if (!actx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      try { actx = new AC(); } catch (e) { return null; }
+    }
+    if (actx.state === "suspended") actx.resume().catch(() => {});
+    return actx;
+  }
+  function resumeSfx() { if (actx && actx.state === "suspended") actx.resume().catch(() => {}); }
+
+  const SFX_GAIN = 0.35;
+  function env(ctx, t0, dur, peak) {                 // short attack/decay gain envelope
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(Math.max(peak, 0.0002), t0 + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    g.connect(ctx.destination);
+    return g;
+  }
+  function tone(ctx, t0, o) {                          // an oscillator blip, optional pitch glide
+    const osc = ctx.createOscillator();
+    osc.type = o.type || "sine";
+    osc.frequency.setValueAtTime(o.f0, t0);
+    if (o.f1 && o.f1 !== o.f0) osc.frequency.exponentialRampToValueAtTime(Math.max(o.f1, 1), t0 + o.dur);
+    osc.connect(env(ctx, t0, o.dur, (o.gain || 0.2) * SFX_GAIN));
+    osc.start(t0); osc.stop(t0 + o.dur + 0.02);
+  }
+  function noise(ctx, t0, o) {                          // filtered white-noise burst
+    const n = Math.max(1, Math.floor(ctx.sampleRate * o.dur));
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const flt = ctx.createBiquadFilter();
+    flt.type = o.type || "bandpass";
+    flt.frequency.setValueAtTime(o.freq, t0);
+    flt.Q.value = o.q || 1;
+    if (o.f1) flt.frequency.exponentialRampToValueAtTime(Math.max(o.f1, 1), t0 + o.dur);
+    src.connect(flt); flt.connect(env(ctx, t0, o.dur, (o.gain || 0.2) * SFX_GAIN));
+    src.start(t0); src.stop(t0 + o.dur + 0.02);
+  }
+
+  const sfx = {
+    step:   (c, t) => noise(c, t, { dur: 0.06, gain: 0.12, type: "lowpass", freq: 380 }),
+    splash: (c, t) => { noise(c, t, { dur: 0.28, gain: 0.4, type: "bandpass", freq: 1400, f1: 500, q: 0.7 }); tone(c, t, { type: "sine", f0: 700, f1: 240, dur: 0.18, gain: 0.12 }); },
+    swoosh: (c, t) => noise(c, t, { dur: 0.16, gain: 0.35, type: "bandpass", freq: 700, f1: 2600, q: 0.6 }),
+    hit:    (c, t) => { noise(c, t, { dur: 0.10, gain: 0.5, type: "lowpass", freq: 2200 }); tone(c, t, { type: "triangle", f0: 180, f1: 70, dur: 0.12, gain: 0.4 }); },
+    hurt:   (c, t) => { tone(c, t, { type: "sawtooth", f0: 220, f1: 80, dur: 0.22, gain: 0.32 }); noise(c, t, { dur: 0.16, gain: 0.25, type: "lowpass", freq: 900 }); },
+    death:  (c, t) => { tone(c, t, { type: "square", f0: 300, f1: 60, dur: 0.34, gain: 0.26 }); noise(c, t, { dur: 0.3, gain: 0.2, type: "lowpass", freq: 1200 }); },
+    pickup: (c, t) => { tone(c, t, { type: "square", f0: 520, dur: 0.06, gain: 0.22 }); tone(c, t + 0.07, { type: "square", f0: 780, dur: 0.08, gain: 0.22 }); },
+    pickup_potion: (c, t) => [660, 880, 1170].forEach((f, i) => tone(c, t + i * 0.06, { type: "sine", f0: f, dur: 0.12, gain: 0.2 })),
+    pickup_weapon: (c, t) => { tone(c, t, { type: "triangle", f0: 1200, f1: 900, dur: 0.22, gain: 0.28 }); tone(c, t, { type: "triangle", f0: 1810, f1: 1500, dur: 0.22, gain: 0.14 }); },
+    eat:    (c, t) => { noise(c, t, { dur: 0.08, gain: 0.3, type: "lowpass", freq: 600 }); noise(c, t + 0.12, { dur: 0.08, gain: 0.28, type: "lowpass", freq: 520 }); },
+    quaff:  (c, t) => [320, 300, 360, 280].forEach((f, i) => tone(c, t + i * 0.07, { type: "sine", f0: f, f1: f * 0.8, dur: 0.09, gain: 0.22 })),
+    read:   (c, t) => noise(c, t, { dur: 0.18, gain: 0.18, type: "highpass", freq: 2600 }),
+    equip:  (c, t) => { noise(c, t, { dur: 0.12, gain: 0.22, type: "bandpass", freq: 2000, q: 0.8 }); tone(c, t + 0.02, { type: "triangle", f0: 900, f1: 1200, dur: 0.1, gain: 0.16 }); },
+    descend: (c, t) => { [392, 330, 294, 247, 196].forEach((f, i) => tone(c, t + i * 0.10, { type: "triangle", f0: f, f1: f * 0.98, dur: 0.16, gain: 0.24 })); noise(c, t + 0.5, { dur: 0.18, gain: 0.18, type: "lowpass", freq: 500 }); },
+    zap:    (c, t) => { tone(c, t, { type: "sawtooth", f0: 880, f1: 220, dur: 0.18, gain: 0.30 }); noise(c, t, { dur: 0.18, gain: 0.20, type: "bandpass", freq: 3200, f1: 800, q: 1.2 }); },
+    cast:   (c, t) => { noise(c, t, { dur: 0.30, gain: 0.16, type: "bandpass", freq: 600, f1: 3600, q: 0.6 }); [523, 659, 784, 1047].forEach((f, i) => tone(c, t + 0.045 * i, { type: "sine", f0: f, dur: 0.20, gain: 0.12 })); },
+    door:   (c, t) => { tone(c, t, { type: "sawtooth", f0: 140, f1: 90, dur: 0.32, gain: 0.16 }); noise(c, t, { dur: 0.34, gain: 0.18, type: "lowpass", freq: 700 }); },
+  };
+
+  window.tslPlaySfx = function (id) {
+    if (muted) return;
+    const fn = sfx[id];
+    if (!fn) return;
+    const ctx = audioCtx();
+    if (ctx) fn(ctx, ctx.currentTime + 0.001);
+  };
+
+  // Torch ambience: an occasional soft crackle once a level is underway.
+  setInterval(() => {
+    if (muted || !unlocked || !level || Math.random() < 0.5) return;
+    const ctx = audioCtx();
+    if (!ctx) return;
+    noise(ctx, ctx.currentTime + Math.random() * 0.2,
+      { dur: 0.05 + Math.random() * 0.05, gain: 0.05, type: "bandpass", freq: 1600 + Math.random() * 1200, q: 0.5 });
+  }, 1100);
+
+  btn.addEventListener("click", toggle);
+  document.addEventListener("keydown", e => { if (e.key === "m" || e.key === "M") toggle(); });
+  render();
+})();
+</script>
 <script src="wasm_exec.js"></script>
 <script>
   const go = new Go();

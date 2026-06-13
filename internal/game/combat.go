@@ -116,6 +116,7 @@ func (g *Game) PlayerStep(d Direction) {
 			// already fired regardless, the C's trap_win exception.
 			g.springTrapAt(g.Player)
 		}
+		g.Sound("step")
 	} else if g.revealSecretDoor(dst) { // the discovering bump costs the turn
 		acted = true
 	} else if g.bumpLockedDoor(dst) {
@@ -129,6 +130,7 @@ func (g *Game) PlayerStep(d Direction) {
 		// Deep water and lava turn away a sighted walker; the blinded blunder
 		// in and floaters drift across (C move_creature).
 		g.Player = dst
+		g.Sound("splash")
 		acted = true
 	}
 	if acted { // a blocked move into a wall doesn't pass the turn
@@ -210,6 +212,7 @@ func (g *Game) playerAttacks(m *Creature) {
 	if g.revealMimic(m) {
 		return // turn wasted! (C combat.c:237)
 	}
+	g.Sound("swoosh") // the swing, whether or not it lands
 	if !g.RNG.Chance(g.playerAttackStat(), m.Def.Dodge) {
 		g.log("You miss the %s.", m.Def.Name)
 		return
@@ -218,6 +221,7 @@ func (g *Game) playerAttacks(m *Creature) {
 	dmg := g.RNG.RollSpec(g.playerDamageSpec())
 	m.HP -= dmg
 	g.log("You hit the %s for %d.", m.Def.Name, dmg)
+	g.Sound("hit")
 	if m.HP <= 0 {
 		g.killCreature(m)
 	}
@@ -228,6 +232,7 @@ func (g *Game) playerAttacks(m *Creature) {
 // keeps every kill site (player now, hazards later) dropping corpses consistently.
 func (g *Game) killCreature(m *Creature) {
 	g.log("The %s dies.", m.Def.Name)
+	g.Sound("death")
 	if m.Def.Corpse != "" && g.Content != nil {
 		if def, ok := g.Content.Items[m.Def.Corpse]; ok {
 			g.Level.Items = append(g.Level.Items, &Item{Def: def, Pos: m.Pos})
@@ -250,6 +255,7 @@ func (g *Game) ZapWand(it *Item, target Pos) {
 		return
 	}
 	it.Charges--
+	g.Sound("zap")
 	g.identify(it) // zapping a wand reveals its type
 	if m := g.Level.CreatureAt(target); m != nil {
 		g.revealMimic(m) // a bolt tears the glamour (C reveal_mimic)
@@ -257,6 +263,7 @@ func (g *Game) ZapWand(it *Item, target Pos) {
 			dmg := g.RNG.RollSpec(it.Def.Damage)
 			m.HP -= dmg
 			g.log("The %s blasts the %s for %d.", it.Def.Name, m.Def.Name, dmg)
+			g.Sound("hit")
 		}
 		if m.HP <= 0 {
 			g.killCreature(m)
@@ -300,6 +307,7 @@ func (g *Game) rangedAttack(m *Creature) {
 // recorded cause), so melee and ranged attacks share one death path.
 func (g *Game) HurtPlayer(dmg int, cause string) {
 	g.PlayerHP -= dmg
+	g.Sound("hurt")
 	if g.PlayerHP <= 0 {
 		g.PlayerHP = 0
 		g.Dead = true
