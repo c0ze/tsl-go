@@ -24,6 +24,7 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           persist-credentials: false
+          fetch-depth: 0 # need full history + tags to build /original from v0.40.1
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version-file: go.mod
@@ -36,6 +37,15 @@ jobs:
           GOOS=js GOARCH=wasm go build -trimpath -ldflags "-s -w" \
             -o _site/tsl-go.wasm ./cmd/tsl-wasm
           ls -l _site/
+      - name: Build the original 0.40.1 at /original
+        run: |
+          mkdir -p _site/original
+          git worktree add "$RUNNER_TEMP/orig" v0.40.1
+          GOOS=js GOARCH=wasm go build -C "$RUNNER_TEMP/orig" -trimpath -ldflags "-s -w" \
+            -o "$GITHUB_WORKSPACE/_site/original/tsl-go.wasm" ./cmd/tsl-wasm
+          cp "$RUNNER_TEMP/orig/web/index.html" _site/original/index.html
+          cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" _site/original/
+          ls -l _site/original/
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: _site
