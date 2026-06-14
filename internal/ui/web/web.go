@@ -97,12 +97,13 @@ func (sc *Screen) sendGrid(v ui.View, cx, cy int) {
 	}
 	n := v.W * v.H
 	color := make([]byte, n)
+	bcolor := make([]byte, n)
 	light := make([]byte, n)
 	dim := make([]byte, n)
-	var sb strings.Builder
+	var top, base strings.Builder
 	for i := range v.Cells {
 		c := v.Cells[i]
-		sb.WriteRune(c.Glyph)
+		top.WriteRune(c.Glyph)
 		color[i] = byte(ui.ColorIndex(c.Color))
 		l := c.Light
 		if l < 0 {
@@ -114,8 +115,14 @@ func (sc *Screen) sendGrid(v ui.View, cx, cy int) {
 		if c.Dim {
 			dim[i] = 1
 		}
+		b := c // the terrain beneath; falls back to the top cell when no base layer
+		if i < len(v.Base) {
+			b = v.Base[i]
+		}
+		base.WriteRune(b.Glyph)
+		bcolor[i] = byte(ui.ColorIndex(b.Color))
 	}
-	fn.Invoke(v.W, v.H, sb.String(), toU8(color), toU8(light), toU8(dim), cx, cy)
+	fn.Invoke(v.W, v.H, top.String(), toU8(color), base.String(), toU8(bcolor), toU8(light), toU8(dim), cx, cy)
 }
 
 // toU8 copies a Go byte slice into a fresh JS Uint8Array.

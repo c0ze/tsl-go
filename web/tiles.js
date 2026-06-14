@@ -143,7 +143,7 @@
 
   function draw() {
     if (!tiles || !G || !ready) return;
-    var w = G.w, h = G.h, g = G.g, color = G.color, light = G.light, dim = G.dim;
+    var w = G.w, h = G.h, g = G.g, color = G.color, bg = G.bg, bcolor = G.bcolor, light = G.light, dim = G.dim;
     // The player is the single fully-lit cell (light 255 only at distance 0);
     // centre a window on it so tiles render large and the camera follows.
     var pcx = w >> 1, pcy = h >> 1;
@@ -162,19 +162,23 @@
     for (var vy = 0; vy < vh; vy++) {
       for (var vx = 0; vx < vw; vx++) {
         var gx = ox + vx, gy = oy + vy, i = gy * w + gx;
-        var glyph = g[i];
-        if (glyph === " " || glyph === undefined) continue; // unseen
+        var tg = g[i];                                      // top (composited) glyph
+        if (tg === " " || tg === undefined) continue;       // unseen
+        var bgl = (bg && bg[i] !== undefined) ? bg[i] : tg; // terrain beneath
         var px = vx * TILE, py = vy * TILE;
-        var t = terrainFor(glyph, color[i]);
+        var t = terrainFor(bgl, bcolor[i]);
         if (t && atlas[t]) {
           ctx.drawImage(atlas[t], px, py, TILE, TILE);
-          if (t === "wall") drawWallEdges(px, py, glyph);
+          if (t === "wall") drawWallEdges(px, py, bgl);
         } else {
           if (atlas.floor) ctx.drawImage(atlas.floor, px, py, TILE, TILE);
           else { ctx.fillStyle = "#2a251d"; ctx.fillRect(px, py, TILE, TILE); }
-          var e = entityFor(glyph);
+          if (tg === bgl) { ctx.fillStyle = PAL[bcolor[i]] || PAL[0]; ctx.fillText(bgl, px + TILE / 2, py + TILE / 2 + 1); } // un-tiled terrain (trap/altar)
+        }
+        if (tg !== bgl) {                                   // an entity sits on the terrain
+          var e = entityFor(tg);
           if (e && atlas[e]) ctx.drawImage(atlas[e], px, py, TILE, TILE);
-          else { ctx.fillStyle = PAL[color[i]] || PAL[0]; ctx.fillText(glyph, px + TILE / 2, py + TILE / 2 + 1); }
+          else { ctx.fillStyle = PAL[color[i]] || PAL[0]; ctx.fillText(tg, px + TILE / 2, py + TILE / 2 + 1); }
         }
         var bri, ov;
         if (dim[i] === 1) { bri = 0.34; ov = "28,34,46"; }    // remembered: cool + dark
@@ -189,8 +193,8 @@
     }
   }
 
-  window.tslGrid = function (w, h, str, color, light, dim, cx, cy) {
-    G = { w: w, h: h, g: Array.from(str), color: color, light: light, dim: dim, cx: cx, cy: cy };
+  window.tslGrid = function (w, h, top, color, base, bcolor, light, dim, cx, cy) {
+    G = { w: w, h: h, g: Array.from(top), color: color, bg: Array.from(base), bcolor: bcolor, light: light, dim: dim, cx: cx, cy: cy };
     draw();
   };
 

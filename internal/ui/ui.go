@@ -28,6 +28,7 @@ type View struct {
 	Messages []string
 	LevelID  string   // current level id; front-ends that key off it (web music) use this
 	Sounds   []string // per-turn sound-effect cues; front-ends that support it (web SFX) play them
+	Base     []Cell   // terrain-only layer (entities are composited into Cells); web tiles draw terrain under entities
 }
 
 // At returns a pointer to the cell at (x, y), which must be in bounds
@@ -157,6 +158,7 @@ func BuildView(g *game.Game) View {
 			}
 		}
 	}
+	v.Base = append([]Cell(nil), v.Cells...) // snapshot the terrain before entities composite on top
 	for _, it := range l.Items {
 		if l.InBounds(it.Pos) && l.At(it.Pos).Visible {
 			paint(v.At(it.Pos.X, it.Pos.Y), it.Def.Rune(), it.Def.Color)
