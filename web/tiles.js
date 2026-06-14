@@ -80,7 +80,21 @@
     m_technician: S + '<path d="M40,42 L60,42 L57,76 L43,76 Z" fill="#6a6862" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><line x1="58" y1="48" x2="72" y2="38" stroke="#6a6862" stroke-width="6" stroke-linecap="round"/><rect x="68" y="30" width="8" height="12" rx="2" fill="#c89a2e" stroke="#16100a" stroke-width="2"/><circle cx="50" cy="30" r="10" fill="#8a8884" stroke="#16100a" stroke-width="3"/><rect x="42" y="26" width="16" height="6" rx="2" fill="#4a90d9" stroke="#16100a" stroke-width="1.5"/></svg>',
     m_gaoler: S + '<path d="M36,40 Q50,32 64,40 L60,78 Q50,84 40,78 Z" fill="#5a5854" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><circle cx="50" cy="28" r="11" fill="#8a8884" stroke="#16100a" stroke-width="3"/><circle cx="46" cy="28" r="2" fill="#161009"/><circle cx="54" cy="28" r="2" fill="#161009"/><circle cx="70" cy="58" r="6" fill="none" stroke="#c89a2e" stroke-width="3"/><line x1="70" y1="62" x2="70" y2="74" stroke="#c89a2e" stroke-width="3"/><line x1="70" y1="68" x2="75" y2="68" stroke="#c89a2e" stroke-width="2.5"/></svg>',
     m_horror: S + '<path d="M24,58 Q20,38 38,36 Q44,22 56,32 Q74,28 76,48 Q86,56 74,68 Q70,80 56,72 Q48,82 38,72 Q24,72 24,58 Z" fill="#6a2a6a" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><circle cx="40" cy="50" r="4" fill="#e0a0f0"/><circle cx="58" cy="46" r="4" fill="#e0a0f0"/><circle cx="50" cy="62" r="3" fill="#e0a0f0"/><g stroke="#9a4a9a" stroke-width="3" stroke-linecap="round"><line x1="30" y1="66" x2="26" y2="78"/><line x1="56" y1="70" x2="58" y2="82"/></g></svg>',
-    m_lurker: S + '<path d="M26,56 Q22,40 40,40 Q50,28 60,40 Q78,40 74,56 Q78,70 62,68 Q50,74 38,68 Q22,70 26,56 Z" fill="#3a6a3a" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><g stroke="#2a5a2a" stroke-width="5" stroke-linecap="round"><path d="M38,68 Q34,80 40,84"/><path d="M50,70 Q50,82 54,86"/><path d="M62,68 Q66,80 60,84"/></g><circle cx="42" cy="50" r="4" fill="#ffd24a"/><circle cx="58" cy="50" r="4" fill="#ffd24a"/><circle cx="42" cy="50" r="1.8" fill="#161009"/><circle cx="58" cy="50" r="1.8" fill="#161009"/></svg>'
+    m_lurker: S + '<path d="M26,56 Q22,40 40,40 Q50,28 60,40 Q78,40 74,56 Q78,70 62,68 Q50,74 38,68 Q22,70 26,56 Z" fill="#3a6a3a" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><g stroke="#2a5a2a" stroke-width="5" stroke-linecap="round"><path d="M38,68 Q34,80 40,84"/><path d="M50,70 Q50,82 54,86"/><path d="M62,68 Q66,80 60,84"/></g><circle cx="42" cy="50" r="4" fill="#ffd24a"/><circle cx="58" cy="50" r="4" fill="#ffd24a"/><circle cx="42" cy="50" r="1.8" fill="#161009"/><circle cx="58" cy="50" r="1.8" fill="#161009"/></svg>',
+    i_amulet: S + '<path d="M36,30 Q50,46 64,30" stroke="#c89a2e" stroke-width="2.5" fill="none"/><line x1="50" y1="40" x2="50" y2="46" stroke="#c89a2e" stroke-width="3"/><circle cx="50" cy="56" r="13" fill="#c060c0" stroke="#16100a" stroke-width="3"/><circle cx="50" cy="56" r="6" fill="#e0a0f0"/></svg>',
+    i_ammo: S + '<g stroke="#6a4a2a" stroke-width="3" stroke-linecap="round"><line x1="36" y1="70" x2="56" y2="34"/><line x1="44" y1="72" x2="64" y2="36"/></g><polygon points="56,34 49,39 59,42" fill="#ccd2dc" stroke="#16100a" stroke-width="1.2"/><polygon points="64,36 57,41 67,44" fill="#ccd2dc" stroke="#16100a" stroke-width="1.2"/><g stroke="#a8763a" stroke-width="2"><line x1="36" y1="70" x2="31" y2="66"/><line x1="36" y1="70" x2="40" y2="75"/></g></svg>',
+    i_cloak: S + '<path d="M50,30 Q34,34 32,72 Q40,66 44,74 Q50,66 50,76 Q50,66 56,74 Q60,66 68,72 Q66,34 50,30 Z" fill="#3a3640" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><circle cx="50" cy="34" r="5" fill="#c89a2e" stroke="#16100a" stroke-width="1.5"/></svg>',
+    i_head: S + '<path d="M30,56 Q30,30 50,30 Q70,30 70,56 L66,56 Q64,42 50,42 Q36,42 34,56 Z" fill="#9aa0aa" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><rect x="30" y="54" width="40" height="8" rx="2" fill="#7a808a" stroke="#16100a" stroke-width="2"/><line x1="50" y1="30" x2="50" y2="42" stroke="#c89a2e" stroke-width="3"/></svg>',
+    i_tool: S + '<line x1="34" y1="68" x2="64" y2="34" stroke="#16100a" stroke-width="6" stroke-linecap="round"/><line x1="34" y1="68" x2="64" y2="34" stroke="#8a8884" stroke-width="3.5" stroke-linecap="round"/><path d="M60,30 Q70,28 70,38" stroke="#8a8884" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="34" cy="68" r="5" fill="#6a4a2a" stroke="#16100a" stroke-width="2"/></svg>',
+    trap: S + '<rect width="100" height="100" fill="#3f3a2e"/><rect x="5" y="5" width="90" height="90" rx="4" fill="#494235"/><circle cx="28" cy="30" r="4" fill="#1a1610"/><circle cx="72" cy="30" r="4" fill="#1a1610"/><g fill="#9a9890" stroke="#16100a" stroke-width="2" stroke-linejoin="round"><polygon points="28,72 34,42 40,72"/><polygon points="46,74 52,40 58,74"/><polygon points="62,72 68,44 74,72"/></g></svg>',
+    altar: S + '<rect width="100" height="100" fill="#3f3a2e"/><ellipse cx="50" cy="84" rx="30" ry="6" fill="#16100a" opacity="0.4"/><path d="M34,60 L66,60 L62,88 L38,88 Z" fill="#8c8270" stroke="#5e5747" stroke-width="2" stroke-linejoin="round"/><rect x="30" y="52" width="40" height="9" rx="2" fill="#a89c84"/><circle cx="50" cy="34" r="14" fill="#2f8f99" opacity="0.45"/><polygon points="50,20 62,34 50,48 38,34" fill="#7fe0e8" stroke="#cffaff" stroke-width="1.5"/></svg>',
+    m_snake_e: S + '<path d="M22,74 Q52,74 50,48 Q48,28 70,28" stroke="#16100a" stroke-width="13" fill="none" stroke-linecap="round"/><path d="M22,74 Q52,74 50,48 Q48,28 70,28" stroke="#3fb6c4" stroke-width="9" fill="none" stroke-linecap="round"/><circle cx="72" cy="28" r="10" fill="#3fb6c4" stroke="#16100a" stroke-width="2.5"/><circle cx="76" cy="25" r="2" fill="#ffff80"/><path d="M28,62 l9,-7 l-4,-1 l8,-7" stroke="#ffff80" stroke-width="2" fill="none"/></svg>',
+    m_brain: S + '<path d="M30,50 Q26,36 40,34 Q44,26 54,32 Q70,30 72,44 Q80,52 70,60 Q72,72 58,68 Q48,76 40,66 Q28,64 30,50 Z" fill="#c878c8" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><g stroke="#8a3a8a" stroke-width="2" fill="none"><path d="M50,34 Q48,50 50,66"/><path d="M38,40 Q46,48 40,58"/><path d="M62,40 Q54,48 60,58"/></g><g stroke="#9a4a9a" stroke-width="3" stroke-linecap="round"><line x1="40" y1="68" x2="36" y2="80"/><line x1="60" y1="68" x2="64" y2="80"/></g></svg>',
+    m_chainsaw: S + '<rect x="58" y="44" width="26" height="9" rx="2" fill="#8a8884" stroke="#16100a" stroke-width="2"/><rect x="80" y="42" width="10" height="13" rx="2" fill="#c0402a" stroke="#16100a" stroke-width="2"/><g stroke="#16100a" stroke-width="1.5"><line x1="62" y1="44" x2="63" y2="53"/><line x1="68" y1="44" x2="69" y2="53"/><line x1="74" y1="44" x2="75" y2="53"/></g><path d="M30,40 Q48,34 64,40 L60,76 Q48,82 36,76 Z" fill="#a32d2d" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><circle cx="46" cy="28" r="12" fill="#c0402a" stroke="#16100a" stroke-width="3"/><circle cx="42" cy="28" r="2.5" fill="#ffd24a"/><circle cx="50" cy="28" r="2.5" fill="#ffd24a"/></svg>',
+    m_flame: S + '<path d="M50,80 Q34,64 42,48 Q36,52 38,40 Q44,46 48,32 Q52,18 56,34 Q60,46 64,42 Q66,54 60,52 Q70,66 50,80 Z" fill="#d6504a" stroke="#16100a" stroke-width="2.5" stroke-linejoin="round"/><path d="M50,76 Q42,64 48,52 Q52,42 54,52 Q60,62 50,76 Z" fill="#ffae3a"/><circle cx="45" cy="50" r="2.5" fill="#fffff0"/><circle cx="56" cy="50" r="2.5" fill="#fffff0"/></svg>',
+    m_sludge: S + '<path d="M22,68 Q18,44 50,42 Q82,44 78,68 Q70,74 64,70 Q58,76 50,72 Q42,76 36,70 Q28,74 22,68 Z" fill="#7a5a2c" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><ellipse cx="40" cy="52" rx="10" ry="5" fill="#9a7a44" opacity="0.6"/><circle cx="43" cy="58" r="4" fill="#c8b890" stroke="#16100a" stroke-width="1.5"/><circle cx="59" cy="58" r="4" fill="#c8b890" stroke="#16100a" stroke-width="1.5"/><circle cx="43" cy="58" r="1.6" fill="#1a1208"/><circle cx="59" cy="58" r="1.6" fill="#1a1208"/></svg>',
+    m_worms: S + '<g stroke="#c87a6a" stroke-width="6" fill="none" stroke-linecap="round"><path d="M34,78 Q30,56 44,52"/><path d="M50,80 Q48,56 50,46"/><path d="M66,78 Q70,56 56,52"/><path d="M40,74 Q34,60 46,58"/></g><circle cx="50" cy="44" r="13" fill="#d8968a" stroke="#16100a" stroke-width="3"/><polygon points="38,34 42,24 46,32 50,22 54,32 58,24 62,34" fill="#e8c34a" stroke="#16100a" stroke-width="2" stroke-linejoin="round"/><circle cx="45" cy="46" r="2" fill="#161009"/><circle cx="55" cy="46" r="2" fill="#161009"/></svg>',
+    m_hand: S + '<path d="M34,64 Q34,52 42,52 L42,40 Q42,34 47,34 Q47,30 51,30 Q51,32 55,32 Q55,28 59,30 Q63,34 62,46 Q70,48 68,58 Q66,70 50,72 Q38,72 34,64 Z" fill="#d8c0a8" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><g stroke="#16100a" stroke-width="1.5" fill="none"><path d="M47,34 L47,52"/><path d="M51,30 L51,50"/><path d="M55,32 L55,50"/></g><rect x="34" y="64" width="14" height="8" fill="#a32d2d" stroke="#16100a" stroke-width="2"/></svg>'
   };
   var atlas = {};
   var ready = false;
@@ -106,7 +120,8 @@
     if (glyph === "+" && colorIdx === 1) return "door";
     if (glyph === "'" && colorIdx === 1) return "door_open";
     if (glyph === ">") return "stairs";
-    if (glyph === "^" && colorIdx === 1) return "lava"; // brown ^ = lava
+    if (glyph === "_") return "altar";
+    if (glyph === "^") return colorIdx === 1 ? "lava" : "trap"; // brown ^ = lava, else a trap
     return null;
   }
 
@@ -122,9 +137,21 @@
     "W": "m_wraith", "d": "m_direwolf", "h": "m_hellhound", "f": "m_frostling", "p": "m_goatman",
     "l": "m_tentacle", "Y": "m_toad", "q": "m_burnskull", "m": "m_mimic", "N": "m_necromancer",
     "E": "m_mummylich", "A": "m_angel",
-    "K": "m_gloomlord", "e": "m_sentinel", "t": "m_technician", "G": "m_gaoler", "H": "m_horror", "L": "m_lurker"
+    "K": "m_gloomlord", "e": "m_sentinel", "t": "m_technician", "G": "m_gaoler", "H": "m_horror", "L": "m_lurker",
+    "\\": "i_amulet", ":": "i_ammo", "(": "i_cloak", "]": "i_head", "'": "i_tool"
   };
-  function entityFor(glyph) { return ENTITY[glyph] || null; }
+  function entityFor(glyph, c) {
+    switch (glyph) { // colour-gated variants where one glyph means two creatures
+      case "S": return c === 5 ? "m_snake_e" : "m_snake";  // cyan electric / green cave
+      case "b": return c === 6 ? "m_brain" : "m_bat";       // magenta brain / cyan bat
+      case "O": return c === 3 ? "m_chainsaw" : "m_ogre";   // red chainsaw / brown ogre
+      case "j": return c === 3 ? "m_flame" : "m_jackal";    // red flame spirit / brown jackal
+      case "s": return c === 1 ? "m_sludge" : "m_skeleton"; // brown sludge / normal skeleton
+      case "W": return c === 0 ? "m_worms" : "m_wraith";    // normal worms / magenta wraith
+      case "p": return c === 0 ? "m_hand" : "m_goatman";    // normal hand / brown goatman
+    }
+    return ENTITY[glyph] || null;
+  }
 
   // The autotiling glyph encodes which neighbours are walls; the open sides are
   // the rest. Shading those edges makes wall masses read as connected stone.
@@ -176,7 +203,7 @@
           if (tg === bgl) { ctx.fillStyle = PAL[bcolor[i]] || PAL[0]; ctx.fillText(bgl, px + TILE / 2, py + TILE / 2 + 1); } // un-tiled terrain (trap/altar)
         }
         if (tg !== bgl) {                                   // an entity sits on the terrain
-          var e = entityFor(tg);
+          var e = entityFor(tg, color[i]);
           if (e && atlas[e]) ctx.drawImage(atlas[e], px, py, TILE, TILE);
           else { ctx.fillStyle = PAL[color[i]] || PAL[0]; ctx.fillText(tg, px + TILE / 2, py + TILE / 2 + 1); }
         }
