@@ -3,9 +3,11 @@
 [![CI](https://github.com/c0ze/tsl-go/actions/workflows/ci.yml/badge.svg)](https://github.com/c0ze/tsl-go/actions/workflows/ci.yml)
 
 A faithful Go port of **The Slimy Lichmummy 0.40**, Ulf Åström's terminal
-roguelike. The goal is full feature parity with the original — it should look
-and play like 0.40 — ported mechanic by mechanic from the C source, which is
-preserved untouched in [`tsl-0.40/`](tsl-0.40/) as the reference.
+roguelike. The goal is full feature parity with the original — it should play
+exactly like 0.40 — ported mechanic by mechanic from the C source, which is
+preserved untouched in [`tsl-0.40/`](tsl-0.40/) as the reference. The
+presentation gets a modern coat of paint; the plain original look is kept at
+[`/original`](https://tsl.coze.org/original).
 
 Descend the dungeon graph, identify potions the hard way, cross the Drowned
 City's pools by levitation or fins, learn spells from books that sometimes
@@ -24,13 +26,20 @@ manual of camouflage) is deliberately absent, catalogued for a possible 0.41.
 ## Play
 
 **In the browser: <https://tsl.coze.org>** — the same engine compiled to
-WebAssembly, saves in localStorage. Or natively:
+WebAssembly, saves in localStorage. The web build adds what a terminal can't:
+per-level background music, synthesized sound effects, and a **Tiles** button
+that swaps the ASCII map for a graphic tileset (torch-lit, with a camera that
+follows you). The plain 0.40.1 build — before the visuals and audio — is kept
+at **<https://tsl.coze.org/original>**. Or play natively:
 
 ```sh
 go run ./cmd/tsl          # or grab a release binary, no install needed
 ```
 
-Standalone executables for Linux, macOS, and Windows are attached to every
+The terminal renders in truecolour: box-drawing walls, deep-water and lava
+glyphs, and a graded field of view that pools warm torchlight around you and
+fades the rest to remembered shadow. Standalone executables for Linux, macOS,
+and Windows are attached to every
 [release](https://github.com/c0ze/tsl-go/releases).
 
 ### Keys
@@ -47,6 +56,9 @@ Standalone executables for Linux, macOS, and Windows are attached to every
 Saving writes `~/.tsl-save.json` and exits; the next launch resumes and
 deletes the savefile — saving is a free action, and there is no save-scumming.
 
+In the browser, **m** mutes the music (a volume slider sits beside it) and the
+**Tiles** button switches between the ASCII and graphic renderers.
+
 ## Develop
 
 ```sh
@@ -54,7 +66,9 @@ go test ./...   # the whole suite; every mechanic is grounded in the C source
 go vet ./...
 ```
 
-- `cmd/tsl/` — terminal front-end (tcell).
+- `cmd/tsl/` — terminal front-end (tcell); `cmd/tsl-wasm/` + `web/` — the
+  browser build (WebAssembly), with the music/SFX controllers and the canvas
+  tile renderer in `web/`.
 - `internal/game/` — the I/O-free engine: scheduler, combat, effects,
   hazards, save/load.
 - `internal/behaviors/` — named item/spell effects, injected by `cmd` so the
