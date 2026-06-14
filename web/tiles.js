@@ -94,7 +94,12 @@
     m_flame: S + '<path d="M50,80 Q34,64 42,48 Q36,52 38,40 Q44,46 48,32 Q52,18 56,34 Q60,46 64,42 Q66,54 60,52 Q70,66 50,80 Z" fill="#d6504a" stroke="#16100a" stroke-width="2.5" stroke-linejoin="round"/><path d="M50,76 Q42,64 48,52 Q52,42 54,52 Q60,62 50,76 Z" fill="#ffae3a"/><circle cx="45" cy="50" r="2.5" fill="#fffff0"/><circle cx="56" cy="50" r="2.5" fill="#fffff0"/></svg>',
     m_sludge: S + '<path d="M22,68 Q18,44 50,42 Q82,44 78,68 Q70,74 64,70 Q58,76 50,72 Q42,76 36,70 Q28,74 22,68 Z" fill="#7a5a2c" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><ellipse cx="40" cy="52" rx="10" ry="5" fill="#9a7a44" opacity="0.6"/><circle cx="43" cy="58" r="4" fill="#c8b890" stroke="#16100a" stroke-width="1.5"/><circle cx="59" cy="58" r="4" fill="#c8b890" stroke="#16100a" stroke-width="1.5"/><circle cx="43" cy="58" r="1.6" fill="#1a1208"/><circle cx="59" cy="58" r="1.6" fill="#1a1208"/></svg>',
     m_worms: S + '<g stroke="#c87a6a" stroke-width="6" fill="none" stroke-linecap="round"><path d="M34,78 Q30,56 44,52"/><path d="M50,80 Q48,56 50,46"/><path d="M66,78 Q70,56 56,52"/><path d="M40,74 Q34,60 46,58"/></g><circle cx="50" cy="44" r="13" fill="#d8968a" stroke="#16100a" stroke-width="3"/><polygon points="38,34 42,24 46,32 50,22 54,32 58,24 62,34" fill="#e8c34a" stroke="#16100a" stroke-width="2" stroke-linejoin="round"/><circle cx="45" cy="46" r="2" fill="#161009"/><circle cx="55" cy="46" r="2" fill="#161009"/></svg>',
-    m_hand: S + '<path d="M34,64 Q34,52 42,52 L42,40 Q42,34 47,34 Q47,30 51,30 Q51,32 55,32 Q55,28 59,30 Q63,34 62,46 Q70,48 68,58 Q66,70 50,72 Q38,72 34,64 Z" fill="#d8c0a8" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><g stroke="#16100a" stroke-width="1.5" fill="none"><path d="M47,34 L47,52"/><path d="M51,30 L51,50"/><path d="M55,32 L55,50"/></g><rect x="34" y="64" width="14" height="8" fill="#a32d2d" stroke="#16100a" stroke-width="2"/></svg>'
+    m_hand: S + '<path d="M34,64 Q34,52 42,52 L42,40 Q42,34 47,34 Q47,30 51,30 Q51,32 55,32 Q55,28 59,30 Q63,34 62,46 Q70,48 68,58 Q66,70 50,72 Q38,72 34,64 Z" fill="#d8c0a8" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><g stroke="#16100a" stroke-width="1.5" fill="none"><path d="M47,34 L47,52"/><path d="M51,30 L51,50"/><path d="M55,32 L55,50"/></g><rect x="34" y="64" width="14" height="8" fill="#a32d2d" stroke="#16100a" stroke-width="2"/></svg>',
+    floor_1: S + '<rect width="100" height="100" fill="#3f3a2e"/><rect x="3" y="3" width="94" height="94" rx="4" fill="#565041"/><g stroke="#44402f" stroke-width="2" fill="none"><path d="M20,10 L34,40 L18,64 L40,90"/><path d="M70,8 L60,38 L78,60 L66,92"/></g><circle cx="48" cy="52" r="3" fill="#615a48"/><circle cx="76" cy="30" r="2" fill="#615a48"/></svg>',
+    floor_2: S + '<rect width="100" height="100" fill="#3f3a2e"/><rect x="4" y="4" width="44" height="44" rx="4" fill="#585143"/><rect x="52" y="4" width="44" height="44" rx="4" fill="#534d3e"/><rect x="4" y="52" width="44" height="44" rx="4" fill="#544e40"/><rect x="52" y="52" width="44" height="44" rx="4" fill="#5b5446"/><g fill="#4a5a36" opacity="0.5"><ellipse cx="30" cy="74" rx="9" ry="4"/><ellipse cx="74" cy="22" rx="7" ry="3"/></g></svg>',
+    wall_1: S + '<rect width="100" height="100" fill="#756c57"/><rect width="100" height="7" fill="#8b8166"/><rect y="93" width="100" height="7" fill="#544d3b"/><g stroke="#544234" stroke-width="3"><line x1="0" y1="34" x2="100" y2="34"/><line x1="0" y1="67" x2="100" y2="67"/><line x1="33" y1="7" x2="33" y2="34"/><line x1="66" y1="7" x2="66" y2="34"/><line x1="33" y1="34" x2="33" y2="67"/><line x1="66" y1="34" x2="66" y2="67"/><line x1="33" y1="67" x2="33" y2="93"/><line x1="66" y1="67" x2="66" y2="93"/></g><path d="M50,12 L46,30 L54,50 L48,66" stroke="#3a3528" stroke-width="2" fill="none"/></svg>',
+    water_1: S + '<rect width="100" height="100" fill="#235a8a"/><rect y="78" width="100" height="22" fill="#1c4870"/><g stroke="#4f8fc4" stroke-width="3" fill="none"><path d="M6,42 q12,-7 24,0 t24,0 t24,0 t24,0"/><path d="M6,66 q12,7 24,0 t24,0 t24,0 t24,0"/></g><circle cx="34" cy="28" r="3" fill="#bfe2ff" opacity="0.6"/><circle cx="62" cy="22" r="2" fill="#bfe2ff" opacity="0.6"/><circle cx="50" cy="34" r="2.5" fill="#bfe2ff" opacity="0.5"/></svg>',
+    lava_1: S + '<rect width="100" height="100" fill="#a8380f"/><g fill="#6e2410"><circle cx="80" cy="22" r="7"/><circle cx="20" cy="84" r="8"/></g><g stroke="#ffae3a" stroke-width="3" fill="none"><path d="M20,28 L34,46 L22,68"/><path d="M52,18 L66,40 L54,66"/><path d="M76,52 L88,72"/></g><circle cx="58" cy="80" r="6" fill="#ffce6a"/><circle cx="30" cy="34" r="5" fill="#ffce6a"/></svg>'
   };
   var atlas = {};
   var ready = false;
@@ -168,6 +173,12 @@
     if (open.indexOf("N") >= 0) { ctx.fillStyle = "rgba(184,170,136,0.35)"; ctx.fillRect(px, py + e, TILE, 2); }
   }
 
+  // Each material has a few looks; a stable per-cell hash (on absolute grid
+  // coords) picks one so the dungeon varies without flickering as you move.
+  var VARIANTS = { floor: 3, wall: 2, water: 2, lava: 2 };
+  function vhash(x, y) { var h = (x * 374761393 + y * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return (h ^ (h >>> 16)) >>> 0; }
+  function vkey(t, x, y) { var n = VARIANTS[t]; if (!n) return t; var v = vhash(x, y) % n; return v === 0 ? t : t + "_" + v; }
+
   function draw() {
     if (!tiles || !G || !ready) return;
     var w = G.w, h = G.h, g = G.g, color = G.color, bg = G.bg, bcolor = G.bcolor, light = G.light, dim = G.dim;
@@ -194,11 +205,13 @@
         var bgl = (bg && bg[i] !== undefined) ? bg[i] : tg; // terrain beneath
         var px = vx * TILE, py = vy * TILE;
         var t = terrainFor(bgl, bcolor[i]);
-        if (t && atlas[t]) {
-          ctx.drawImage(atlas[t], px, py, TILE, TILE);
+        var timg = t ? (atlas[vkey(t, gx, gy)] || atlas[t]) : null;
+        if (timg) {
+          ctx.drawImage(timg, px, py, TILE, TILE);
           if (t === "wall") drawWallEdges(px, py, bgl);
         } else {
-          if (atlas.floor) ctx.drawImage(atlas.floor, px, py, TILE, TILE);
+          var fimg = atlas[vkey("floor", gx, gy)] || atlas.floor;
+          if (fimg) ctx.drawImage(fimg, px, py, TILE, TILE);
           else { ctx.fillStyle = "#2a251d"; ctx.fillRect(px, py, TILE, TILE); }
           if (tg === bgl) { ctx.fillStyle = PAL[bcolor[i]] || PAL[0]; ctx.fillText(bgl, px + TILE / 2, py + TILE / 2 + 1); } // un-tiled terrain (trap/altar)
         }
