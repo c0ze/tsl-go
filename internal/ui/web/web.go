@@ -3,6 +3,7 @@
 package web
 
 import (
+	"strings"
 	"syscall/js"
 
 	"github.com/c0ze/tsl-go/internal/game"
@@ -82,6 +83,46 @@ func (sc *Screen) Render(v ui.View) {
 	sc.msgs.Set("textContent", msgs)
 	sc.announceLevel(v.LevelID)
 	sc.playSounds(v.Sounds)
+	sc.sendGrid(v, -1, -1)
+}
+
+// sendGrid hands the raw cell grid (glyphs + colour/light/dim) to the JS tile
+// renderer (window.tslGrid) so it can draw graphic tiles on a canvas. The ASCII
+// <pre> path above is untouched; the front-end shows whichever the user picked.
+// cx,cy is the targeting cursor, or -1,-1 when none.
+func (sc *Screen) sendGrid(v ui.View, cx, cy int) {
+	fn := js.Global().Get("tslGrid")
+	if fn.Type() != js.TypeFunction {
+		return
+	}
+	n := v.W * v.H
+	color := make([]byte, n)
+	light := make([]byte, n)
+	dim := make([]byte, n)
+	var sb strings.Builder
+	for i := range v.Cells {
+		c := v.Cells[i]
+		sb.WriteRune(c.Glyph)
+		color[i] = byte(ui.ColorIndex(c.Color))
+		l := c.Light
+		if l < 0 {
+			l = 0
+		} else if l > 1 {
+			l = 1
+		}
+		light[i] = byte(l * 255)
+		if c.Dim {
+			dim[i] = 1
+		}
+	}
+	fn.Invoke(v.W, v.H, sb.String(), toU8(color), toU8(light), toU8(dim), cx, cy)
+}
+
+// toU8 copies a Go byte slice into a fresh JS Uint8Array.
+func toU8(b []byte) js.Value {
+	a := js.Global().Get("Uint8Array").New(len(b))
+	js.CopyBytesToJS(a, b)
+	return a
 }
 
 // playSounds fires each queued sound-effect cue at the JS synth
@@ -167,6 +208,7 @@ func (sc *Screen) Target(origin game.Pos) (game.Pos, bool) {
 	}
 	for {
 		sc.screen.Set("innerHTML", RenderHTML(v, &cur))
+		sc.sendGrid(v, cur.X, cur.Y)
 		key := <-sc.keys
 		if d, ok := dirs[key]; ok {
 			cur = clamp(game.Pos{X: cur.X + d[0], Y: cur.Y + d[1]})

@@ -79,3 +79,20 @@ func lift(v uint8, n int) uint8 {
 	}
 	return uint8(r)
 }
+
+// PaletteOrder fixes each colour's index so the web tile renderer can be handed
+// a compact per-cell colour byte; the JS side mirrors this exact order.
+var PaletteOrder = []content.Color{
+	content.ColorNormal, content.ColorBrown, content.ColorBlue, content.ColorRed,
+	content.ColorGreen, content.ColorCyan, content.ColorMagenta, content.ColorBlack,
+}
+
+// ColorIndex returns c's position in PaletteOrder (0 for any unknown colour).
+func ColorIndex(c content.Color) int {
+	for i, p := range PaletteOrder {
+		if p == c {
+			return i
+		}
+	}
+	return 0
+}

@@ -32,6 +32,10 @@
   #mute { background: transparent; color: #888; border: 1px solid #444;
           border-radius: 4px; padding: .2rem .55rem; font: 13px/1 inherit; cursor: pointer; }
   #mute.on { color: #c8bea5; border-color: #6a6450; }
+  #viewmode { position: fixed; top: .6rem; left: .8rem; background: transparent;
+              color: #888; border: 1px solid #444; border-radius: 4px;
+              padding: .2rem .6rem; font: 13px/1 inherit; cursor: pointer; }
+  #tiles { display: block; margin: 0 auto; max-width: 100%; height: auto; }
   footer { margin-top: auto; padding: .6rem; color: #555; font-size: 12px; }
   footer a { color: #779; }
 </style>
@@ -39,10 +43,12 @@
 <body>
 <main>
   <pre id="screen"></pre>
+  <canvas id="tiles" hidden></canvas>
   <div id="status"></div>
   <div id="messages"></div>
   <pre id="overlay" hidden></pre>
 </main>
+<button id="viewmode" type="button">Tiles</button>
 <div id="audioctl">
   <input id="vol" type="range" min="0" max="100" step="1" aria-label="Music volume" title="Music volume">
   <button id="mute" type="button">&#9834; on</button>
@@ -222,6 +228,7 @@
   render();
 })();
 </script>
+<script src="tiles.js"></script>
 <script src="wasm_exec.js"></script>
 <script>
   const go = new Go();

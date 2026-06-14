@@ -1,0 +1,176 @@
+// Graphic-tile renderer for the web front-end. The wasm calls window.tslGrid()
+// each frame with the raw cell grid (glyphs + colour/light/dim); this draws it
+// to a <canvas> as SVG tiles, tinted by the per-cell torch light. A toggle
+// button swaps between this and the ASCII <pre>. Terrain tiles fill the cell;
+// entities (player/items/monsters) draw as transparent sprites over a floor
+// tile, falling back to a coloured letter when no sprite exists yet — so the
+// game stays fully playable. Mirrors internal/ui.PaletteOrder.
+(function () {
+  "use strict";
+  var PAL = ["#c8bea5", "#b07a3a", "#4a90d9", "#d6504a", "#6fae4a", "#3fb6c4", "#c060c0", "#282c30"];
+  var TILE = 32, VIEWW = 23, VIEWH = 17; // tile px and the player-centred window
+
+  var canvas = document.getElementById("tiles");
+  var pre = document.getElementById("screen");
+  var btn = document.getElementById("viewmode");
+  var ctx = canvas.getContext("2d");
+
+  var tiles = false;
+  try { tiles = localStorage.getItem("tsl-tiles") === "1"; } catch (e) {}
+
+  var G = null; // latest grid: {w,h,g,color,light,dim,cx,cy}
+
+  // ---- tile atlas: SVGs rasterised once to images. Terrain fills 100x100;
+  //      entity sprites are transparent and centred. -----------------------
+  var S = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">';
+  var SVG = {
+    floor: S + '<rect width="100" height="100" fill="#3f3a2e"/><rect x="4" y="4" width="44" height="44" rx="4" fill="#5b5446"/><rect x="52" y="4" width="44" height="44" rx="4" fill="#555041"/><rect x="4" y="52" width="44" height="44" rx="4" fill="#585143"/><rect x="52" y="52" width="44" height="44" rx="4" fill="#50493b"/><g stroke="#6c6450" stroke-width="1.5" opacity="0.55"><line x1="8" y1="8" x2="44" y2="8"/><line x1="56" y1="8" x2="92" y2="8"/><line x1="8" y1="56" x2="44" y2="56"/><line x1="56" y1="56" x2="92" y2="56"/></g></svg>',
+    wall: S + '<rect width="100" height="100" fill="#756c57"/><rect width="100" height="7" fill="#8b8166"/><rect y="93" width="100" height="7" fill="#544d3b"/><g stroke="#544234" stroke-width="3"><line x1="0" y1="34" x2="100" y2="34"/><line x1="0" y1="67" x2="100" y2="67"/><line x1="50" y1="7" x2="50" y2="34"/><line x1="25" y1="34" x2="25" y2="67"/><line x1="75" y1="34" x2="75" y2="67"/><line x1="50" y1="67" x2="50" y2="93"/></g><g stroke="#8b8166" stroke-width="1" opacity="0.55"><line x1="0" y1="36" x2="100" y2="36"/><line x1="0" y1="69" x2="100" y2="69"/></g></svg>',
+    water: S + '<rect width="100" height="100" fill="#235a8a"/><rect y="78" width="100" height="22" fill="#1c4870"/><g stroke="#4f8fc4" stroke-width="3" fill="none"><path d="M6,30 q12,-7 24,0 t24,0 t24,0 t24,0"/><path d="M6,55 q12,-7 24,0 t24,0 t24,0 t24,0"/></g><g stroke="#bfe2ff" stroke-width="2" opacity="0.5"><line x1="20" y1="20" x2="34" y2="20"/><line x1="64" y1="44" x2="78" y2="44"/></g></svg>',
+    lava: S + '<rect width="100" height="100" fill="#a8380f"/><g fill="#6e2410"><circle cx="16" cy="18" r="7"/><circle cx="92" cy="88" r="8"/></g><g stroke="#ffae3a" stroke-width="3" fill="none"><path d="M14,30 L40,48 L24,70"/><path d="M60,20 L74,44 L62,74"/><path d="M82,52 L94,70"/></g><circle cx="40" cy="80" r="6" fill="#ffce6a"/><circle cx="78" cy="26" r="5" fill="#ffce6a"/></svg>',
+    door: S + '<rect width="100" height="100" fill="#4a4438"/><rect x="16" y="8" width="68" height="92" rx="3" fill="#7a4f25" stroke="#16100a" stroke-width="4"/><line x1="24" y1="14" x2="24" y2="100" stroke="#9a6a38" stroke-width="2" opacity="0.6"/><g stroke="#5a3a1c" stroke-width="3"><line x1="40" y1="14" x2="40" y2="100"/><line x1="62" y1="14" x2="62" y2="100"/></g><g stroke="#3a2410" stroke-width="4"><line x1="18" y1="40" x2="82" y2="40"/><line x1="18" y1="74" x2="82" y2="74"/></g><circle cx="72" cy="58" r="5" fill="#e8c34a" stroke="#16100a" stroke-width="2"/></svg>',
+    door_open: S + '<rect width="100" height="100" fill="#4a4438"/><rect x="16" y="8" width="68" height="92" rx="3" fill="#14110d"/><rect x="16" y="8" width="13" height="92" fill="#7a4f25" stroke="#16100a" stroke-width="3"/><rect x="71" y="8" width="13" height="92" fill="#5e3c1c" stroke="#16100a" stroke-width="3"/></svg>',
+    stairs: S + '<rect width="100" height="100" fill="#3f3a2e"/><rect x="10" y="20" width="80" height="14" fill="#8a8068"/><rect x="18" y="34" width="64" height="13" fill="#746b55"/><rect x="26" y="47" width="48" height="13" fill="#5f5746"/><rect x="34" y="60" width="32" height="12" fill="#4b4537"/><rect x="42" y="72" width="16" height="14" fill="#2f2b20"/><g stroke="#9a9078" stroke-width="1" opacity="0.5"><line x1="10" y1="21" x2="90" y2="21"/><line x1="18" y1="35" x2="82" y2="35"/></g></svg>',
+
+    player: S + '<path d="M30,86 Q50,30 70,86 Z" fill="#a8763a" stroke="#16100a" stroke-width="4" stroke-linejoin="round"/><circle cx="50" cy="34" r="15" fill="#a8763a" stroke="#16100a" stroke-width="4"/><circle cx="50" cy="38" r="9" fill="#e3b88e" stroke="#16100a" stroke-width="2"/><path d="M35,38 Q50,22 65,38" stroke="#16100a" stroke-width="4" fill="none"/><circle cx="46" cy="38" r="1.8" fill="#1a1208"/><circle cx="54" cy="38" r="1.8" fill="#1a1208"/><circle cx="82" cy="28" r="10" fill="#ff8c2a" opacity="0.4"/><line x1="72" y1="52" x2="82" y2="30" stroke="#6a4a2a" stroke-width="5" stroke-linecap="round"/><path d="M82,28 q-6,-9 0,-16 q6,7 0,16 z" fill="#ffb24a" stroke="#16100a" stroke-width="1.5"/><circle cx="82" cy="24" r="3.5" fill="#ffe08a"/></svg>',
+    i_potion: S + '<ellipse cx="50" cy="70" rx="13" ry="5" fill="#a83468" opacity="0.5"/><circle cx="50" cy="62" r="18" fill="#d24a8a" stroke="#16100a" stroke-width="3"/><path d="M37,55 A18,18 0 0,1 62,53" stroke="#ee84b4" stroke-width="3" fill="none" opacity="0.6" stroke-linecap="round"/><circle cx="42" cy="56" r="2.5" fill="#ffffff" opacity="0.7"/><rect x="44" y="32" width="12" height="16" fill="#c0427d" stroke="#16100a" stroke-width="3"/><rect x="42" y="22" width="16" height="10" rx="2" fill="#8a5a2c" stroke="#16100a" stroke-width="3"/></svg>',
+    i_scroll: S + '<rect x="24" y="28" width="52" height="11" rx="5" fill="#c0a972" stroke="#16100a" stroke-width="3"/><rect x="29" y="34" width="42" height="40" rx="2" fill="#d8c79a" stroke="#16100a" stroke-width="3"/><g stroke="#9a7a4a" stroke-width="2"><line x1="37" y1="46" x2="63" y2="46"/><line x1="37" y1="53" x2="63" y2="53"/><line x1="37" y1="60" x2="59" y2="60"/></g><rect x="24" y="70" width="52" height="11" rx="5" fill="#c0a972" stroke="#16100a" stroke-width="3"/></svg>',
+    i_weapon: S + '<polygon points="50,22 56,64 44,64" fill="#ccd2dc" stroke="#16100a" stroke-width="2.5" stroke-linejoin="round"/><line x1="50" y1="28" x2="50" y2="60" stroke="#eef2f8" stroke-width="1.5" opacity="0.8"/><rect x="34" y="64" width="32" height="7" rx="2" fill="#c89a2e" stroke="#16100a" stroke-width="2.5"/><rect x="46" y="71" width="8" height="12" fill="#6a3a1a" stroke="#16100a" stroke-width="2"/><circle cx="50" cy="86" r="5" fill="#c89a2e" stroke="#16100a" stroke-width="2"/></svg>',
+    i_bow: S + '<path d="M40,18 Q74,50 40,82" stroke="#16100a" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M40,18 Q74,50 40,82" stroke="#9a6a38" stroke-width="4" fill="none" stroke-linecap="round"/><line x1="40" y1="18" x2="40" y2="82" stroke="#d8c79a" stroke-width="2"/><line x1="34" y1="50" x2="72" y2="50" stroke="#6a4a2a" stroke-width="2.5"/><polygon points="72,46 80,50 72,54" fill="#ccd2dc" stroke="#16100a" stroke-width="1.5"/></svg>',
+    i_armor: S + '<path d="M30,30 Q50,24 70,30 L66,72 Q50,82 34,72 Z" fill="#9aa0aa" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><path d="M36,34 Q50,30 64,34" stroke="#d2d7de" stroke-width="2.5" fill="none" opacity="0.6"/><line x1="50" y1="33" x2="50" y2="74" stroke="#6a707a" stroke-width="2"/><circle cx="34" cy="32" r="3" fill="#c89a2e" stroke="#16100a" stroke-width="1.5"/><circle cx="66" cy="32" r="3" fill="#c89a2e" stroke="#16100a" stroke-width="1.5"/></svg>',
+    i_food: S + '<rect x="22" y="50" width="18" height="8" rx="4" fill="#e8dcc0" stroke="#16100a" stroke-width="2.5"/><circle cx="24" cy="54" r="5" fill="#e8dcc0" stroke="#16100a" stroke-width="2"/><ellipse cx="54" cy="56" rx="20" ry="15" fill="#b5572e" stroke="#16100a" stroke-width="3"/><ellipse cx="48" cy="50" rx="8" ry="5" fill="#d57a4a" opacity="0.6"/></svg>',
+    i_wand: S + '<line x1="32" y1="72" x2="64" y2="30" stroke="#16100a" stroke-width="7" stroke-linecap="round"/><line x1="32" y1="72" x2="64" y2="30" stroke="#8a5a2c" stroke-width="4" stroke-linecap="round"/><circle cx="66" cy="27" r="14" fill="#7a3a9a" opacity="0.4"/><circle cx="66" cy="27" r="8" fill="#b76ad6" stroke="#16100a" stroke-width="2"/><g stroke="#e6c0f6" stroke-width="2"><line x1="36" y1="28" x2="44" y2="28"/><line x1="40" y1="24" x2="40" y2="32"/></g></svg>',
+    i_ring: S + '<circle cx="50" cy="58" r="16" fill="none" stroke="#16100a" stroke-width="10"/><circle cx="50" cy="58" r="16" fill="none" stroke="#e8c34a" stroke-width="6"/><polygon points="50,28 60,40 50,52 40,40" fill="#4a90d9" stroke="#16100a" stroke-width="2"/><line x1="46" y1="38" x2="50" y2="34" stroke="#bfe2ff" stroke-width="2"/></svg>',
+    i_light: S + '<line x1="50" y1="84" x2="50" y2="46" stroke="#16100a" stroke-width="8" stroke-linecap="round"/><line x1="50" y1="84" x2="50" y2="46" stroke="#6a4a2a" stroke-width="5" stroke-linecap="round"/><rect x="42" y="40" width="16" height="12" rx="2" fill="#5e3c1c" stroke="#16100a" stroke-width="2"/><circle cx="50" cy="28" r="16" fill="#ff8c2a" opacity="0.4"/><path d="M50,44 q-9,-14 0,-26 q9,11 0,26 z" fill="#ffb24a" stroke="#16100a" stroke-width="1.5"/><circle cx="50" cy="28" r="5" fill="#ffe08a"/></svg>',
+    i_book: S + '<rect x="30" y="28" width="40" height="48" rx="3" fill="#3a6ab0" stroke="#16100a" stroke-width="3"/><rect x="66" y="30" width="6" height="44" fill="#d8d2c0" stroke="#16100a" stroke-width="1.5"/><line x1="35" y1="32" x2="35" y2="72" stroke="#6a9ad8" stroke-width="2" opacity="0.6"/><circle cx="48" cy="52" r="6" fill="none" stroke="#ffd24a" stroke-width="2.5"/></svg>',
+    m_rat: S + '<path d="M68,54 q24,0 26,20" stroke="#16100a" stroke-width="5" fill="none"/><path d="M68,54 q24,0 26,20" stroke="#7a6a54" stroke-width="2.5" fill="none"/><ellipse cx="50" cy="56" rx="23" ry="15" fill="#968570" stroke="#16100a" stroke-width="3"/><ellipse cx="44" cy="50" rx="11" ry="5" fill="#a89579" opacity="0.5"/><circle cx="28" cy="52" r="12" fill="#9c8b76" stroke="#16100a" stroke-width="3"/><circle cx="23" cy="41" r="6" fill="#8a7a66" stroke="#16100a" stroke-width="2"/><circle cx="24" cy="51" r="2" fill="#161009"/><circle cx="17" cy="56" r="2.5" fill="#d28a8a" stroke="#16100a" stroke-width="1"/></svg>',
+    m_bat: S + '<path d="M50,48 Q26,28 12,44 Q24,48 20,58 Q34,54 50,54 Z" fill="#3fb6c4" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><path d="M50,48 Q74,28 88,44 Q76,48 80,58 Q66,54 50,54 Z" fill="#3fb6c4" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><ellipse cx="50" cy="52" rx="9" ry="11" fill="#3fb6c4" stroke="#16100a" stroke-width="3"/><polygon points="44,42 46,32 50,44" fill="#3fb6c4" stroke="#16100a" stroke-width="1.5"/><polygon points="56,42 54,32 50,44" fill="#3fb6c4" stroke="#16100a" stroke-width="1.5"/><circle cx="46" cy="50" r="1.8" fill="#161009"/><circle cx="54" cy="50" r="1.8" fill="#161009"/></svg>',
+    m_kobold: S + '<polygon points="32,40 26,22 40,42" fill="#5e9a3c" stroke="#16100a" stroke-width="2" stroke-linejoin="round"/><polygon points="68,40 74,22 60,42" fill="#5e9a3c" stroke="#16100a" stroke-width="2" stroke-linejoin="round"/><circle cx="50" cy="52" r="20" fill="#6fae4a" stroke="#16100a" stroke-width="3"/><path d="M36,40 Q50,34 64,40" stroke="#8fce6a" stroke-width="3" fill="none" opacity="0.5"/><path d="M34,60 Q50,72 66,60" fill="#4e8a2c" opacity="0.5"/><circle cx="42" cy="50" r="4" fill="#ffd24a" stroke="#16100a" stroke-width="1.4"/><circle cx="58" cy="50" r="4" fill="#ffd24a" stroke="#16100a" stroke-width="1.4"/><circle cx="42" cy="51" r="1.6" fill="#1a1208"/><circle cx="58" cy="51" r="1.6" fill="#1a1208"/><path d="M43,62 Q50,67 57,62" stroke="#16100a" stroke-width="1.8" fill="none"/><polygon points="48,64 52,64 50,69" fill="#eef2d0"/></svg>',
+    m_gnoblin: S + '<line x1="62" y1="30" x2="66" y2="60" stroke="#6a4a2a" stroke-width="6" stroke-linecap="round"/><circle cx="62" cy="26" r="8" fill="#8a5e2c" stroke="#16100a" stroke-width="2.5"/><path d="M36,46 L52,46 L50,72 L38,72 Z" fill="#5e8a3a" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><polygon points="33,34 27,24 39,36" fill="#5e9a3c" stroke="#16100a" stroke-width="1.5"/><circle cx="44" cy="36" r="11" fill="#6fae4a" stroke="#16100a" stroke-width="3"/><circle cx="40" cy="35" r="3" fill="#ffd24a" stroke="#16100a" stroke-width="1"/><circle cx="48" cy="35" r="3" fill="#ffd24a" stroke="#16100a" stroke-width="1"/></svg>',
+    m_snake: S + '<path d="M22,74 Q52,74 50,48 Q48,28 70,28" stroke="#16100a" stroke-width="13" fill="none" stroke-linecap="round"/><path d="M22,74 Q52,74 50,48 Q48,28 70,28" stroke="#6fae4a" stroke-width="9" fill="none" stroke-linecap="round"/><circle cx="72" cy="28" r="10" fill="#6fae4a" stroke="#16100a" stroke-width="2.5"/><circle cx="76" cy="25" r="2" fill="#ffd24a"/><path d="M82,28 l9,-3 m-9,3 l9,3" stroke="#d6504a" stroke-width="1.5" fill="none"/></svg>',
+    m_jackal: S + '<g stroke="#8a5e2c" stroke-width="4" stroke-linecap="round"><line x1="38" y1="58" x2="36" y2="74"/><line x1="48" y1="60" x2="48" y2="76"/><line x1="58" y1="60" x2="60" y2="76"/><line x1="66" y1="56" x2="68" y2="72"/></g><ellipse cx="50" cy="54" rx="22" ry="12" fill="#a8763a" stroke="#16100a" stroke-width="3"/><circle cx="72" cy="48" r="10" fill="#a8763a" stroke="#16100a" stroke-width="2.5"/><polygon points="80,48 92,50 80,54" fill="#a8763a" stroke="#16100a" stroke-width="1.5"/><polygon points="68,40 70,28 76,42" fill="#a8763a" stroke="#16100a" stroke-width="1.5"/><circle cx="74" cy="46" r="1.8" fill="#161009"/></svg>',
+    m_slime: S + '<path d="M22,70 Q16,42 50,40 Q84,42 78,70 Q62,76 50,73 Q38,76 22,70 Z" fill="#6fae4a" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><ellipse cx="40" cy="50" rx="11" ry="6" fill="#9fd06a" opacity="0.6"/><circle cx="42" cy="58" r="5" fill="#eef7e0" stroke="#16100a" stroke-width="2"/><circle cx="60" cy="58" r="5" fill="#eef7e0" stroke="#16100a" stroke-width="2"/><circle cx="42" cy="59" r="2" fill="#1a1208"/><circle cx="60" cy="59" r="2" fill="#1a1208"/></svg>',
+    m_zombie: S + '<line x1="44" y1="48" x2="28" y2="58" stroke="#6a8050" stroke-width="7" stroke-linecap="round"/><line x1="56" y1="48" x2="40" y2="60" stroke="#6a8050" stroke-width="7" stroke-linecap="round"/><path d="M40,40 L60,40 L57,74 L43,74 Z" fill="#6a8050" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><circle cx="50" cy="28" r="11" fill="#8aa06a" stroke="#16100a" stroke-width="3"/><circle cx="46" cy="27" r="2" fill="#161009"/><circle cx="54" cy="27" r="2" fill="#161009"/><path d="M45,33 L55,33" stroke="#16100a" stroke-width="1.5"/></svg>',
+    m_skeleton: S + '<line x1="50" y1="44" x2="50" y2="72" stroke="#d8d2c0" stroke-width="4"/><g stroke="#d8d2c0" stroke-width="3" fill="none"><path d="M50,50 Q40,52 38,58"/><path d="M50,50 Q60,52 62,58"/><path d="M50,60 Q42,62 40,68"/><path d="M50,60 Q58,62 60,68"/></g><circle cx="50" cy="30" r="12" fill="#e8e4d8" stroke="#16100a" stroke-width="3"/><circle cx="45" cy="30" r="3" fill="#161009"/><circle cx="55" cy="30" r="3" fill="#161009"/><polygon points="50,34 47,40 53,40" fill="#161009"/></svg>',
+    m_dragon: S + '<polygon points="66,40 88,32 81,59" fill="#8a2f1f" stroke="#16100a" stroke-width="2.5" stroke-linejoin="round"/><polygon points="70,38 84,33 78,46" fill="#aa3d28" opacity="0.6"/><path d="M26,58 L10,52 L19,65 Z" fill="#cf4a30" stroke="#16100a" stroke-width="2.5" stroke-linejoin="round"/><path d="M26,58 Q28,40 50,40 Q76,40 82,56 Q74,72 50,74 Q30,72 26,58 Z" fill="#cf4a30" stroke="#16100a" stroke-width="3" stroke-linejoin="round"/><path d="M30,66 Q50,76 74,64 Q68,74 50,74 Q34,74 30,66 Z" fill="#8f2a18" opacity="0.5"/><path d="M28,50 Q44,46 60,50" stroke="#e8664a" stroke-width="3" fill="none" opacity="0.6" stroke-linecap="round"/><polygon points="66,42 74,26 70,44" fill="#e8c08e" stroke="#16100a" stroke-width="2" stroke-linejoin="round"/><ellipse cx="58" cy="54" rx="4" ry="5" fill="#ffe27a" stroke="#16100a" stroke-width="1.5"/><rect x="57" y="50" width="2" height="9" fill="#16100a"/></svg>'
+  };
+  var atlas = {};
+  var ready = false;
+  function loadAtlas() {
+    var ids = Object.keys(SVG), pending = ids.length;
+    if (!pending) { ready = true; return; }
+    ids.forEach(function (id) {
+      var img = new Image();
+      img.onload = function () { atlas[id] = img; if (--pending === 0) { ready = true; draw(); } };
+      img.onerror = function () { if (--pending === 0) { ready = true; draw(); } };
+      img.src = "data:image/svg+xml;utf8," + encodeURIComponent(SVG[id]);
+    });
+  }
+
+  var WALL = { "■": 1, "│": 1, "─": 1, "└": 1, "┌": 1, "┐": 1, "┘": 1, "├": 1, "┤": 1, "┬": 1, "┴": 1, "┼": 1 };
+
+  // terrainFor returns the full-cell tile for terrain glyphs (null otherwise).
+  // '+' and "'" collide with the spellbook/tool items, so gate on brown (1).
+  function terrainFor(glyph, colorIdx) {
+    if (glyph === "·") return "floor";
+    if (glyph === "≈") return "water";
+    if (WALL[glyph]) return "wall";
+    if (glyph === "+" && colorIdx === 1) return "door";
+    if (glyph === "'" && colorIdx === 1) return "door_open";
+    if (glyph === ">") return "stairs";
+    if (glyph === "^" && colorIdx === 1) return "lava"; // brown ^ = lava
+    return null;
+  }
+
+  // entityFor returns the transparent sprite for the player and items (null
+  // otherwise -> coloured-letter fallback). Monsters are still letters.
+  var ENTITY = {
+    "@": "player", "!": "i_potion", "?": "i_scroll", ")": "i_weapon", "}": "i_bow",
+    "[": "i_armor", "%": "i_food", "/": "i_wand", "=": "i_ring", "~": "i_light", "+": "i_book",
+    "r": "m_rat", "b": "m_bat", "k": "m_kobold", "o": "m_gnoblin", "S": "m_snake",
+    "j": "m_jackal", "x": "m_slime", "z": "m_zombie", "s": "m_skeleton", "D": "m_dragon"
+  };
+  function entityFor(glyph) { return ENTITY[glyph] || null; }
+
+  // The autotiling glyph encodes which neighbours are walls; the open sides are
+  // the rest. Shading those edges makes wall masses read as connected stone.
+  var WALLOPEN = { "■": "NESW", "│": "EW", "─": "NS", "└": "SW", "┌": "NW", "┐": "NE", "┘": "SE", "├": "W", "┤": "E", "┬": "N", "┴": "S", "┼": "" };
+  function drawWallEdges(px, py, glyph) {
+    var open = WALLOPEN[glyph] || "";
+    if (!open) return;
+    var e = Math.max(2, Math.round(TILE * 0.17));
+    ctx.fillStyle = "rgba(18,14,9,0.5)";
+    if (open.indexOf("N") >= 0) ctx.fillRect(px, py, TILE, e);
+    if (open.indexOf("S") >= 0) ctx.fillRect(px, py + TILE - e, TILE, e);
+    if (open.indexOf("W") >= 0) ctx.fillRect(px, py, e, TILE);
+    if (open.indexOf("E") >= 0) ctx.fillRect(px + TILE - e, py, e, TILE);
+    if (open.indexOf("N") >= 0) { ctx.fillStyle = "rgba(184,170,136,0.35)"; ctx.fillRect(px, py + e, TILE, 2); }
+  }
+
+  function draw() {
+    if (!tiles || !G || !ready) return;
+    var w = G.w, h = G.h, g = G.g, color = G.color, light = G.light, dim = G.dim;
+    // The player is the single fully-lit cell (light 255 only at distance 0);
+    // centre a window on it so tiles render large and the camera follows.
+    var pcx = w >> 1, pcy = h >> 1;
+    for (var k = 0; k < light.length; k++) { if (light[k] === 255) { pcx = k % w; pcy = (k / w) | 0; break; } }
+    var vw = Math.min(VIEWW, w), vh = Math.min(VIEWH, h);
+    var ox = Math.max(0, Math.min(pcx - (vw >> 1), w - vw));
+    var oy = Math.max(0, Math.min(pcy - (vh >> 1), h - vh));
+    if (canvas.width !== vw * TILE || canvas.height !== vh * TILE) {
+      canvas.width = vw * TILE; canvas.height = vh * TILE;
+    }
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = Math.floor(TILE * 0.82) + "px ui-monospace, monospace";
+    for (var vy = 0; vy < vh; vy++) {
+      for (var vx = 0; vx < vw; vx++) {
+        var gx = ox + vx, gy = oy + vy, i = gy * w + gx;
+        var glyph = g[i];
+        if (glyph === " " || glyph === undefined) continue; // unseen
+        var px = vx * TILE, py = vy * TILE;
+        var t = terrainFor(glyph, color[i]);
+        if (t && atlas[t]) {
+          ctx.drawImage(atlas[t], px, py, TILE, TILE);
+          if (t === "wall") drawWallEdges(px, py, glyph);
+        } else {
+          if (atlas.floor) ctx.drawImage(atlas.floor, px, py, TILE, TILE);
+          else { ctx.fillStyle = "#2a251d"; ctx.fillRect(px, py, TILE, TILE); }
+          var e = entityFor(glyph);
+          if (e && atlas[e]) ctx.drawImage(atlas[e], px, py, TILE, TILE);
+          else { ctx.fillStyle = PAL[color[i]] || PAL[0]; ctx.fillText(glyph, px + TILE / 2, py + TILE / 2 + 1); }
+        }
+        var bri, ov;
+        if (dim[i] === 1) { bri = 0.34; ov = "28,34,46"; }    // remembered: cool + dark
+        else { bri = 0.30 + 0.70 * (light[i] / 255); ov = "6,5,3"; } // torch falloff
+        ctx.fillStyle = "rgba(" + ov + "," + (1 - bri).toFixed(3) + ")";
+        ctx.fillRect(px, py, TILE, TILE);
+        if (gx === G.cx && gy === G.cy) {
+          ctx.strokeStyle = "#ffd24a"; ctx.lineWidth = 2;
+          ctx.strokeRect(px + 1, py + 1, TILE - 2, TILE - 2);
+        }
+      }
+    }
+  }
+
+  window.tslGrid = function (w, h, str, color, light, dim, cx, cy) {
+    G = { w: w, h: h, g: Array.from(str), color: color, light: light, dim: dim, cx: cx, cy: cy };
+    draw();
+  };
+
+  function apply() {
+    if (tiles) { pre.hidden = true; canvas.hidden = false; draw(); }
+    else { canvas.hidden = true; pre.hidden = false; }
+    if (btn) btn.textContent = tiles ? "ASCII" : "Tiles";
+  }
+  if (btn) btn.addEventListener("click", function () {
+    tiles = !tiles;
+    try { localStorage.setItem("tsl-tiles", tiles ? "1" : "0"); } catch (e) {}
+    apply();
+  });
+
+  loadAtlas();
+  apply();
+})();
