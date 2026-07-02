@@ -151,14 +151,26 @@ func TestMessageClassSeverity(t *testing.T) {
 		{"The poison overcomes you. You die.", "m-bad"},
 		{"You get burned by lava!", "m-bad"},
 		{"You step on a polymorph trap!", "m-bad"},
+		// monsterAttacks' effect-application follow-ups are harm too
+		{"The pit viper poisons you.", "m-bad"},
+		{"The sludge dweller slows you.", "m-bad"},
+		{"The floating brain confuses you.", "m-bad"},
+		{"The wraith frightens you.", "m-bad"},
+		{"The severed hand afflicts you.", "m-bad"},
 		{"You pick up the crowbar.", "m-good"},
 		{"You quaff the potion of healing and recover 6 HP.", "m-good"},
-		{"The gnoblin dies.", "m-good"},
 		{"You learn force bolt.", "m-good"},
 		{"You ascend to demigodhood. You win!", "m-good"},
 		{"You hit the gnoblin for 4.", ""}, // your own blows stay neutral
 		{"The gnoblin misses you.", ""},
 		{"You open the door.", ""},
+		// killCreature names no killer — "The imp dies." could be the player's
+		// ally felled by a hostile, so deaths stay neutral
+		{"The gnoblin dies.", ""},
+		{"The imp dies.", ""},
+		// the player's own wand applying an effect phrases "...the <monster>."
+		{"The wand of slowness slows the gnoblin.", ""},
+		{"The wand of misery afflicts the gnoblin.", ""},
 	}
 	for _, c := range cases {
 		if got := messageClass(c.msg); got != c.want {

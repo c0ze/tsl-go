@@ -127,10 +127,18 @@ var badPhrases = []string{
 	"You step on", // "...a polymorph trap!", "...an electrified plate!"
 	"You fall asleep",
 	"You stagger",
+	// monsterAttacks' effect-application follow-up, "The X <verb> you." — the
+	// player-caused wand variant phrases "...the <monster>.", never "you.".
+	"poisons you.",
+	"slows you.",
+	"confuses you.",
+	"frightens you.",
+	"afflicts you.", // effectVerb's fallback for unlisted effects
 }
 
-// goodPhrases marks a log line as a gain — pickups, heals, kills, victory
-// (rendered green).
+// goodPhrases marks a log line as a gain — pickups, heals, victory (rendered
+// green). Creature deaths stay neutral: killCreature's "The X dies." names no
+// killer, so a hostile felling the player's ally reads the same as a kill.
 var goodPhrases = []string{
 	"You pick up",
 	"recover", // "...and recover N HP."
@@ -140,7 +148,6 @@ var goodPhrases = []string{
 	"fresh charges",
 	"You learn",
 	"You win",
-	" dies.", // "The X dies." — the player's death never phrases this way
 	"turn and flee",
 }
 
