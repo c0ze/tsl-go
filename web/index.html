@@ -26,6 +26,14 @@
   .c-magenta { color: #c060c0; }
   .c-black   { color: #282c30; }
   .dim       { opacity: .45; }
+  /* Torch-light falloff buckets — mirror of internal/ui.Lit's 0.30+0.70·light
+     ramp (bucket b stands for light b/4; full brightness carries no class).
+     The background is black, so opacity multiplies the glyph colour exactly
+     like the terminal's brightness scaling. */
+  .lt0       { opacity: .30; }
+  .lt1       { opacity: .475; }
+  .lt2       { opacity: .65; }
+  .lt3       { opacity: .825; }
   .cursor    { background: #ddd; color: #000; }
   #audioctl { position: fixed; top: .6rem; right: .8rem; display: flex; align-items: center; gap: .5rem; }
   #vol { width: 80px; accent-color: #c8bea5; cursor: pointer; }
