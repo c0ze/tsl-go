@@ -86,6 +86,21 @@ go vet ./...
 CI runs gofmt, vet, and the full test suite on every push; pushing a `v*`
 tag builds and publishes the cross-platform binaries.
 
+## Versioning
+
+Two release lines, so the faithful port stays findable forever:
+
+- **v0.40.x — the faithful line.** Plays exactly like the original 0.40 as
+  the C source defines it: identical mechanics, plain presentation, no
+  graphics, no audio. Bug fixes only. v0.40.1 is this line's current release
+  and the build served at [/original](https://tsl.coze.org/original).
+- **v0.50+ — the enhanced line.** Everything beyond the original ships
+  here: the truecolour torch-lit rendering, the graphic tile mode, music and
+  sound effects, HUD polish, and any new mechanics (v0.50.0, v0.51.0, …).
+
+Before tagging, ask which line the changes belong to; an enhancement must
+never ship under v0.40.x.
+
 ## License
 
 The port derives from The Slimy Lichmummy by Ulf Åström; see
