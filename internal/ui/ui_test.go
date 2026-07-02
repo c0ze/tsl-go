@@ -81,6 +81,34 @@ func TestBuildViewShowsEP(t *testing.T) {
 	}
 }
 
+func TestBuildViewHUDFields(t *testing.T) {
+	g := testGame(t, []string{".@."})
+	g.PlayerHP, g.PlayerMax = 14, 20
+	g.EP, g.EPMax = 7, 10
+	g.Weapon = &game.Item{Def: &content.ItemDef{Name: "dagger"}}
+	g.AddEffect("poison", 3)
+	v := BuildView(g)
+	h := v.HUD
+	if h.HP != 14 || h.HPMax != 20 {
+		t.Errorf("HUD HP = %d/%d, want 14/20", h.HP, h.HPMax)
+	}
+	if h.EP != 7 || h.EPMax != 10 {
+		t.Errorf("HUD EP = %d/%d, want 7/10", h.EP, h.EPMax)
+	}
+	if h.Location != "the dungeon" {
+		t.Errorf("HUD location = %q, want the no-dungeon fallback", h.Location)
+	}
+	if h.Wield != "dagger" || h.Wear != "none" {
+		t.Errorf("HUD gear = wield %q wear %q, want dagger/none", h.Wield, h.Wear)
+	}
+	if !strings.Contains(h.Effects, "Poisoned") {
+		t.Errorf("HUD effects %q should include Poisoned", h.Effects)
+	}
+	if v.Status != h.Line() {
+		t.Errorf("Status %q must be exactly HUD.Line() %q", v.Status, h.Line())
+	}
+}
+
 func TestRunCastSpell(t *testing.T) {
 	g := testGame(t, []string{".@."})
 	g.EP, g.EPMax = 10, 10

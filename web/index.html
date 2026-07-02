@@ -10,8 +10,20 @@
          font-family: "DejaVu Sans Mono", Menlo, Consolas, monospace; }
   main { position: relative; margin-top: 1rem; }
   pre { margin: 0; font-size: 16px; line-height: 1.15; }
-  #status { margin-top: .4rem; color: #9ad; white-space: pre; font-size: 13px; }
+  #status { margin-top: .4rem; color: #c8bea5; white-space: pre; font-size: 13px; }
+  /* HUD segments (internal/ui/web StatusHTML) — HP by ratio, EP cyan,
+     location amber, gear labels muted, active effects highlighted. */
+  #status .s-hp-good { color: #6fae4a; }
+  #status .s-hp-warn { color: #d9a23a; }
+  #status .s-hp-crit { color: #d6504a; }
+  #status .s-ep      { color: #3fb6c4; }
+  #status .s-loc     { color: #d9a23a; }
+  #status .s-label   { color: #77705e; }
+  #status .s-eff     { color: #c060c0; }
   #messages { margin-top: .2rem; color: #bbb; white-space: pre; min-height: 4.6em; font-size: 13px; }
+  /* Message-log severity (internal/ui/web MessagesHTML). */
+  #messages .m-bad  { color: #d6504a; }
+  #messages .m-good { color: #6fae4a; }
   #overlay { position: absolute; top: 0; left: 0; right: 0;
              background: rgba(0,0,0,.92); border: 1px solid #555; padding: 1em;
              white-space: pre-wrap; }

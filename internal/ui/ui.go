@@ -20,11 +20,25 @@ type Cell struct {
 	Light float64 // 0..1 brightness of a visible tile; renderers scale Colour by it for the torch-lit falloff
 }
 
+// HUD carries the status line's segments individually so a front-end can
+// style each one (the web colours HP by ratio, EP cyan, location amber, …);
+// Line renders the plain single-string form the terminal draws.
+type HUD struct {
+	HP, HPMax int
+	EP, EPMax int    // EPMax 0 hides the EP segment
+	Location  string // current level's display name
+	Wield     string // wielded weapon's display name, "none" when empty-handed
+	Wear      string // worn armour's display name, "none" when unarmoured
+	Worn      string // comma-joined worn accessories, "" when none
+	Effects   string // comma-joined active effect labels, "" when none
+}
+
 // View is a read-only snapshot the front-end draws.
 type View struct {
 	W, H     int
 	Cells    []Cell // len W*H, row-major
-	Status   string // HUD line (HP, depth, gear)
+	Status   string // pre-rendered HUD line (HP, depth, gear) — always HUD.Line()
+	HUD      HUD    // the same HUD segment by segment, for front-ends that colour them
 	Messages []string
 	LevelID  string   // current level id; front-ends that key off it (web music) use this
 	Sounds   []string // per-turn sound-effect cues; front-ends that support it (web SFX) play them
@@ -181,7 +195,8 @@ func BuildView(g *game.Game) View {
 			paint(v.At(g.Player.X, g.Player.Y), PlayerGlyph, PlayerColor)
 		}
 	}
-	v.Status = statusLine(g)
+	v.HUD = buildHUD(g)
+	v.Status = v.HUD.Line()
 	v.Messages = lastN(g.Messages, 4)
 	v.LevelID = l.ID
 	v.Sounds = g.Sounds
@@ -195,29 +210,41 @@ func paint(c *Cell, glyph rune, color content.Color) {
 	c.Glyph, c.Color = glyph, color
 }
 
-// statusLine summarises the player's vitals and gear for the HUD.
-func statusLine(g *game.Game) string {
-	wield, wear := "none", "none"
+// buildHUD summarises the player's vitals and gear, segment by segment.
+func buildHUD(g *game.Game) HUD {
+	h := HUD{
+		HP: g.PlayerHP, HPMax: g.PlayerMax,
+		EP: g.EP, EPMax: g.EPMax,
+		Location: g.LocationName(),
+		Wield:    "none", Wear: "none",
+		Worn:    wornAccessories(g),
+		Effects: g.EffectsSummary(),
+	}
+	if h.Location == "" {
+		h.Location = "the dungeon"
+	}
 	if g.Weapon != nil && g.Weapon.Def != nil {
-		wield = g.DisplayName(g.Weapon)
+		h.Wield = g.DisplayName(g.Weapon)
 	}
 	if g.Armor != nil && g.Armor.Def != nil {
-		wear = g.DisplayName(g.Armor)
+		h.Wear = g.DisplayName(g.Armor)
 	}
-	loc := g.LocationName()
-	if loc == "" {
-		loc = "the dungeon"
+	return h
+}
+
+// Line renders the HUD as the plain status line the terminal draws (and the
+// web falls back to conceptually — its coloured spans carry the same text).
+func (h HUD) Line() string {
+	s := fmt.Sprintf("HP %d/%d", h.HP, h.HPMax)
+	if h.EPMax > 0 {
+		s += fmt.Sprintf("   EP %d/%d", h.EP, h.EPMax)
 	}
-	s := fmt.Sprintf("HP %d/%d", g.PlayerHP, g.PlayerMax)
-	if g.EPMax > 0 {
-		s += fmt.Sprintf("   EP %d/%d", g.EP, g.EPMax)
+	s += fmt.Sprintf("   %s   Wield: %s   Wear: %s", h.Location, h.Wield, h.Wear)
+	if h.Worn != "" {
+		s += "   Worn: " + h.Worn
 	}
-	s += fmt.Sprintf("   %s   Wield: %s   Wear: %s", loc, wield, wear)
-	if worn := wornAccessories(g); worn != "" {
-		s += "   Worn: " + worn
-	}
-	if eff := g.EffectsSummary(); eff != "" {
-		s += "   [" + eff + "]"
+	if h.Effects != "" {
+		s += "   [" + h.Effects + "]"
 	}
 	return s
 }

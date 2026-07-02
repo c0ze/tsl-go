@@ -76,6 +76,106 @@ func RenderHTML(v ui.View, cursor *game.Pos) string {
 	return b.String()
 }
 
+// StatusHTML lays the HUD out as coloured spans, one per segment, with the
+// exact text and spacing of ui.HUD.Line: HP classed green→amber→red by ratio,
+// EP cyan, the location amber, gear labels muted, active effects highlighted.
+func StatusHTML(v ui.View) string {
+	h := v.HUD
+	var b strings.Builder
+	fmt.Fprintf(&b, `<span class="%s">HP %d/%d</span>`, hpClass(h.HP, h.HPMax), h.HP, h.HPMax)
+	if h.EPMax > 0 {
+		fmt.Fprintf(&b, `   <span class="s-ep">EP %d/%d</span>`, h.EP, h.EPMax)
+	}
+	fmt.Fprintf(&b, `   <span class="s-loc">%s</span>`, html.EscapeString(h.Location))
+	fmt.Fprintf(&b, `   <span class="s-label">Wield:</span> %s`, html.EscapeString(h.Wield))
+	fmt.Fprintf(&b, `   <span class="s-label">Wear:</span> %s`, html.EscapeString(h.Wear))
+	if h.Worn != "" {
+		fmt.Fprintf(&b, `   <span class="s-label">Worn:</span> %s`, html.EscapeString(h.Worn))
+	}
+	if h.Effects != "" {
+		fmt.Fprintf(&b, `   <span class="s-eff">[%s]</span>`, html.EscapeString(h.Effects))
+	}
+	return b.String()
+}
+
+// hpClass buckets the HP ratio into the web HUD's traffic-light classes.
+func hpClass(hp, max int) string {
+	if max <= 0 || float64(hp)/float64(max) > 2.0/3 {
+		return "s-hp-good"
+	}
+	if float64(hp)/float64(max) > 1.0/3 {
+		return "s-hp-warn"
+	}
+	return "s-hp-crit"
+}
+
+// badPhrases marks a log line as harm the player suffers (rendered red).
+var badPhrases = []string{
+	" you for ", // "The X hits/blasts you for N."
+	"You die",   // "You die.", "You die...", "...You die."
+	"You drown",
+	"burned", // "You get burned (by lava)!"
+	"You land in lava",
+	"vile fumes", // poison gas
+	"overcomes you",
+	"bites into your hand",
+	"wracks you with agony",
+	"You are blinded",
+	"Darkness falls",
+	"stuck in a web",
+	"You trigger a trap",
+	"You step on", // "...a polymorph trap!", "...an electrified plate!"
+	"You fall asleep",
+	"You stagger",
+}
+
+// goodPhrases marks a log line as a gain — pickups, heals, kills, victory
+// (rendered green).
+var goodPhrases = []string{
+	"You pick up",
+	"recover", // "...and recover N HP."
+	"wounds begin",
+	"surge with vitality",
+	"mind sharpens",
+	"fresh charges",
+	"You learn",
+	"You win",
+	" dies.", // "The X dies." — the player's death never phrases this way
+	"turn and flee",
+}
+
+// messageClass buckets a log line by severity for the web message log: "m-bad"
+// for harm the player suffers, "m-good" for gains, "" for everything else.
+// Keyword-based and presentation-only — a miss just keeps the default colour.
+func messageClass(msg string) string {
+	for _, p := range badPhrases {
+		if strings.Contains(msg, p) {
+			return "m-bad"
+		}
+	}
+	for _, p := range goodPhrases {
+		if strings.Contains(msg, p) {
+			return "m-good"
+		}
+	}
+	return ""
+}
+
+// MessagesHTML lays the message log out one line per message, each wrapped in
+// its severity class (none for neutral lines), text HTML-escaped.
+func MessagesHTML(msgs []string) string {
+	var b strings.Builder
+	for _, m := range msgs {
+		if class := messageClass(m); class != "" {
+			fmt.Fprintf(&b, `<span class="%s">%s</span>`, class, html.EscapeString(m))
+		} else {
+			b.WriteString(html.EscapeString(m))
+		}
+		b.WriteString("\n")
+	}
+	return b.String()
+}
+
 // MenuHTML lays a menu out the way the terminal draws it: the title, then
 // one "  a) item" line per entry with "> " marking the selection.
 func MenuHTML(m ui.MenuSpec, sel int) string {

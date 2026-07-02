@@ -70,17 +70,14 @@ func (sc *Screen) NextAction() (ui.Action, error) {
 	}
 }
 
-// Render draws the view: map grid, status line, last messages.
+// Render draws the view: map grid, colour-coded status line, last messages
+// (severity-classed).
 func (sc *Screen) Render(v ui.View) {
 	sc.last = v
 	sc.over.Set("hidden", true)
 	sc.screen.Set("innerHTML", RenderHTML(v, nil))
-	sc.status.Set("textContent", v.Status)
-	msgs := ""
-	for _, m := range v.Messages {
-		msgs += m + "\n"
-	}
-	sc.msgs.Set("textContent", msgs)
+	sc.status.Set("innerHTML", StatusHTML(v))
+	sc.msgs.Set("innerHTML", MessagesHTML(v.Messages))
 	sc.announceLevel(v.LevelID)
 	sc.playSounds(v.Sounds)
 	sc.sendGrid(v, -1, -1)

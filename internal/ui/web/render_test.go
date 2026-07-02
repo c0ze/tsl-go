@@ -91,6 +91,95 @@ func TestRenderHTMLCursor(t *testing.T) {
 	}
 }
 
+func TestStatusHTMLSegments(t *testing.T) {
+	v := ui.View{HUD: ui.HUD{HP: 15, HPMax: 20, EP: 3, EPMax: 10,
+		Location: "Dungeon <1>", Wield: "dagger", Wear: "none",
+		Worn: "ring of protection", Effects: "Poisoned"}}
+	out := StatusHTML(v)
+	for _, want := range []string{
+		`<span class="s-hp-good">HP 15/20</span>`,
+		`<span class="s-ep">EP 3/10</span>`,
+		`<span class="s-loc">Dungeon &lt;1&gt;</span>`, // and escaped
+		`<span class="s-label">Wield:</span> dagger`,
+		`<span class="s-label">Worn:</span> ring of protection`,
+		`<span class="s-eff">[Poisoned]</span>`,
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("status HTML missing %q, got %q", want, out)
+		}
+	}
+}
+
+func TestStatusHTMLOmitsEmptySegments(t *testing.T) {
+	v := ui.View{HUD: ui.HUD{HP: 2, HPMax: 20, Location: "the dungeon", Wield: "none", Wear: "none"}}
+	out := StatusHTML(v)
+	if strings.Contains(out, "EP") || strings.Contains(out, "Worn") || strings.Contains(out, "s-eff") {
+		t.Errorf("EP/Worn/effects segments should be omitted when empty, got %q", out)
+	}
+	if !strings.Contains(out, `<span class="s-hp-crit">HP 2/20</span>`) {
+		t.Errorf("low HP should class as critical, got %q", out)
+	}
+}
+
+func TestHPClassRatios(t *testing.T) {
+	cases := []struct {
+		hp, max int
+		want    string
+	}{
+		{20, 20, "s-hp-good"},
+		{14, 20, "s-hp-good"}, // just over 2/3
+		{13, 20, "s-hp-warn"},
+		{7, 20, "s-hp-warn"}, // just over 1/3
+		{6, 20, "s-hp-crit"},
+		{0, 20, "s-hp-crit"},
+		{5, 0, "s-hp-good"}, // degenerate max: never divide by zero
+	}
+	for _, c := range cases {
+		if got := hpClass(c.hp, c.max); got != c.want {
+			t.Errorf("hpClass(%d, %d) = %q, want %q", c.hp, c.max, got, c.want)
+		}
+	}
+}
+
+func TestMessageClassSeverity(t *testing.T) {
+	cases := []struct {
+		msg, want string
+	}{
+		{"The gnoblin hits you for 3.", "m-bad"},
+		{"The imp blasts you for 5.", "m-bad"},
+		{"You die...", "m-bad"},
+		{"The poison overcomes you. You die.", "m-bad"},
+		{"You get burned by lava!", "m-bad"},
+		{"You step on a polymorph trap!", "m-bad"},
+		{"You pick up the crowbar.", "m-good"},
+		{"You quaff the potion of healing and recover 6 HP.", "m-good"},
+		{"The gnoblin dies.", "m-good"},
+		{"You learn force bolt.", "m-good"},
+		{"You ascend to demigodhood. You win!", "m-good"},
+		{"You hit the gnoblin for 4.", ""}, // your own blows stay neutral
+		{"The gnoblin misses you.", ""},
+		{"You open the door.", ""},
+	}
+	for _, c := range cases {
+		if got := messageClass(c.msg); got != c.want {
+			t.Errorf("messageClass(%q) = %q, want %q", c.msg, got, c.want)
+		}
+	}
+}
+
+func TestMessagesHTML(t *testing.T) {
+	out := MessagesHTML([]string{"The rat hits you for 2.", "You pick up the <sword>.", "You open the door."})
+	if !strings.Contains(out, `<span class="m-bad">The rat hits you for 2.</span>`) {
+		t.Errorf("damage lines carry m-bad, got %q", out)
+	}
+	if !strings.Contains(out, `<span class="m-good">You pick up the &lt;sword&gt;.</span>`) {
+		t.Errorf("pickup lines carry m-good and escape HTML, got %q", out)
+	}
+	if !strings.Contains(out, "You open the door.\n") || strings.Contains(out, `<span>You open`) {
+		t.Errorf("neutral lines render bare, got %q", out)
+	}
+}
+
 func TestMenuHTMLMarksSelection(t *testing.T) {
 	out := MenuHTML(ui.MenuSpec{Title: "Eat what?", Items: []string{"ration", "corpse"}}, 1)
 	if !strings.Contains(out, "&gt; b) corpse") {
