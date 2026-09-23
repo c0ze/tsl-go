@@ -42,9 +42,9 @@ func New() *Screen {
 			return nil // leave browser shortcuts (Ctrl/Cmd+R, …) to the browser
 		}
 		key := ev.Get("key").String()
-		if _, arrow := arrows[key]; arrow {
+		if _, arrow := arrows[key]; arrow && sc.over.Get("hidden").Bool() {
 			if t := ev.Get("target"); t.Truthy() && t.Get("tagName").String() == "INPUT" {
-				return nil // the focused volume slider keeps its arrow keys
+				return nil // the focused volume slider keeps its arrows — except in a menu
 			}
 		}
 		if len(key) == 1 || key == "Enter" || key == "Escape" ||

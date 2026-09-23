@@ -122,7 +122,7 @@ func keyToAction(ev *tc.EventKey) (ui.Action, bool) {
 	case tc.KeyRight:
 		return ui.Action{Kind: ui.ActMove, Dir: game.DirE}, true
 	case tc.KeyRune:
-		if ev.Modifiers()&(tc.ModAlt|tc.ModCtrl) != 0 {
+		if ev.Modifiers()&(tc.ModAlt|tc.ModCtrl|tc.ModMeta) != 0 {
 			return ui.Action{}, false // Alt/Ctrl chords aren't game keys
 		}
 		return ui.ActionForRune(ev.Rune())
@@ -146,7 +146,7 @@ func keyName(ev *tc.EventKey) string {
 	case tc.KeyRight:
 		return ui.KeyRight
 	case tc.KeyRune:
-		if ev.Modifiers()&(tc.ModAlt|tc.ModCtrl) == 0 {
+		if ev.Modifiers()&(tc.ModAlt|tc.ModCtrl|tc.ModMeta) == 0 {
 			return string(ev.Rune())
 		}
 	}

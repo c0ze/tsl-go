@@ -86,7 +86,7 @@ func TestTravelBringsAdjacentCreatures(t *testing.T) {
 	if len(g.Level.Creatures) != 1 || g.Level.Creatures[0] != imp {
 		t.Fatalf("only the adjacent imp should follow, B has %v", g.Level.Creatures)
 	}
-	if chebyshev(imp.Pos, g.Player) > followRadius || imp.Pos == g.Player {
+	if chebyshev(imp.Pos, Pos{3, 1}) > 2 || imp.Pos == g.Player {
 		t.Errorf("follower landed at %v, player at %v", imp.Pos, g.Player)
 	}
 	if len(a.Creatures) != 2 {
@@ -122,5 +122,28 @@ func TestTravelArrivalAvoidsOccupiedStairs(t *testing.T) {
 	}
 	if chebyshev(g.Player, Pos{3, 1}) != 1 {
 		t.Errorf("player should land beside the stairs, at %v", g.Player)
+	}
+}
+
+// With the stairs occupied and every nearby tile taken, the arrival still
+// finds a free tile somewhere (C find_random_free_spot), never the squatter's.
+func TestTravelArrivalFallsBackToAnyFreeTile(t *testing.T) {
+	g := fakeDungeon(t)
+	g.Player = Pos{3, 1}
+	g.Travel() // generate B
+	b := g.Level
+	g.Player = Pos{3, 1}
+	g.Travel() // back to A
+	for y := 0; y < b.H; y++ {
+		for x := 0; x < b.W; x++ {
+			if x != 0 || y != 0 { // leave one far corner free
+				b.Creatures = append(b.Creatures, &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat"}, Pos: Pos{x, y}, HP: 5})
+			}
+		}
+	}
+	g.Player = Pos{3, 1}
+	g.Travel()
+	if g.Player != (Pos{0, 0}) {
+		t.Errorf("player should land on the only free tile {0 0}, at %v", g.Player)
 	}
 }

@@ -140,9 +140,10 @@ func (g *Game) stepToward(m *Creature, target Pos) {
 		return
 	}
 	if !g.creatureCanEnter(m, dst) {
-		if !m.Def.Mimic && !m.Def.Permaswim { // the rooted and the pool-bound can't walk through anyway
-			g.monsterOpenDoor(m, dst) // try a door in the way (spends this move)
-		}
+		// A refused step still tries a door in the way — even for a creature
+		// that couldn't walk through it (C pursue: move_creature fails, then
+		// open_door), unless it lacks the knack for doors.
+		g.monsterOpenDoor(m, dst)
 		return
 	}
 	m.Pos = dst

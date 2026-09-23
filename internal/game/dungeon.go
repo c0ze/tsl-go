@@ -103,33 +103,34 @@ func (g *Game) Travel() {
 			break
 		}
 	}
-	if g.Level.CreatureAt(g.Player) != nil {
+	arrival := g.Player
+	if g.Level.CreatureAt(arrival) != nil {
 		// Someone is standing on the stairs: step off beside them rather
-		// than share their tile.
-		if spot, ok := g.freeTileNear(g.Player); ok {
+		// than share their tile (the C would overlap them).
+		if spot, ok := g.nearestFreeSpot(arrival, g.walkerFits); ok {
 			g.Player = spot
 		}
 	}
-	g.bringFollowers(from, fromPos)
+	g.bringFollowers(from, fromPos, arrival)
 	def := g.Dungeon.defs[g.Level.ID]
 	g.log("You enter %s.", def.Name)
 	g.Sound("descend")
 	g.advanceWorld()
 }
 
-// followRadius bounds how far from the arrival stairs a follower may land.
-const followRadius = 3
-
 // bringFollowers moves every creature adjacent to the stairs the player just
-// took on level from onto the current level, at the nearest free spot around
-// the player (C move_everyone + find_nearest_free_spot). A disguised mimic
-// stays put, as does anyone with no room to land.
-func (g *Game) bringFollowers(from *Level, stairs Pos) {
+// took on level from onto the current level, around the arrival stairs (C
+// move_everyone + find_nearest_free_spot). A disguised mimic stays put.
+func (g *Game) bringFollowers(from *Level, stairs, arrival Pos) {
 	for _, m := range append([]*Creature(nil), from.Creatures...) {
 		if m.Disguised || chebyshev(m.Pos, stairs) != 1 {
 			continue
 		}
-		if spot, ok := g.landingSpot(m); ok {
+		fits := g.walkerFits
+		if m.Def.Permaswim {
+			fits = func(p Pos) bool { return g.Level.At(p).Def.Water && g.Level.CreatureAt(p) == nil }
+		}
+		if spot, ok := g.nearestFreeSpot(arrival, fits); ok {
 			from.RemoveCreature(m)
 			m.Pos = spot
 			g.Level.Creatures = append(g.Level.Creatures, m)
@@ -137,41 +138,40 @@ func (g *Game) bringFollowers(from *Level, stairs Pos) {
 	}
 }
 
-// landingSpot is the nearest tile around the player m can stand on: water
-// for a water-bound swimmer, open floor for everyone else.
-func (g *Game) landingSpot(m *Creature) (Pos, bool) {
-	return g.nearestTile(g.Player, func(p Pos) bool {
-		if p == g.Player || g.Level.CreatureAt(p) != nil {
-			return false
-		}
-		if m.Def.Permaswim {
-			return g.Level.At(p).Def.Water
-		}
-		return g.Level.Passable(p)
-	})
+// walkerFits reports whether p is open floor with nobody on it, the player
+// included.
+func (g *Game) walkerFits(p Pos) bool {
+	return g.Level.Passable(p) && g.Level.CreatureAt(p) == nil && p != g.Player
 }
 
-// freeTileNear is the nearest open, unoccupied floor around p (excluding p).
-func (g *Game) freeTileNear(p Pos) (Pos, bool) {
-	return g.nearestTile(p, func(q Pos) bool {
-		return q != p && g.Level.Passable(q) && g.Level.CreatureAt(q) == nil
-	})
-}
-
-// nearestTile scans rings of radius 1..followRadius around c, nearest first,
-// for an in-bounds tile that ok accepts.
-func (g *Game) nearestTile(c Pos, ok func(Pos) bool) (Pos, bool) {
-	for radius := 1; radius <= followRadius; radius++ {
+// nearestFreeSpot is the C's find_nearest_free_spot: the first of the boxes
+// of radius 0, 1, and 2 around c holding tiles that fit yields one of them at
+// random; failing that, any fitting tile on the level does (the C's
+// find_random_free_spot). ok is false only when nothing fits anywhere.
+func (g *Game) nearestFreeSpot(c Pos, fits func(Pos) bool) (Pos, bool) {
+	var cands []Pos
+	for radius := 0; radius <= 2 && len(cands) == 0; radius++ {
 		for dy := -radius; dy <= radius; dy++ {
 			for dx := -radius; dx <= radius; dx++ {
-				p := Pos{X: c.X + dx, Y: c.Y + dy}
-				if chebyshev(p, c) == radius && g.Level.InBounds(p) && ok(p) {
-					return p, true
+				if p := (Pos{X: c.X + dx, Y: c.Y + dy}); g.Level.InBounds(p) && fits(p) {
+					cands = append(cands, p)
 				}
 			}
 		}
 	}
-	return Pos{}, false
+	if len(cands) == 0 {
+		for y := 0; y < g.Level.H; y++ {
+			for x := 0; x < g.Level.W; x++ {
+				if p := (Pos{X: x, Y: y}); fits(p) {
+					cands = append(cands, p)
+				}
+			}
+		}
+	}
+	if len(cands) == 0 {
+		return Pos{}, false
+	}
+	return cands[g.RNG.Intn(len(cands))], true
 }
 
 // EnterStart places the player on the current (start) level's entry tile and

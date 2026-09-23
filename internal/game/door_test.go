@@ -66,9 +66,10 @@ func TestBumpWallDoesNotOpen(t *testing.T) {
 	}
 }
 
-// A creature that can't walk (a revealed mimic, a pool-bound tentacle) can't
-// open a door either: stepping toward the player through one does nothing.
-func TestRootedCreatureLeavesDoorShut(t *testing.T) {
+// A creature whose step is refused still tries a closed door in its way —
+// even a revealed mimic or a pool-bound tentacle (C pursue: move_creature
+// fails, then open_door), since neither lacks the knack for doors.
+func TestRootedCreatureStillOpensDoor(t *testing.T) {
 	for _, def := range []*content.MonsterDef{
 		{ID: "mimic", Name: "mimic", HP: 3, Damage: "1d1", Mimic: true},
 		{ID: "tentacle", Name: "tentacle", HP: 3, Damage: "1d1", Swim: true, Permaswim: true},
@@ -77,8 +78,8 @@ func TestRootedCreatureLeavesDoorShut(t *testing.T) {
 		g.Level.Set(Pos{2, 1}, g.Content.Tiles["door_closed"])
 		g.Level.Creatures = append(g.Level.Creatures, &Creature{Def: def, Pos: Pos{3, 1}, HP: 3})
 		g.worldTick()
-		if g.Level.At(Pos{2, 1}).Def.ID != "door_closed" {
-			t.Errorf("a %s opened the door", def.ID)
+		if g.Level.At(Pos{2, 1}).Def.ID != "door_open" {
+			t.Errorf("a %s should open the door as in the C", def.ID)
 		}
 	}
 }
