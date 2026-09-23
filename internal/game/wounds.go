@@ -40,7 +40,9 @@ func (g *Game) woundCreature(m *Creature) {
 		return
 	}
 	m.Effects = prolongEffect(m.Effects, "wound", meleeWoundTime)
-	g.log("The %s is wounded!", m.Def.Name)
+	if g.canSee(m.Pos) {
+		g.log("The %s is wounded!", m.Def.Name)
+	}
 }
 
 // playerBleeds deals the wounded player's per-move blood loss (C
@@ -70,9 +72,17 @@ func (g *Game) creatureBleeds(m *Creature) bool {
 	if m.HP > 0 {
 		return false
 	}
-	g.log("The %s collapses!", m.Def.Name)
+	if g.canSee(m.Pos) {
+		g.log("The %s collapses!", m.Def.Name)
+	}
 	g.dropCorpseAndRemove(m)
 	return true
+}
+
+// canSee reports whether the player can currently see p (C can_see), which
+// decides whether events there are narrated.
+func (g *Game) canSee(p Pos) bool {
+	return g.Level.InBounds(p) && g.Level.At(p).Visible
 }
 
 // FirstAid is the first-aid spell (C magic.c first_aid): it stops the

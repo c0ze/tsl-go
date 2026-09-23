@@ -84,6 +84,9 @@ func (g *Game) advanceWorld() {
 }
 
 func (g *Game) passTurn() {
+	if g.Dead {
+		return // already dead this action (say, bled out on the step): nothing more happens
+	}
 	g.swimCheck()
 	if g.Dead {
 		return // drowned

@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"sort"
+	"strings"
 )
 
 // PolymorphRandom turns the player into a random roster form for the given
@@ -19,5 +20,13 @@ func (g *Game) PolymorphRandom(turns int) string {
 	sort.Strings(ids)
 	g.Shape = g.Content.Monsters[ids[g.RNG.Intn(len(ids))]]
 	g.AddEffect("polymorph", turns)
-	return fmt.Sprintf("You transform into a %s!", g.Shape.Name)
+	return fmt.Sprintf("You transform into %s!", withArticle(g.Shape.Name))
+}
+
+// withArticle prefixes a creature name with "a" or "an" (the C's name_one).
+func withArticle(name string) string {
+	if name != "" && strings.ContainsRune("aeiouAEIOU", rune(name[0])) {
+		return "an " + name
+	}
+	return "a " + name
 }

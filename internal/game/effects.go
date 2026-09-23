@@ -105,7 +105,7 @@ func (g *Game) tickCreatureEffects(m *Creature) bool {
 		e.Turns--
 		if e.Turns > 0 {
 			kept = append(kept, e)
-		} else if e.Kind == "wound" && g.Level.InBounds(m.Pos) && g.Level.At(m.Pos).Visible {
+		} else if e.Kind == "wound" && g.canSee(m.Pos) {
 			g.log("The %s is no longer bleeding.", m.Def.Name)
 		}
 	}

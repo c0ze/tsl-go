@@ -173,6 +173,9 @@ func (g *Game) playerAttacks(m *Creature) {
 // shapeshifted form's natural weapon, else the wielded one (bare fists never
 // wound).
 func (g *Game) playerWoundChance() int {
+	if g.HasEffect("hungry_book") || g.HasEffect("flame_hands") {
+		return 0 // a temp weapon replaces the wielded one, and neither wounds (C vweapon.c)
+	}
 	if g.Shape != nil {
 		return g.Shape.Wound
 	}

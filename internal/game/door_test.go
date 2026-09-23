@@ -142,3 +142,14 @@ func TestShapeWithoutDoorsRefusesEveryDoorVerb(t *testing.T) {
 		t.Errorf("a slime closed a door, messages %v", g.Messages)
 	}
 }
+
+// Vowel-initial forms get "an" (the C's name_one).
+func TestDoorRefusalUsesArticle(t *testing.T) {
+	g := doorGame()
+	g.Level.Set(Pos{2, 1}, g.Content.Tiles["door_closed"])
+	g.Shape = &content.MonsterDef{ID: "imp", Name: "imp", NoDoors: true}
+	g.PlayerStep(DirE)
+	if !hasMessage(g, "As an imp, you cannot open doors.") {
+		t.Errorf("got %v", g.Messages)
+	}
+}

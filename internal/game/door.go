@@ -30,6 +30,11 @@ func (g *Game) monsterOpenDoor(m *Creature, p Pos) {
 	}
 	if !m.Def.NoDoors {
 		g.openDoor(p)
+		if g.canSee(p) { // C open_door, doors.c:361-372
+			g.log("A door opens.")
+		} else {
+			g.log("You hear a door open.")
+		}
 		return
 	}
 	if g.RNG.Intn(2) == 0 && g.Level.At(p).Visible {
@@ -112,7 +117,7 @@ func (g *Game) RefuseDoors(verb string) bool {
 	if g.Shape == nil || !g.Shape.NoDoors {
 		return false
 	}
-	g.log("As a %s, you cannot %s doors.", g.Shape.Name, verb)
+	g.log("As %s, you cannot %s doors.", withArticle(g.Shape.Name), verb)
 	return true
 }
 

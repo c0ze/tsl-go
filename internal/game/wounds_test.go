@@ -63,6 +63,7 @@ func TestCreaturesBleedUnlessImmune(t *testing.T) {
 	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 1}, Pos: Pos{8, 1}, HP: 1}
 	slime := &Creature{Def: &content.MonsterDef{ID: "slime", Name: "slime", HP: 3, WoundImmune: true}, Pos: Pos{5, 0}, HP: 3}
 	g.Level.Creatures = append(g.Level.Creatures, rat, slime)
+	g.UpdateFOV() // collapses are only narrated in view
 	g.woundCreature(rat)
 	g.woundCreature(slime)
 	if slime.HasEffect("wound") {
@@ -82,5 +83,39 @@ func TestFirstAidRefusedWhenUnwounded(t *testing.T) {
 	g.CastSpell(book)
 	if g.EP != 5 || !hasMessage(g, "You are not wounded.") {
 		t.Errorf("unwounded first aid should cost nothing: EP %d, messages %v", g.EP, g.Messages)
+	}
+}
+
+// Off-screen wounds and collapses stay unnarrated (C: only if can_see).
+func TestUnseenWoundsAreSilent(t *testing.T) {
+	g := combatGame()
+	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 1}, Pos: Pos{8, 1}, HP: 1}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	g.woundCreature(rat) // no FOV computed: nothing is visible
+	g.stepToward(rat, g.Player)
+	if len(g.Messages) != 0 {
+		t.Errorf("unseen events were narrated: %v", g.Messages)
+	}
+}
+
+// Temporary weapons replace the wielded one and never wound (C vweapon.c).
+func TestTempWeaponIgnoresWieldedWound(t *testing.T) {
+	g := combatGame()
+	g.Weapon = &Item{Def: &content.ItemDef{ID: "machete", Name: "machete", Kind: "weapon", Wound: 50}}
+	g.AddEffect("flame_hands", 5)
+	if g.playerWoundChance() != 0 {
+		t.Error("flaming hands shouldn't carry the machete's wounding")
+	}
+}
+
+// Bleeding out on a step into water ends there: the cause stays "bled to
+// death" rather than being rewritten by the drowning check.
+func TestBleedDeathIsFinal(t *testing.T) {
+	g := waterGame()
+	g.woundPlayer()
+	g.PlayerHP = 1
+	g.PlayerStep(DirE)
+	if !g.Dead || g.DeathCause != "bled to death" || hasMessage(g, "You drown...") {
+		t.Errorf("dead=%v cause=%q messages %v", g.Dead, g.DeathCause, g.Messages)
 	}
 }
