@@ -29,30 +29,6 @@ func (r rect) intersects(o rect) bool {
 	return r.x <= o.x+o.w && r.x+r.w >= o.x && r.y <= o.y+o.h && r.y+r.h >= o.y
 }
 
-// Rooms generates a rooms-and-corridors level of size w×h. It returns the level,
-// the player start (center of the first room), and the down-stairs position
-// (center of the last room). Each room is joined to the previous by a corridor,
-// so the level is fully connected.
-func Rooms(r *rng.MT, c *content.Content, w, h, depth int) (*game.Level, game.Pos, game.Pos, error) {
-	floor, wall, stairs := c.Tiles["floor"], c.Tiles["wall"], c.Tiles["stairs_down"]
-	if floor == nil || wall == nil || stairs == nil {
-		return nil, game.Pos{}, game.Pos{}, fmt.Errorf("gen: tiles floor/wall/stairs_down must all be defined")
-	}
-
-	lvl := game.NewLevel(w, h, wall)
-	rooms := carveRooms(r, lvl, floor)
-	if len(rooms) == 0 {
-		return nil, game.Pos{}, game.Pos{}, fmt.Errorf("gen: no rooms placed (level too small)")
-	}
-
-	start := rooms[0].center()
-	down := rooms[len(rooms)-1].center()
-	lvl.Set(down, stairs)
-	placeMonsters(r, c, lvl, rooms, start, depth)
-	placeItems(r, c, lvl, rooms, start)
-	return lvl, start, down, nil
-}
-
 // carveRooms places up to maxRooms non-overlapping rooms into lvl (which starts
 // filled with wall), joining each to the previous with a corridor so the result
 // is fully connected, and returns the rooms in placement order.
@@ -148,35 +124,6 @@ func placeItems(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, st
 			it.Charges = def.Power // wand charges / arrows in the bundle
 		}
 		lvl.Items = append(lvl.Items, it)
-	}
-}
-
-// placeMonsters drops 0-2 monsters into each room except the starting room.
-func placeMonsters(r *rng.MT, c *content.Content, lvl *game.Level, rooms []rect, start game.Pos, depth int) {
-	ids := make([]string, 0, len(c.Monsters))
-	for id, m := range c.Monsters {
-		if m.MinDepth > depth {
-			continue // not deep enough for this monster yet
-		}
-		ids = append(ids, id)
-	}
-	if len(ids) == 0 {
-		return
-	}
-	sort.Strings(ids) // deterministic ordering for a given seed
-	for i, room := range rooms {
-		if i == 0 {
-			continue // keep the starting room clear
-		}
-		n := r.Intn(3) // 0..2
-		for k := 0; k < n; k++ {
-			pos := game.Pos{X: room.x + r.Intn(room.w), Y: room.y + r.Intn(room.h)}
-			if pos == start || !lvl.Passable(pos) || lvl.CreatureAt(pos) != nil {
-				continue
-			}
-			def := c.Monsters[ids[r.Intn(len(ids))]]
-			lvl.Creatures = append(lvl.Creatures, &game.Creature{Def: def, Pos: pos, HP: def.HP})
-		}
 	}
 }
 

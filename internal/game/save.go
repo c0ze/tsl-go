@@ -30,7 +30,6 @@ type savedCreature struct {
 	ID         string        `json:"id"`
 	Pos        Pos           `json:"pos"`
 	HP         int           `json:"hp"`
-	Faction    Faction       `json:"f,omitempty"`
 	Energy     int           `json:"e,omitempty"`
 	Effects    []savedEffect `json:"fx,omitempty"`
 	Ally       bool          `json:"ally,omitempty"`
@@ -182,7 +181,7 @@ func saveLevel(id string, l *Level) savedLevel {
 		sl.Tiles[i] = st
 	}
 	for _, c := range l.Creatures {
-		sc := savedCreature{ID: c.Def.ID, Pos: c.Pos, HP: c.HP, Faction: c.Faction,
+		sc := savedCreature{ID: c.Def.ID, Pos: c.Pos, HP: c.HP,
 			Energy: c.Energy, Effects: saveEffects(c.Effects),
 			Ally: c.Ally, Lifetime: c.Lifetime, Disguised: c.Disguised}
 		if c.DisguiseAs != nil {
@@ -300,7 +299,7 @@ func loadLevel(c *content.Content, sl savedLevel) (*Level, error) {
 		if def == nil {
 			return nil, fmt.Errorf("load: unknown monster %q", sc.ID)
 		}
-		cr := &Creature{Def: def, Pos: sc.Pos, HP: sc.HP, Faction: sc.Faction,
+		cr := &Creature{Def: def, Pos: sc.Pos, HP: sc.HP,
 			Energy: sc.Energy, Effects: loadEffects(sc.Effects),
 			Ally: sc.Ally, Lifetime: sc.Lifetime, Disguised: sc.Disguised}
 		if sc.DisguiseAs != "" {
