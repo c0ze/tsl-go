@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -37,7 +38,7 @@ func (s *scriptPrompter) NextAction() (Action, error) {
 	return a, nil
 }
 
-func (s *scriptPrompter) Menu(MenuSpec) (int, bool) { return 0, false }
+func (s *scriptPrompter) Menu(m MenuSpec) (int, bool) { return 0, m.Title == QuitPrompt }
 
 func (s *scriptPrompter) Target(game.Pos) (game.Pos, bool) { return game.Pos{}, false }
 
@@ -113,8 +114,8 @@ func TestRunCastSpell(t *testing.T) {
 	g := testGame(t, []string{".@."})
 	g.EP, g.EPMax = 10, 10
 	cast := false
-	g.Behaviors = map[string]game.Behavior{"first_aid": func(gg *game.Game, it *game.Item) []string { cast = true; return []string{"mend"} }}
-	g.Content.Items = map[string]*content.ItemDef{"book_aid": {ID: "book_aid", Name: "spellbook of first aid", Kind: "spellbook", Use: "first_aid", Cost: 4}}
+	g.Behaviors = map[string]game.Behavior{"mend": func(gg *game.Game, it *game.Item) []string { cast = true; return []string{"mend"} }}
+	g.Content.Items = map[string]*content.ItemDef{"book_aid": {ID: "book_aid", Name: "spellbook of first aid", Kind: "spellbook", Use: "mend", Cost: 4}}
 	g.Known = map[string]bool{"book_aid": true} // learned, not carried (C read_book)
 	p := &menuPrompter{actions: []Action{{Kind: ActCast}, {Kind: ActQuit}}, pick: 0}
 	if err := Run(g, p, &nullRenderer{}); err != nil {
@@ -265,7 +266,13 @@ func (c *capturePrompter) NextAction() (Action, error) {
 	c.i++
 	return a, nil
 }
-func (c *capturePrompter) Menu(m MenuSpec) (int, bool)      { c.lastMenu = m; return 0, false }
+func (c *capturePrompter) Menu(m MenuSpec) (int, bool) {
+	if m.Title == QuitPrompt {
+		return 0, true
+	}
+	c.lastMenu = m
+	return 0, false
+}
 func (c *capturePrompter) Target(game.Pos) (game.Pos, bool) { return game.Pos{}, false }
 
 func TestInventoryMenuShowsAppearance(t *testing.T) {
@@ -534,5 +541,119 @@ func TestCloseKeyBinding(t *testing.T) {
 	a, ok := ActionForRune('O')
 	if !ok || a.Kind != ActClose {
 		t.Errorf("ActionForRune('O') = %+v, %v; want ActClose", a, ok)
+	}
+}
+
+func TestMenuKeyLettersWinOverNavigation(t *testing.T) {
+	items := func(n int) []string { return make([]string, n) }
+	yn := []string{"Yes", "No"}
+	cases := []struct {
+		key     string
+		sel     int
+		items   []string
+		wantSel int
+		wantRes PromptResult
+	}{
+		{"j", 0, items(12), 9, PromptPick},  // the 10th item is labelled j)
+		{"k", 0, items(12), 10, PromptPick}, // the 11th, k)
+		{"q", 0, items(20), 16, PromptPick}, // the 17th, q)
+		{"j", 0, items(3), 1, PromptContinue},
+		{"k", 0, items(3), 2, PromptContinue},
+		{"q", 1, items(3), 1, PromptCancel},
+		{KeyEscape, 1, items(3), 1, PromptCancel},
+		{KeyEnter, 2, items(3), 2, PromptPick},
+		{"c", 0, items(3), 2, PromptPick},
+		{"d", 0, items(3), 0, PromptContinue},
+		{"y", 1, yn, 0, PromptPick}, // prompt_yn: y is yes
+		{"n", 0, yn, 1, PromptPick},
+		{"y", 0, items(2), 0, PromptContinue}, // only a Yes/No prompt reads y/n
+	}
+	for _, c := range cases {
+		sel, res := MenuKey(c.key, c.sel, c.items)
+		if sel != c.wantSel || res != c.wantRes {
+			t.Errorf("MenuKey(%q, %d, %v) = (%d, %v), want (%d, %v)", c.key, c.sel, c.items, sel, res, c.wantSel, c.wantRes)
+		}
+	}
+}
+
+func TestTargetKeyMovesDiagonallyAndClamps(t *testing.T) {
+	cur, res := TargetKey("y", game.Pos{X: 3, Y: 3}, 10, 10)
+	if cur != (game.Pos{X: 2, Y: 2}) || res != PromptContinue {
+		t.Errorf("y from (3,3) = %v %v", cur, res)
+	}
+	if cur, _ = TargetKey("b", game.Pos{X: 0, Y: 9}, 10, 10); cur != (game.Pos{X: 0, Y: 9}) {
+		t.Errorf("b at the corner should clamp, got %v", cur)
+	}
+	if _, res = TargetKey("q", cur, 10, 10); res != PromptCancel {
+		t.Errorf("q should cancel aiming, got %v", res)
+	}
+}
+
+// quitPrompter presses Q forever and answers every menu with `answer`.
+type quitPrompter struct {
+	answer, menus, actions int
+}
+
+func (q *quitPrompter) NextAction() (Action, error) {
+	q.actions++
+	if q.actions > 3 {
+		return Action{}, errStop
+	}
+	return Action{Kind: ActQuit}, nil
+}
+func (q *quitPrompter) Menu(m MenuSpec) (int, bool) {
+	q.menus++
+	return q.answer, true
+}
+func (q *quitPrompter) Target(game.Pos) (game.Pos, bool) { return game.Pos{}, false }
+
+var errStop = errors.New("stop")
+
+// Quit asks first, as the C does: "No" keeps the run going, "Yes" ends it.
+func TestQuitAsksForConfirmation(t *testing.T) {
+	no := &quitPrompter{answer: 1}
+	if err := Run(testGame(t, []string{".@."}), no, &nullRenderer{}); err != errStop {
+		t.Fatalf("declined quit should keep playing, Run returned %v", err)
+	}
+	if no.menus != 3 {
+		t.Errorf("each Q should ask once, asked %d times", no.menus)
+	}
+	yes := &quitPrompter{answer: 0}
+	if err := Run(testGame(t, []string{".@."}), yes, &nullRenderer{}); err != nil || yes.actions != 1 {
+		t.Errorf("confirmed quit should end the run at once: err=%v after %d actions", err, yes.actions)
+	}
+}
+
+// Deathspell has no range or breath, but it is aimed at an adjacent victim:
+// the cast must ask for a target (it used to fall through to "fizzles").
+func TestRunCastDeathspellAsksForTarget(t *testing.T) {
+	g := testGame(t, []string{".....", ".@...", "....."})
+	g.RNG = rng.NewWithSeed(1)
+	g.EP, g.EPMax = 10, 10
+	g.Content.Items = map[string]*content.ItemDef{"book_deathspell": {ID: "book_deathspell", Name: "deathspell", Kind: "spellbook", Cost: 1, Deathspell: true}}
+	g.Known = map[string]bool{"book_deathspell": true}
+	p := &zapPrompter{actions: []Action{{Kind: ActCast}, {Kind: ActQuit}}, target: game.Pos{X: 4, Y: 1}} // nobody there
+	if err := Run(g, p, &nullRenderer{}); err != nil {
+		t.Fatal(err)
+	}
+	if g.EP != 10 {
+		t.Errorf("an empty-tile deathspell is refused free (C), EP = %d", g.EP)
+	}
+	if !strings.Contains(strings.Join(g.Messages, "|"), "No one is there!") {
+		t.Errorf("deathspell should reach its targeted path, messages %v", g.Messages)
+	}
+}
+
+// A sighted step onto lava asks first; "No" leaves the player where they were.
+func TestLavaPromptDecline(t *testing.T) {
+	g := testGame(t, []string{".@."})
+	g.Content.Tiles["lava"] = &content.TileDef{ID: "lava", Glyph: "~", Transparent: true, Lava: true}
+	g.Level.Set(game.Pos{X: 2, Y: 0}, g.Content.Tiles["lava"])
+	p := &capturePrompter{actions: []Action{{Kind: ActMove, Dir: game.DirE}}}
+	if err := Run(g, p, &nullRenderer{}); err != nil {
+		t.Fatal(err)
+	}
+	if p.lastMenu.Title != "Step into the lava?" || g.Player != (game.Pos{X: 1, Y: 0}) {
+		t.Errorf("expected the lava prompt and no move: menu %q, player %v", p.lastMenu.Title, g.Player)
 	}
 }

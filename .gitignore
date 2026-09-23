@@ -1,4 +1,6 @@
 # Built binaries
+/tsl
+/tsl.exe
 /tsl-go
 /tsl-go.exe
 /dist/
@@ -10,6 +12,7 @@ tsl-0.40/tsl_gui
 # Runtime artifacts
 morgue.txt
 .tsl-save.json
+.tsl-save-*.tmp
 tsl_conf
 /tsl-wasm
 

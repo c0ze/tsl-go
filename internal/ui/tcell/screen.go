@@ -50,28 +50,48 @@ func cellColor(c ui.Cell) tc.Color {
 // Render draws the view (map then message lines) and flushes it.
 func (sc *Screen) Render(v ui.View) {
 	sc.last = v
-	sc.drawView(v)
+	sc.drawView(v, v.Player)
 	sc.s.Show()
 }
 
-// drawView paints the map, status line, and messages (without flushing).
-func (sc *Screen) drawView(v ui.View) {
+// footerRows is what the map must leave free below it: the status line, up to
+// four messages, and the aim prompt.
+const footerRows = 6
+
+// viewport returns the map's top-left offset so a focus point stays on a
+// screen smaller than the map (an 80x24 terminal can't fit a 60x24 level plus
+// its HUD): the window centres on focus and stops at the map's edges.
+func viewport(v ui.View, focus game.Pos, sw, sh int) (ox, oy, rows int) {
+	rows = min(v.H, max(sh-footerRows, 1))
+	cols := min(v.W, max(sw, 1))
+	ox = min(max(focus.X-cols/2, 0), v.W-cols)
+	oy = min(max(focus.Y-rows/2, 0), v.H-rows)
+	return ox, oy, rows
+}
+
+// drawView paints the map window around focus, then the status line and
+// messages beneath it (without flushing). It returns the map offset and the
+// row the footer starts on, for the targeting cursor and aim prompt.
+func (sc *Screen) drawView(v ui.View, focus game.Pos) (ox, oy, footer int) {
 	sc.s.Clear()
-	for y := 0; y < v.H; y++ {
-		for x := 0; x < v.W; x++ {
-			c := v.At(x, y)
+	sw, sh := sc.s.Size()
+	ox, oy, rows := viewport(v, focus, sw, sh)
+	for y := 0; y < rows; y++ {
+		for x := 0; x+ox < v.W; x++ {
+			c := v.At(x+ox, y+oy)
 			st := tc.StyleDefault.Foreground(cellColor(*c))
 			sc.s.SetContent(x, y, c.Glyph, nil, st)
 		}
 	}
-	drawString(sc.s, 0, v.H, v.Status)
+	drawString(sc.s, 0, rows, v.Status)
 	for i, msg := range v.Messages {
-		drawString(sc.s, 0, v.H+1+i, msg)
+		drawString(sc.s, 0, rows+1+i, msg)
 	}
+	return ox, oy, rows
 }
 
 func drawString(s tc.Screen, x, y int, str string) {
-	for i, r := range str {
+	for i, r := range []rune(str) {
 		s.SetContent(x+i, y, r, nil, tc.StyleDefault)
 	}
 }
@@ -86,6 +106,7 @@ func (sc *Screen) NextAction() (ui.Action, error) {
 			}
 		case *tc.EventResize:
 			sc.s.Sync()
+			sc.Render(sc.last) // re-fit the map window to the new size
 		}
 	}
 }
@@ -100,11 +121,40 @@ func keyToAction(ev *tc.EventKey) (ui.Action, bool) {
 		return ui.Action{Kind: ui.ActMove, Dir: game.DirW}, true
 	case tc.KeyRight:
 		return ui.Action{Kind: ui.ActMove, Dir: game.DirE}, true
+	case tc.KeyRune:
+		if ev.Modifiers()&(tc.ModAlt|tc.ModCtrl|tc.ModMeta) != 0 {
+			return ui.Action{}, false // Alt/Ctrl chords aren't game keys
+		}
+		return ui.ActionForRune(ev.Rune())
 	}
-	return ui.ActionForRune(ev.Rune())
+	return ui.Action{}, false
 }
 
-// Menu presents a blocking list; arrows/jk move, Enter/letter selects, Esc/q cancels.
+// keyName normalises a tcell key event to the shared ui key names.
+func keyName(ev *tc.EventKey) string {
+	switch ev.Key() {
+	case tc.KeyEnter:
+		return ui.KeyEnter
+	case tc.KeyEscape:
+		return ui.KeyEscape
+	case tc.KeyUp:
+		return ui.KeyUp
+	case tc.KeyDown:
+		return ui.KeyDown
+	case tc.KeyLeft:
+		return ui.KeyLeft
+	case tc.KeyRight:
+		return ui.KeyRight
+	case tc.KeyRune:
+		if ev.Modifiers()&(tc.ModAlt|tc.ModCtrl|tc.ModMeta) == 0 {
+			return string(ev.Rune())
+		}
+	}
+	return ""
+}
+
+// Menu presents a blocking list (ui.MenuKey: letters pick, arrows/jk move,
+// Enter picks, Esc/q cancels), scrolling it when it outgrows the screen.
 func (sc *Screen) Menu(m ui.MenuSpec) (int, bool) {
 	if len(m.Items) == 0 {
 		return 0, false
@@ -113,76 +163,46 @@ func (sc *Screen) Menu(m ui.MenuSpec) (int, bool) {
 	for {
 		sc.s.Clear()
 		drawString(sc.s, 0, 0, m.Title)
-		for i, it := range m.Items {
+		_, sh := sc.s.Size()
+		rows := max(sh-1, 1)
+		top := min(max(sel-rows/2, 0), max(len(m.Items)-rows, 0))
+		for i := top; i < len(m.Items) && i-top < rows; i++ {
 			prefix := "  "
 			if i == sel {
 				prefix = "> "
 			}
-			drawString(sc.s, 0, i+1, fmt.Sprintf("%s%c) %s", prefix, 'a'+i, it))
+			drawString(sc.s, 0, i-top+1, fmt.Sprintf("%s%c) %s", prefix, 'a'+i, m.Items[i]))
 		}
 		sc.s.Show()
 		ev, ok := sc.s.PollEvent().(*tc.EventKey)
 		if !ok {
 			continue
 		}
-		switch {
-		case ev.Key() == tc.KeyUp || ev.Rune() == 'k':
-			sel = (sel - 1 + len(m.Items)) % len(m.Items)
-		case ev.Key() == tc.KeyDown || ev.Rune() == 'j':
-			sel = (sel + 1) % len(m.Items)
-		case ev.Key() == tc.KeyEnter:
-			return sel, true
-		case ev.Key() == tc.KeyEscape || ev.Rune() == 'q':
-			return 0, false
-		case ev.Rune() >= 'a' && int(ev.Rune()-'a') < len(m.Items):
-			return int(ev.Rune() - 'a'), true
+		var res ui.PromptResult
+		if sel, res = ui.MenuKey(keyName(ev), sel, m.Items); res != ui.PromptContinue {
+			return sel, res == ui.PromptPick
 		}
 	}
 }
 
 // Target lets the player move a cursor over the last-rendered map and pick a
-// tile. Arrows/hjkl move the cursor; Enter confirms; Esc/q cancels.
+// tile (ui.TargetKey: hjklyubn/arrows move, Enter confirms, Esc/q cancels).
 func (sc *Screen) Target(origin game.Pos) (game.Pos, bool) {
 	v := sc.last
-	clamp := func(p game.Pos) game.Pos {
-		if p.X < 0 {
-			p.X = 0
-		}
-		if p.Y < 0 {
-			p.Y = 0
-		}
-		if v.W > 0 && p.X >= v.W {
-			p.X = v.W - 1
-		}
-		if v.H > 0 && p.Y >= v.H {
-			p.Y = v.H - 1
-		}
-		return p
-	}
-	cur := clamp(origin)
+	cur := ui.ClampPos(origin, v.W, v.H)
 	cursorStyle := tc.StyleDefault.Foreground(tc.ColorYellow).Reverse(true)
 	for {
-		sc.drawView(v)
-		drawString(sc.s, 0, v.H+1+len(v.Messages), "Aim: move cursor, Enter to fire, Esc to cancel")
-		sc.s.SetContent(cur.X, cur.Y, '*', nil, cursorStyle)
+		ox, oy, footer := sc.drawView(v, cur)
+		drawString(sc.s, 0, footer+1+len(v.Messages), "Aim: move cursor, Enter to fire, Esc to cancel")
+		sc.s.SetContent(cur.X-ox, cur.Y-oy, '*', nil, cursorStyle)
 		sc.s.Show()
 		ev, ok := sc.s.PollEvent().(*tc.EventKey)
 		if !ok {
 			continue
 		}
-		switch {
-		case ev.Key() == tc.KeyEnter:
-			return cur, true
-		case ev.Key() == tc.KeyEscape || ev.Rune() == 'q':
-			return game.Pos{}, false
-		case ev.Key() == tc.KeyUp || ev.Rune() == 'k':
-			cur = clamp(game.Pos{X: cur.X, Y: cur.Y - 1})
-		case ev.Key() == tc.KeyDown || ev.Rune() == 'j':
-			cur = clamp(game.Pos{X: cur.X, Y: cur.Y + 1})
-		case ev.Key() == tc.KeyLeft || ev.Rune() == 'h':
-			cur = clamp(game.Pos{X: cur.X - 1, Y: cur.Y})
-		case ev.Key() == tc.KeyRight || ev.Rune() == 'l':
-			cur = clamp(game.Pos{X: cur.X + 1, Y: cur.Y})
+		var res ui.PromptResult
+		if cur, res = ui.TargetKey(keyName(ev), cur, v.W, v.H); res != ui.PromptContinue {
+			return cur, res == ui.PromptPick
 		}
 	}
 }

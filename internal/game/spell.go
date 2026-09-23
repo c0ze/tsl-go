@@ -37,6 +37,10 @@ func (g *Game) CastSpell(book *Item) {
 		g.log("You lack the energy to cast %s.", book.Def.Name)
 		return
 	}
+	if book.Def.Use == "first_aid" && !g.HasEffect("wound") {
+		g.log("You are not wounded.") // C first_aid returns false: no EP, no turn
+		return
+	}
 	g.castSpend(book.Def.Cost)
 	if b, ok := g.Behaviors[book.Def.Use]; ok {
 		g.Messages = append(g.Messages, b(g, book)...)

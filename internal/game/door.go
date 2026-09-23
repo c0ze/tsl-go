@@ -21,6 +21,31 @@ func (g *Game) openDoor(p Pos) bool {
 	return true
 }
 
+// monsterOpenDoor is a creature's try at the closed door on p (C open_door
+// from pursue). One that can't open doors spends its move rattling it, and
+// half the time the player hears it if they can see the door (doors.c:219).
+func (g *Game) monsterOpenDoor(m *Creature, p Pos) {
+	if !g.Level.InBounds(p) || g.Level.At(p).Def.OpensTo == "" {
+		return // a plain wall: nothing to try
+	}
+	if !m.Def.NoDoors {
+		g.openDoor(p)
+		if g.canSee(p) { // C open_door, doors.c:361-372
+			g.log("A door opens.")
+		} else {
+			g.log("You hear a door open.")
+		}
+		return
+	}
+	if g.RNG.Intn(2) == 0 && g.Level.At(p).Visible {
+		noise := m.Def.DoorNoise
+		if noise == "" {
+			noise = "scratching on"
+		}
+		g.log("You hear something %s the door.", noise)
+	}
+}
+
 // revealSecretDoor handles a bump into a secret door: the C reveals it with
 // "You find a secret door!" (player.c:1620) and maybe_locked_door rolls 50/50
 // locked vs closed (doors.c). Reports whether one was revealed — the
@@ -85,10 +110,21 @@ func (g *Game) HasCrowbar() bool {
 	return false
 }
 
+// RefuseDoors reports whether the player's current form can't handle doors
+// (a shapeshift into a no_doors creature), telling them so: "As a slime, you
+// cannot open doors." (C doors.c:54, :219, :412 check this before anything).
+func (g *Game) RefuseDoors(verb string) bool {
+	if g.Shape == nil || !g.Shape.NoDoors {
+		return false
+	}
+	g.log("As %s, you cannot %s doors.", withArticle(g.Shape.Name), verb)
+	return true
+}
+
 // UnlockDoor spends one key on the locked door at p — the C's unlock_door
 // destroys the key and sets the tile straight to open (doors.c:470).
 func (g *Game) UnlockDoor(p Pos) {
-	if g.Dead || g.Won || !g.Level.InBounds(p) || !g.Level.At(p).Def.Locked {
+	if g.Dead || g.Won || !g.Level.InBounds(p) || !g.Level.At(p).Def.Locked || g.RefuseDoors("unlock") {
 		return
 	}
 	for _, it := range g.Inventory {
@@ -119,14 +155,14 @@ func (g *Game) loudNoise(p Pos) {
 // outright (the tile becomes floor); failure is loud. Either way the attempt
 // costs the turn.
 func (g *Game) ForceDoor(p Pos) {
-	if g.Dead || g.Won || !g.Level.InBounds(p) || !g.Level.At(p).Def.Locked {
+	if g.Dead || g.Won || !g.Level.InBounds(p) || !g.Level.At(p).Def.Locked || g.RefuseDoors("open") {
 		return
 	}
 	switch {
 	case g.HasCrowbar():
 		g.log("You break the door open with your crowbar!")
 		g.Level.Set(p, g.Content.Tiles["floor"])
-	case g.rollXN(5, 3):
+	case g.RNG.Chance(5, 3):
 		g.log("You break the door open!")
 		g.Level.Set(p, g.Content.Tiles["floor"])
 	default:
@@ -139,7 +175,7 @@ func (g *Game) ForceDoor(p Pos) {
 // CloseDoor closes the open door at p (the C's close_door): anything standing
 // or lying in the doorway blocks it.
 func (g *Game) CloseDoor(p Pos) {
-	if g.Dead || g.Won || !g.Level.InBounds(p) {
+	if g.Dead || g.Won || !g.Level.InBounds(p) || g.RefuseDoors("close") {
 		return
 	}
 	t := g.Level.At(p)
@@ -163,7 +199,7 @@ func (g *Game) CloseDoor(p Pos) {
 	g.Sound("door")
 	// The C rolls stealth vs DOOR_STEALTH (rules.h:139) for a quiet close;
 	// slamming it is loud.
-	if g.rollXN(g.playerStealth(), doorStealth) {
+	if g.RNG.Chance(g.playerStealth(), doorStealth) {
 		g.log("You silently close the door.")
 	} else {
 		g.log("You slam the door shut.")
@@ -175,20 +211,6 @@ func (g *Game) CloseDoor(p Pos) {
 // doorStealth is the C's DOOR_STEALTH (rules.h:139): the difficulty side of
 // the quiet-close roll.
 const doorStealth = 2
-
-// rollXN is the C's roll_xn (rolls.c:70): true with probability x in x+n,
-// clamping either side up to 1 by shifting the shortfall to the other.
-func (g *Game) rollXN(x, n int) bool {
-	if x < 1 {
-		n += 1 - x
-		x = 1
-	}
-	if n < 1 {
-		x += 1 - n
-		n = 1
-	}
-	return g.RNG.Intn(x+n) < x
-}
 
 // playerStealth sums worn stealth (the C's attr_stealth): dark cloak, padded
 // boots.

@@ -116,6 +116,8 @@ var badPhrases = []string{
 	"You drown",
 	"burned", // "You get burned (by lava)!"
 	"You land in lava",
+	"into the lava",
+	"You step into lava",
 	"vile fumes", // poison gas
 	"overcomes you",
 	"bites into your hand",
@@ -127,6 +129,9 @@ var badPhrases = []string{
 	"You step on", // "...a polymorph trap!", "...an electrified plate!"
 	"You fall asleep",
 	"You stagger",
+	"You have been wounded",
+	"You are bleeding",
+	"lost too much blood",
 	// monsterAttacks' effect-application follow-up, "The X <verb> you." — the
 	// player-caused wand variant phrases "...the <monster>.", never "you.".
 	"poisons you.",
@@ -143,6 +148,7 @@ var goodPhrases = []string{
 	"You pick up",
 	"recover", // "...and recover N HP."
 	"wounds begin",
+	"no longer bleeding",
 	"surge with vitality",
 	"mind sharpens",
 	"fresh charges",
@@ -194,7 +200,8 @@ func MenuHTML(m ui.MenuSpec, sel int) string {
 		if i == sel {
 			prefix = "&gt; "
 		}
-		fmt.Fprintf(&b, "%s%c) %s\n", prefix, 'a'+i, html.EscapeString(it))
+		// Each entry carries its letter so a tap can pick it (web/touch.js).
+		fmt.Fprintf(&b, "<span class=\"mi\" data-key=\"%c\">%s%c) %s</span>\n", 'a'+i, prefix, 'a'+i, html.EscapeString(it))
 	}
 	return b.String()
 }

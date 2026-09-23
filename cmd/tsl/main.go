@@ -9,11 +9,9 @@ import (
 	"time"
 
 	"github.com/c0ze/tsl-go/data"
-	"github.com/c0ze/tsl-go/internal/behaviors"
 	"github.com/c0ze/tsl-go/internal/boot"
 	"github.com/c0ze/tsl-go/internal/content"
 	"github.com/c0ze/tsl-go/internal/game"
-	"github.com/c0ze/tsl-go/internal/gen"
 	"github.com/c0ze/tsl-go/internal/ui"
 	tcellui "github.com/c0ze/tsl-go/internal/ui/tcell"
 )
@@ -37,6 +35,13 @@ func main() {
 }
 
 func run() (string, error) {
+	// The terminal comes up first: resuming consumes the savefile, so a
+	// terminal that then failed to start would lose the run.
+	screen, err := tcellui.New()
+	if err != nil {
+		return "", err
+	}
+	defer screen.Close()
 	c, err := content.Load(data.Files)
 	if err != nil {
 		return "", err
@@ -50,11 +55,6 @@ func run() (string, error) {
 			return "", err
 		}
 	}
-	screen, err := tcellui.New()
-	if err != nil {
-		return "", err
-	}
-	defer screen.Close()
 	for {
 		err := ui.Run(g, screen, screen)
 		if errors.Is(err, ui.ErrSaveRequested) {
@@ -93,17 +93,36 @@ func savePath() string {
 	return filepath.Join(home, ".tsl-save.json")
 }
 
-// saveTo writes the game to path (save-and-quit's file half).
-func saveTo(path string, g *game.Game) error {
-	f, err := os.Create(path)
+// saveTo writes the game to path (save-and-quit's file half). It writes a
+// temporary file and renames it into place, so a failed or interrupted save
+// never leaves a truncated savefile that would block every later launch.
+func saveTo(path string, g *game.Game) (err error) {
+	f, err := os.CreateTemp(filepath.Dir(path), ".tsl-save-*.tmp")
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err != nil {
+			os.Remove(f.Name())
+		}
+	}()
 	if err := g.Save(f); err != nil {
 		f.Close()
 		return err
 	}
-	return f.Close()
+	// Flush to disk before the rename: the savefile usually doesn't exist
+	// yet (resuming deletes it), so a crash could otherwise leave it empty.
+	if err := f.Sync(); err != nil {
+		f.Close()
+		return err
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
+	if err := os.Chmod(f.Name(), 0o644); err != nil { // CreateTemp makes it 0600
+		return err
+	}
+	return os.Rename(f.Name(), path)
 }
 
 // loadFrom resumes a saved game if path exists, deleting the savefile on a
@@ -118,11 +137,7 @@ func loadFrom(path string, c *content.Content) (*game.Game, error) {
 	if err != nil {
 		return nil, err
 	}
-	var g *game.Game
-	build := func(def *content.LevelDef) (*game.Level, error) {
-		return gen.LevelFromDef(g.RNG, c, def) // bound after load; called lazily on first entry
-	}
-	g, err = game.LoadGame(f, c, behaviors.Registry(), build)
+	g, err := boot.LoadGame(f, c)
 	f.Close() // before the delete: Windows refuses to remove an open file
 	if err != nil {
 		return nil, fmt.Errorf("savefile %s: %w", path, err)

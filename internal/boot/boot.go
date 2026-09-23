@@ -4,6 +4,7 @@ package boot
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/c0ze/tsl-go/internal/behaviors"
 	"github.com/c0ze/tsl-go/internal/content"
@@ -70,4 +71,17 @@ func startLevelID(c *content.Content) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("no start level defined in levels.toml")
+}
+
+// LoadGame restores a saved game from r, wiring the behaviours and the level
+// builder (bound to the restored dice, so levels first entered after the
+// resume generate as they would have) — the shared resume behind both
+// front-ends.
+func LoadGame(r io.Reader, c *content.Content) (*game.Game, error) {
+	var g *game.Game
+	build := func(def *content.LevelDef) (*game.Level, error) {
+		return gen.LevelFromDef(g.RNG, c, def) // g is bound below; called lazily on first entry
+	}
+	g, err := game.LoadGame(r, c, behaviors.Registry(), build)
+	return g, err
 }

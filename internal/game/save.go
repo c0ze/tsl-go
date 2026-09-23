@@ -30,7 +30,6 @@ type savedCreature struct {
 	ID         string        `json:"id"`
 	Pos        Pos           `json:"pos"`
 	HP         int           `json:"hp"`
-	Faction    Faction       `json:"f,omitempty"`
 	Energy     int           `json:"e,omitempty"`
 	Effects    []savedEffect `json:"fx,omitempty"`
 	Ally       bool          `json:"ally,omitempty"`
@@ -182,7 +181,7 @@ func saveLevel(id string, l *Level) savedLevel {
 		sl.Tiles[i] = st
 	}
 	for _, c := range l.Creatures {
-		sc := savedCreature{ID: c.Def.ID, Pos: c.Pos, HP: c.HP, Faction: c.Faction,
+		sc := savedCreature{ID: c.Def.ID, Pos: c.Pos, HP: c.HP,
 			Energy: c.Energy, Effects: saveEffects(c.Effects),
 			Ally: c.Ally, Lifetime: c.Lifetime, Disguised: c.Disguised}
 		if c.DisguiseAs != nil {
@@ -201,7 +200,9 @@ func saveLevel(id string, l *Level) savedLevel {
 // ID the content no longer knows fails the load (the fail-fast convention).
 func LoadGame(r io.Reader, c *content.Content, behaviors map[string]Behavior,
 	build func(*content.LevelDef) (*Level, error)) (*Game, error) {
-	var sg savedGame
+	// An equipment slot missing from the file (a save older than the slot)
+	// is empty, not inventory[0] — the zero value would equip the first item.
+	sg := savedGame{Weapon: -1, Armor: -1, Ring: -1, Amulet: -1, Boots: -1, Head: -1, Cloak: -1}
 	if err := json.NewDecoder(r).Decode(&sg); err != nil {
 		return nil, fmt.Errorf("load: %w", err)
 	}
@@ -252,6 +253,9 @@ func LoadGame(r io.Reader, c *content.Content, behaviors map[string]Behavior,
 		return nil, fmt.Errorf("load: current level %q missing from save", sg.Current)
 	}
 	g.Level = cache[sg.Current]
+	if !g.Level.InBounds(g.Player) {
+		return nil, fmt.Errorf("load: player position %v outside level %q", g.Player, sg.Current)
+	}
 	if len(c.Levels) > 0 { // a real dungeon graph (bare test games have none)
 		g.Dungeon = &Dungeon{defs: c.Levels, cache: cache, current: sg.Current, build: build}
 	}
@@ -295,7 +299,7 @@ func loadLevel(c *content.Content, sl savedLevel) (*Level, error) {
 		if def == nil {
 			return nil, fmt.Errorf("load: unknown monster %q", sc.ID)
 		}
-		cr := &Creature{Def: def, Pos: sc.Pos, HP: sc.HP, Faction: sc.Faction,
+		cr := &Creature{Def: def, Pos: sc.Pos, HP: sc.HP,
 			Energy: sc.Energy, Effects: loadEffects(sc.Effects),
 			Ally: sc.Ally, Lifetime: sc.Lifetime, Disguised: sc.Disguised}
 		if sc.DisguiseAs != "" {

@@ -120,6 +120,7 @@ type Game struct {
 	recallPos    Pos
 	recallSet    bool
 	lockedBump   *Pos // locked door just bumped, awaiting the front-end's prompt chain
+	lavaBump     *Pos // lava a sighted player just tried to enter, awaiting "Step into the lava?"
 	Messages     []string
 	Sounds       []string // transient per-turn sound-effect cues for the front-end (web SFX); see Sound
 	Dead         bool

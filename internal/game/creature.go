@@ -2,21 +2,12 @@ package game
 
 import "github.com/c0ze/tsl-go/internal/content"
 
-// Faction marks whose side a creature is on.
-type Faction int
-
-const (
-	FactionEnemy Faction = iota
-	FactionPlayer
-)
-
 // Creature is a monster on the level (the player is modelled separately on Game
 // for now). HP is current hit points; Def carries its stats and glyph.
 type Creature struct {
 	Def     *content.MonsterDef
 	Pos     Pos
 	HP      int
-	Faction Faction
 	Energy  int
 	Effects []Effect // timed afflictions (e.g. poison from a venom wand)
 

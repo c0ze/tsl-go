@@ -22,6 +22,7 @@ type Screen struct {
 	status    js.Value // <div id="status">
 	msgs      js.Value // <div id="messages">
 	over      js.Value // <pre id="overlay">
+	final     bool     // an end screen is up: Enter reloads the page
 }
 
 // New wires the DOM and the key listener.
@@ -37,8 +38,26 @@ func New() *Screen {
 	}
 	doc.Call("addEventListener", "keydown", js.FuncOf(func(this js.Value, args []js.Value) any {
 		ev := args[0]
+		altGr := ev.Call("getModifierState", "AltGraph").Bool() // reports as Ctrl+Alt on Windows
+		if !altGr && (ev.Get("ctrlKey").Bool() || ev.Get("metaKey").Bool() || ev.Get("altKey").Bool()) {
+			return nil // leave browser shortcuts (Ctrl/Cmd+R, …) to the browser
+		}
 		key := ev.Get("key").String()
-		if key == " " || len(key) == 1 || key == "Enter" || key == "Escape" ||
+		if sc.final {
+			// A fresh press only: the auto-repeat of an Enter still held from
+			// the confirming menu pick must not skip past the death screen.
+			if key == "Enter" && !ev.Get("repeat").Bool() {
+				ev.Call("preventDefault")
+				js.Global().Get("location").Call("reload")
+			}
+			return nil
+		}
+		if _, arrow := arrows[key]; arrow && sc.over.Get("hidden").Bool() {
+			if t := ev.Get("target"); t.Truthy() && t.Get("tagName").String() == "INPUT" {
+				return nil // the focused volume slider keeps its arrows — except in a menu
+			}
+		}
+		if len(key) == 1 || key == "Enter" || key == "Escape" ||
 			key == "ArrowUp" || key == "ArrowDown" || key == "ArrowLeft" || key == "ArrowRight" {
 			ev.Call("preventDefault")
 			select {
@@ -157,7 +176,8 @@ func (sc *Screen) announceLevel(id string) {
 	}
 }
 
-// Menu mirrors the terminal: j/k/arrows move, Enter/letter picks, Esc/q cancels.
+// Menu mirrors the terminal (ui.MenuKey: letters pick, j/k/arrows move,
+// Enter picks, Esc/q cancels).
 func (sc *Screen) Menu(m ui.MenuSpec) (int, bool) {
 	if len(m.Items) == 0 {
 		return 0, false
@@ -166,71 +186,58 @@ func (sc *Screen) Menu(m ui.MenuSpec) (int, bool) {
 	for {
 		sc.over.Set("hidden", false)
 		sc.over.Set("innerHTML", MenuHTML(m, sel))
-		key := <-sc.keys
-		switch {
-		case key == "ArrowUp" || key == "k":
-			sel = (sel - 1 + len(m.Items)) % len(m.Items)
-		case key == "ArrowDown" || key == "j":
-			sel = (sel + 1) % len(m.Items)
-		case key == "Enter":
+		var res ui.PromptResult
+		if sel, res = ui.MenuKey(<-sc.keys, sel, m.Items); res != ui.PromptContinue {
 			sc.over.Set("hidden", true)
-			return sel, true
-		case key == "Escape" || key == "q":
-			sc.over.Set("hidden", true)
-			return 0, false
-		case len(key) == 1 && key[0] >= 'a' && int(key[0]-'a') < len(m.Items):
-			sc.over.Set("hidden", true)
-			return int(key[0] - 'a'), true
+			return sel, res == ui.PromptPick
 		}
 	}
 }
 
-// Target moves a crosshair over the last-rendered map: hjkl/arrows steer,
-// Enter confirms, Esc/q cancels — the terminal's exact UX.
+// Target moves a crosshair over the last-rendered map — the terminal's exact
+// UX (ui.TargetKey: hjklyubn/arrows steer, Enter confirms, Esc/q cancels).
 func (sc *Screen) Target(origin game.Pos) (game.Pos, bool) {
 	v := sc.last
-	cur := origin
-	clamp := func(p game.Pos) game.Pos {
-		if p.X < 0 {
-			p.X = 0
-		}
-		if p.Y < 0 {
-			p.Y = 0
-		}
-		if v.W > 0 && p.X >= v.W {
-			p.X = v.W - 1
-		}
-		if v.H > 0 && p.Y >= v.H {
-			p.Y = v.H - 1
-		}
-		return p
-	}
-	dirs := map[string][2]int{
-		"h": {-1, 0}, "l": {1, 0}, "k": {0, -1}, "j": {0, 1},
-		"y": {-1, -1}, "u": {1, -1}, "b": {-1, 1}, "n": {1, 1},
-		"ArrowLeft": {-1, 0}, "ArrowRight": {1, 0}, "ArrowUp": {0, -1}, "ArrowDown": {0, 1},
-	}
+	cur := ui.ClampPos(origin, v.W, v.H)
 	for {
 		sc.screen.Set("innerHTML", RenderHTML(v, &cur))
 		sc.sendGrid(v, cur.X, cur.Y)
-		key := <-sc.keys
-		if d, ok := dirs[key]; ok {
-			cur = clamp(game.Pos{X: cur.X + d[0], Y: cur.Y + d[1]})
-			continue
-		}
-		switch key {
-		case "Enter":
+		var res ui.PromptResult
+		if cur, res = ui.TargetKey(<-sc.keys, cur, v.W, v.H); res != ui.PromptContinue {
 			sc.screen.Set("innerHTML", RenderHTML(v, nil))
-			return cur, true
-		case "Escape", "q":
-			sc.screen.Set("innerHTML", RenderHTML(v, nil))
-			return game.Pos{}, false
+			sc.sendGrid(v, -1, -1)
+			return cur, res == ui.PromptPick
 		}
 	}
 }
 
-// Overlay shows a terminal-style full message (save confirmation, the morgue).
+// OnVisibility calls hidden when the page goes out of sight or is being
+// unloaded (tab switch, app switch, close, reload), and shown when it comes
+// back — including a restore from the back/forward cache.
+func (sc *Screen) OnVisibility(hidden, shown func()) {
+	doc, win := sc.doc, js.Global()
+	onChange := js.FuncOf(func(js.Value, []js.Value) any {
+		if doc.Get("visibilityState").String() == "hidden" {
+			hidden()
+		} else {
+			shown()
+		}
+		return nil
+	})
+	doc.Call("addEventListener", "visibilitychange", onChange)
+	win.Call("addEventListener", "pagehide", js.FuncOf(func(js.Value, []js.Value) any { hidden(); return nil }))
+	win.Call("addEventListener", "pageshow", js.FuncOf(func(this js.Value, args []js.Value) any {
+		if len(args) > 0 && args[0].Get("persisted").Bool() {
+			shown()
+		}
+		return nil
+	}))
+}
+
+// Overlay shows a terminal-style end screen (save confirmation, the morgue);
+// the game is over, so Enter now reloads the page.
 func (sc *Screen) Overlay(text string) {
+	sc.final = true
 	sc.over.Set("hidden", false)
 	sc.over.Set("textContent", text)
 }

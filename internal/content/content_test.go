@@ -686,3 +686,16 @@ func TestLoadRejectsBonuslessAmulet(t *testing.T) {
 		t.Fatal("expected error: an accessory needs an attack or dodge bonus")
 	}
 }
+
+// A misspelled key fails the load instead of silently defaulting.
+func TestLoadRejectsUnknownKey(t *testing.T) {
+	dir := writeTiles(t, `
+[tile.floor]
+glyph = "."
+color = "normal"
+pasable = true
+`)
+	if _, err := Load(os.DirFS(dir)); err == nil {
+		t.Fatal("an unknown key should fail the load")
+	}
+}

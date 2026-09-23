@@ -117,7 +117,7 @@ func amnesia(g *game.Game, it *game.Item) []string {
 // blindness — and cuts levitation short, landing the drinker (C potions.c
 // treasure_elixir: "Removes all status effects, even good ones").
 func elixir(g *game.Game, it *game.Item) []string {
-	for _, kind := range []string{"poison", "haste", "slow", "regen", "blind"} {
+	for _, kind := range []string{"poison", "haste", "slow", "regen", "wound", "blind"} {
 		g.RemoveEffect(kind)
 	}
 	g.DispelLevitation()
@@ -298,11 +298,12 @@ func scare(g *game.Game, it *game.Item) []string {
 	return []string{fmt.Sprintf("You read the %s; %d nearby creature(s) turn and flee!", it.Def.Name, n)}
 }
 
-// firstAid is the first-aid spell — it knits wounds over time (a regen effect),
-// the faithful "applies a healing effect" from magic.c.
+// firstAid is the first-aid spell (C magic.c first_aid): it stops the
+// bleeding and restores 1d3 HP. CastSpell has already refused an unwounded
+// caster, so here there is always a wound to treat.
 func firstAid(g *game.Game, it *game.Item) []string {
-	g.AddEffect("regen", it.Def.Power)
-	return []string{fmt.Sprintf("You weave %s; your wounds begin to knit shut.", it.Def.Name)}
+	g.FirstAid()
+	return nil
 }
 
 // recharge tops up a random carried wand with a few fresh charges.

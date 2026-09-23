@@ -3,14 +3,19 @@
 <head>
 <meta charset="utf-8">
 <title>tsl-go — The Slimy Lichmummy</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>
   html, body { background: #000; color: #ddd; margin: 0; height: 100%; }
   body { display: flex; flex-direction: column; align-items: center;
          font-family: "DejaVu Sans Mono", Menlo, Consolas, monospace; }
   main { position: relative; margin-top: 1rem; }
-  pre { margin: 0; font-size: 16px; line-height: 1.15; }
-  #status { margin-top: .4rem; color: #c8bea5; white-space: pre; font-size: 13px; }
+  /* 60 map columns at ~0.602em per monospace cell: shrink the glyphs on a
+     narrow screen so the whole map fits instead of clipping both edges. */
+  pre { margin: 0; font-size: min(16px, calc((100vw - 32px) / 36.4)); line-height: 1.15; }
+  main { max-width: 100vw; padding: 0 16px; box-sizing: border-box; }
+  /* Narrow screens: clear the fixed Tiles/music buttons above the map. */
+  @media (max-width: 640px) { main { margin-top: 3rem; } }
+  #status { margin-top: .4rem; color: #c8bea5; white-space: pre-wrap; font-size: 13px; }
   /* HUD segments (internal/ui/web StatusHTML) — HP by ratio, EP cyan,
      location amber, gear labels muted, active effects highlighted. */
   #status .s-hp-good { color: #6fae4a; }
@@ -20,7 +25,7 @@
   #status .s-loc     { color: #d9a23a; }
   #status .s-label   { color: #77705e; }
   #status .s-eff     { color: #c060c0; }
-  #messages { margin-top: .2rem; color: #bbb; white-space: pre; min-height: 4.6em; font-size: 13px; }
+  #messages { margin-top: .2rem; color: #bbb; white-space: pre-wrap; min-height: 4.6em; font-size: 13px; }
   /* Message-log severity (internal/ui/web MessagesHTML). */
   #messages .m-bad  { color: #d6504a; }
   #messages .m-good { color: #6fae4a; }
@@ -57,6 +62,28 @@
               padding: .2rem .6rem; font: 13px/1 inherit; cursor: pointer; }
   #tiles { display: block; margin: 0 auto; max-width: 100%; height: auto; }
   footer { margin-top: auto; padding: .6rem; color: #555; font-size: 12px; }
+  #overlay .mi { display: inline-block; min-width: 60%; }
+  /* On-screen controls (web/touch.js): shown only on touch screens. */
+  #touchpad { display: none; }
+  @media (pointer: coarse) {
+    #touchpad { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+                justify-content: space-between; align-items: flex-end; gap: 12px;
+                padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+                background: rgba(0,0,0,.9); border-top: 1px solid #2a2a2a; }
+    body { padding-bottom: calc(196px + env(safe-area-inset-bottom)); }
+    footer { display: none; }
+    #overlay .mi { padding: .25em 0; }
+  }
+  #touchpad button { background: #16140f; color: #c8bea5; border: 1px solid #3d382c;
+                     border-radius: 6px; font: 14px/1 inherit; padding: 0;
+                     touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+  #touchpad button:active { background: #3d382c; }
+  #touchpad .dpad { display: grid; grid-template-columns: repeat(3, 52px); grid-auto-rows: 52px; gap: 4px; }
+  #touchpad .dpad button { font-size: 20px; }
+  #touchpad .acts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 38px;
+                    gap: 4px; flex: 1; max-width: 260px; }
+  #touchpad .acts .ok { color: #6fae4a; border-color: #4d6b3a; }
+  #touchpad .acts .esc { color: #d6504a; border-color: #6b3a3a; }
   footer a { color: #779; }
 </style>
 </head>
@@ -74,12 +101,40 @@
   <button id="mute" type="button">&#9834; on</button>
 </div>
 <div id="loading">summoning the dungeon&hellip;</div>
+<div id="touchpad" aria-label="On-screen controls">
+  <div class="dpad">
+    <button data-key="y" data-repeat data-map-only aria-label="up-left">&#8598;</button>
+    <button data-key="ArrowUp" data-repeat aria-label="up">&#8593;</button>
+    <button data-key="u" data-repeat data-map-only aria-label="up-right">&#8599;</button>
+    <button data-key="ArrowLeft" data-repeat aria-label="left">&#8592;</button>
+    <button data-key="g" data-map-only aria-label="pick up">get</button>
+    <button data-key="ArrowRight" data-repeat aria-label="right">&#8594;</button>
+    <button data-key="b" data-repeat data-map-only aria-label="down-left">&#8601;</button>
+    <button data-key="ArrowDown" data-repeat aria-label="down">&#8595;</button>
+    <button data-key="n" data-repeat data-map-only aria-label="down-right">&#8600;</button>
+  </div>
+  <div class="acts">
+    <button data-key="i" data-map-only>inv</button>
+    <button data-key="e" data-map-only>eat</button>
+    <button data-key="r" data-map-only>read</button>
+    <button data-key="&gt;" data-map-only>stairs</button>
+    <button data-key="z" data-map-only>zap</button>
+    <button data-key="f" data-map-only>fire</button>
+    <button data-key="c" data-map-only>cast</button>
+    <button data-key="t" data-map-only>talk</button>
+    <button data-key="O" data-map-only>close</button>
+    <button data-key="S" data-map-only>save</button>
+    <button class="ok" data-key="Enter">OK</button>
+    <button class="esc" data-key="Escape">Esc</button>
+    <button data-key="Q" data-map-only>quit</button>
+  </div>
+</div>
 <footer>
   tsl-go — a faithful Go port of <em>The Slimy Lichmummy 0.40</em> by Ulf Åström
   &middot; <a href="https://github.com/c0ze/tsl-go">source</a>
   &middot; <a href="/original/">original 0.40.1</a>
   &middot; keys: hjklyubn move, g get, i inventory, e eat, r read, z zap,
-  f fire, c cast, t talk, &gt; stairs, S save
+  f fire, c cast, t talk, O close door, &gt; stairs, S save, Q quit, m music
 </footer>
 <script>
 /* Background-music controller: streams each level's tracks (web/audio/manifest.json)
@@ -91,8 +146,12 @@
   const btn = document.getElementById("mute");
   const vol = document.getElementById("vol");
   let manifest = {}, playlist = [], idx = 0, level = null, unlocked = false;
-  let muted = localStorage.getItem("tsl-muted") === "1";
-  let musicVol = parseFloat(localStorage.getItem("tsl-vol"));
+  // Storage can throw (blocked site data, private mode); preferences are a
+  // convenience, so fall back to defaults rather than lose the audio block.
+  function pref(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function setPref(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  let muted = pref("tsl-muted") === "1";
+  let musicVol = parseFloat(pref("tsl-vol"));
   if (!(musicVol >= 0 && musicVol <= 1)) musicVol = 0.5;
   audio.volume = musicVol;
   if (vol) vol.value = String(Math.round(musicVol * 100));
@@ -152,13 +211,13 @@
   }
   function toggle() {
     muted = !muted;
-    localStorage.setItem("tsl-muted", muted ? "1" : "0");
+    setPref("tsl-muted", muted ? "1" : "0");
     if (muted) audio.pause(); else { unlocked = true; audio.volume = musicVol; play(); }
     render();
   }
   if (vol) vol.addEventListener("input", () => {
     musicVol = (parseInt(vol.value, 10) || 0) / 100;
-    localStorage.setItem("tsl-vol", String(musicVol));
+    setPref("tsl-vol", String(musicVol));
     if (!fadeTimer) audio.volume = musicVol;     // don't fight an in-progress fade
   });
   // ---- sound effects (Web Audio synthesis; no asset files) ---------------
@@ -244,11 +303,18 @@
   }, 1100);
 
   btn.addEventListener("click", toggle);
-  document.addEventListener("keydown", e => { if (e.key === "m" || e.key === "M") toggle(); });
+  // m mutes — but not while a menu is open (there m picks the 13th item) or
+  // under a browser shortcut chord.
+  document.addEventListener("keydown", e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (!document.getElementById("overlay").hidden) return;
+    if (e.key === "m" || e.key === "M") toggle();
+  });
   render();
 })();
 </script>
 <script src="tiles.js"></script>
+<script src="touch.js"></script>
 <script src="wasm_exec.js"></script>
 <script>
   const go = new Go();

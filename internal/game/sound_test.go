@@ -105,8 +105,8 @@ func TestDoorOpenCue(t *testing.T) {
 func TestCastCue(t *testing.T) {
 	g := sfxGame(t, []string{"@.."})
 	g.EP, g.EPMax = 10, 10
-	g.Behaviors = map[string]Behavior{"first_aid": func(gg *Game, it *Item) []string { return []string{"mend"} }}
-	book := &Item{Def: &content.ItemDef{ID: "book_aid", Name: "first aid", Kind: "spellbook", Use: "first_aid", Cost: 4}}
+	g.Behaviors = map[string]Behavior{"mend": func(gg *Game, it *Item) []string { return []string{"mend"} }}
+	book := &Item{Def: &content.ItemDef{ID: "book_aid", Name: "first aid", Kind: "spellbook", Use: "mend", Cost: 4}}
 	g.CastSpell(book)
 	if !hasSound(g, "cast") {
 		t.Errorf("casting a spell should cue a cast, got %v", g.Sounds)

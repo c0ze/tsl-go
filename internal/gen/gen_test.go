@@ -50,16 +50,24 @@ func glyphGrid(l *game.Level) string {
 	return string(b)
 }
 
+// roomsLevel generates a one-staircase level from c, returning it with the
+// start and the stairs.
+func roomsLevel(t *testing.T, seed uint32, c *content.Content, def *content.LevelDef) (*game.Level, game.Pos, game.Pos) {
+	t.Helper()
+	if def == nil {
+		def = &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"}}
+	}
+	l, err := LevelFromDef(rng.NewWithSeed(seed), c, def)
+	if err != nil {
+		t.Fatalf("seed %d: %v", seed, err)
+	}
+	return l, l.Start, l.Portals[0].Pos
+}
+
 func TestRoomsDeterministic(t *testing.T) {
 	c := testContent()
-	l1, s1, d1, err := Rooms(rng.NewWithSeed(42), c, 60, 24, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	l2, s2, d2, err := Rooms(rng.NewWithSeed(42), c, 60, 24, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	l1, s1, d1 := roomsLevel(t, 42, c, nil)
+	l2, s2, d2 := roomsLevel(t, 42, c, nil)
 	if s1 != s2 || d1 != d2 {
 		t.Fatalf("non-deterministic start/stairs: %v/%v vs %v/%v", s1, d1, s2, d2)
 	}
@@ -71,10 +79,7 @@ func TestRoomsDeterministic(t *testing.T) {
 func TestRoomsConnectivityAndPlacement(t *testing.T) {
 	c := testContent()
 	for seed := uint32(1); seed <= 20; seed++ {
-		l, start, down, err := Rooms(rng.NewWithSeed(seed), c, 60, 24, 1)
-		if err != nil {
-			t.Fatalf("seed %d: %v", seed, err)
-		}
+		l, start, down := roomsLevel(t, seed, c, nil)
 		if !l.InBounds(start) || !l.InBounds(down) {
 			t.Fatalf("seed %d: start/down out of bounds", seed)
 		}
@@ -95,10 +100,7 @@ func TestRoomsPlacesItems(t *testing.T) {
 	c.Items = map[string]*content.ItemDef{
 		"potion": {ID: "potion", Name: "potion", Glyph: "!", Color: content.ColorRed, Kind: "potion", Use: "heal", Power: 8},
 	}
-	l, _, _, err := Rooms(rng.NewWithSeed(3), c, 60, 24, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	l, _, _ := roomsLevel(t, 3, c, nil)
 	if len(l.Items) == 0 {
 		t.Error("expected at least one item placed")
 	}
@@ -114,10 +116,7 @@ func TestPlaceItemsSkipsNoSpawn(t *testing.T) {
 	c.Items = map[string]*content.ItemDef{
 		"corpse": {ID: "corpse", Name: "corpse", Glyph: "%", Color: content.ColorBrown, Kind: "food", Use: "eat", Power: 3, NoSpawn: true},
 	}
-	l, _, _, err := Rooms(rng.NewWithSeed(3), c, 60, 24, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	l, _, _ := roomsLevel(t, 3, c, nil)
 	if len(l.Items) != 0 {
 		t.Errorf("nospawn items must not be placed as floor loot, got %d", len(l.Items))
 	}
@@ -143,23 +142,6 @@ func TestPlaceItemsSeedsWandCharges(t *testing.T) {
 		}
 	}
 	t.Fatal("no wand was placed across 20 seeds")
-}
-
-func TestPlaceMonstersRespectsMinDepth(t *testing.T) {
-	c := testContent()
-	c.Monsters = map[string]*content.MonsterDef{
-		"deepling": {ID: "deepling", Name: "deepling", Glyph: "D", Color: content.ColorRed, HP: 3, Attack: 1, Dodge: 1, Damage: "1d2", MinDepth: 5},
-	}
-	if l, _, _, err := Rooms(rng.NewWithSeed(7), c, 60, 24, 1); err != nil {
-		t.Fatal(err)
-	} else if len(l.Creatures) != 0 {
-		t.Errorf("min_depth 5 monster must not spawn at depth 1, got %d", len(l.Creatures))
-	}
-	if l, _, _, err := Rooms(rng.NewWithSeed(7), c, 60, 24, 5); err != nil {
-		t.Fatal(err)
-	} else if len(l.Creatures) == 0 {
-		t.Error("min_depth 5 monster should spawn at depth 5")
-	}
 }
 
 func levelDefContent() *content.Content {
@@ -322,10 +304,8 @@ func TestRoomsPlacesMonsters(t *testing.T) {
 	c.Monsters = map[string]*content.MonsterDef{
 		"rat": {ID: "rat", Name: "rat", Glyph: "r", Color: content.ColorBrown, HP: 3, Attack: 2, Dodge: 1, Damage: "1d2"},
 	}
-	l, _, _, err := Rooms(rng.NewWithSeed(7), c, 60, 24, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	l, _, _ := roomsLevel(t, 7, c, &content.LevelDef{ID: "x", Name: "X", W: 60, H: 24, Links: []string{"y"},
+		Monsters: 6, Spawn: []content.SpawnEntry{{Monster: "rat", Weight: 1}}})
 	if len(l.Creatures) == 0 {
 		t.Error("expected at least one monster placed")
 	}

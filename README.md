@@ -18,7 +18,7 @@ bite back, and take the ascension altar — or be remembered by `morgue.txt`.
 The 0.40 parity roadmap is **complete**: the turn-energy scheduler and every
 speed modifier, the full potion (13/13), scroll (10/10), and spellbook tables,
 spell memorization, ~45 monsters including all five uniques the original can
-actually spawn, hidden traps, water/swimming/levitation, lava, breath
+actually spawn, hidden traps, bleeding wounds and first aid, water/swimming/levitation, lava, breath
 weapons, ammunition, allies, polymorph, and save/resume. Content the original
 defines but can never reach (three unspawnable uniques, the commented-out
 manual of camouflage) is deliberately absent, catalogued for a possible 0.41.
@@ -46,18 +46,30 @@ and Windows are attached to every
 
 | Key | Action | Key | Action |
 |---|---|---|---|
-| h j k l y u b n | move (vi keys) | `g` | pick up |
+| h j k l y u b n, arrows | move (vi keys) | `g` | pick up |
 | `i` | inventory / use | `e` | eat |
 | `r` | read scroll or study a book | `z` | zap wand |
 | `f` | fire bow | `c` | cast a learned spell |
 | `t` | talk | `>` | take stairs |
-| `S` | save and quit | `q` | quit |
+| `O` | close a door | `S` | save and quit |
+| `Q` | quit (asks first) | | |
+
+In menus, a letter picks its item; `j`/`k` or the arrows move and Enter
+picks; Esc or `q` cancels. When aiming, the move keys steer the cursor,
+Enter fires, Esc cancels.
 
 Saving writes `~/.tsl-save.json` and exits; the next launch resumes and
 deletes the savefile — saving is a free action, and there is no save-scumming.
+The terminal build fits an 80×24 window: the map scrolls to keep you in
+view.
 
 In the browser, **m** mutes the music (a volume slider sits beside it) and the
-**Tiles** button switches between the ASCII and graphic renderers.
+**Tiles** button switches between the ASCII and graphic renderers. On a phone
+or tablet, on-screen controls appear: a direction pad (hold to keep walking),
+the action buttons, and OK/Esc; menu entries are tappable. The browser also
+autosaves whenever the page goes out of sight, so a reload, a closed tab, or a
+phone discarding the tab picks the run back up — and coming back deletes that
+save, so it can't be used to rewind.
 
 ## Develop
 
@@ -76,6 +88,8 @@ go vet ./...
 - `internal/{content,gen,fov,rng,ui}/` — TOML content loading (fail-fast
   validation), level generation, field of view, the original's Mersenne
   Twister, and the rendering/input boundary.
+- `internal/boot/` — the shared new-game constructor, plus the random-play
+  soak test (`TSL_SOAK_SEEDS=2000 go test ./internal/boot` for a deep sweep).
 - `data/` — all game content as TOML: tiles, monsters, items, the dungeon
   graph.
 - `docs/superpowers/plans/` — one dated plan per shipped increment, each

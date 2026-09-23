@@ -12,25 +12,36 @@ import (
 	"time"
 
 	"github.com/c0ze/tsl-go/data"
-	"github.com/c0ze/tsl-go/internal/behaviors"
 	"github.com/c0ze/tsl-go/internal/boot"
 	"github.com/c0ze/tsl-go/internal/content"
 	"github.com/c0ze/tsl-go/internal/game"
-	"github.com/c0ze/tsl-go/internal/gen"
 	"github.com/c0ze/tsl-go/internal/ui"
 	"github.com/c0ze/tsl-go/internal/ui/web"
 )
 
 const (
-	saveKey       = "tsl-go-save"
-	quarantineKey = "tsl-go-save-corrupt" // a bad payload parks here for inspection
+	// The enhanced build keeps its own slot: /original (v0.40.1, same origin)
+	// owns "tsl-go-save", and the two lines' save formats may diverge. An
+	// enhanced save made before the split can't be told apart from a live
+	// /original run there, so it is left for /original rather than taken.
+	saveKey       = "tsl-go-save-v050"
+	quarantineKey = "tsl-go-save-v050-corrupt" // a bad payload parks here for inspection
 )
 
 func main() {
 	sc := web.New()
-	if err := play(sc); err != nil {
-		sc.Overlay("tsl-go error: " + err.Error())
-	}
+	func() {
+		defer func() {
+			// A panic would otherwise kill the runtime and freeze the page on
+			// its last frame; say what happened instead.
+			if r := recover(); r != nil {
+				sc.Overlay(fmt.Sprintf("tsl-go crashed: %v\n\nPress Enter to start again.", r))
+			}
+		}()
+		if err := play(sc); err != nil {
+			sc.Overlay("tsl-go error: " + err.Error() + "\n\nPress Enter to reload.")
+		}
+	}()
 	select {} // keep the wasm runtime alive for the final overlay
 }
 
@@ -48,6 +59,25 @@ func play(sc *web.Screen) error {
 			return err
 		}
 	}
+	// Autosave while the page is out of sight: a reload, a closed tab, or a
+	// phone discarding the background tab resumes the run instead of losing
+	// it. Coming back into view deletes that save again, so it can't be used
+	// to rewind (the no-scumming rule). The Go side only runs these handlers
+	// while the game is parked waiting for a key, so g is never mid-turn.
+	live := true
+	sc.OnVisibility(func() {
+		if live && !g.Dead && !g.Won {
+			var b strings.Builder
+			if g.Save(&b) == nil {
+				putSave(b.String())
+			}
+		}
+	}, func() {
+		if live {
+			clearSave(saveKey)
+		}
+	})
+	defer func() { live = false }()
 	for {
 		err := ui.Run(g, sc, sc)
 		if errors.Is(err, ui.ErrSaveRequested) {
@@ -56,11 +86,13 @@ func play(sc *web.Screen) error {
 				g.Messages = append(g.Messages, "Couldn't save game!")
 				continue // never crash a live game over a failed save
 			}
+			live = false // an explicit save-and-quit keeps its savefile
 			if !putSave(b.String()) {
+				live = true
 				g.Messages = append(g.Messages, "Couldn't save game!")
 				continue // blocked storage (private mode etc.): keep playing
 			}
-			sc.Overlay("Game saved.\n\nReload the page to resume.")
+			sc.Overlay("Game saved.\n\nPress Enter (or reload) to resume.")
 			return nil
 		}
 		if err != nil {
@@ -70,11 +102,11 @@ func play(sc *web.Screen) error {
 	}
 	switch {
 	case g.Won:
-		sc.Overlay("You escaped the dungeon victorious!\n\nReload to descend again.")
+		sc.Overlay("You escaped the dungeon victorious!\n\nPress Enter to descend again.")
 	case g.Dead:
-		sc.Overlay(g.MorgueText() + "\nReload to try again.")
+		sc.Overlay(g.MorgueText() + "\nPress Enter to try again.")
 	default:
-		sc.Overlay("You leave the dungeon. Farewell.\n\nReload to descend again.")
+		sc.Overlay("You leave the dungeon. Farewell.\n\nPress Enter to descend again.")
 	}
 	return nil
 }
@@ -82,24 +114,21 @@ func play(sc *web.Screen) error {
 // resume restores a localStorage save and deletes it (the no-scumming rule),
 // or returns nil for a fresh descent.
 func resume(c *content.Content) (*game.Game, error) {
-	raw := getSave()
+	key := saveKey
+	raw := getSave(key)
 	if raw == "" {
 		return nil, nil
 	}
-	var g *game.Game
-	build := func(def *content.LevelDef) (*game.Level, error) {
-		return gen.LevelFromDef(g.RNG, c, def)
-	}
-	g, err := game.LoadGame(strings.NewReader(raw), c, behaviors.Registry(), build)
+	g, err := boot.LoadGame(strings.NewReader(raw), c)
 	if err != nil {
 		// Quarantine, don't destroy: the live slot is freed so a reload
 		// starts fresh instead of hitting the same fatal overlay forever,
 		// while the payload survives under the debug key (#78's rule that a
 		// failed load must not silently lose the save).
-		quarantineSave(raw)
+		quarantineSave(key, raw)
 		return nil, fmt.Errorf("savefile was corrupt (preserved as %q): %w", quarantineKey, err)
 	}
-	if !clearSave() {
+	if !clearSave(key) {
 		// Broken storage: play on, but say the single-use rule is at risk.
 		g.Messages = append(g.Messages, "The old savefile could not be removed.")
 	}
@@ -110,9 +139,9 @@ func resume(c *content.Content) (*game.Game, error) {
 // private browsing): syscall/js panics where a browser would throw, and a
 // missing save must never take the runtime down with it.
 
-func getSave() (out string) {
+func getSave(key string) (out string) {
 	defer func() { _ = recover() }()
-	raw := js.Global().Get("localStorage").Call("getItem", saveKey)
+	raw := js.Global().Get("localStorage").Call("getItem", key)
 	if raw.IsNull() {
 		return ""
 	}
@@ -125,18 +154,18 @@ func putSave(s string) (ok bool) {
 	return true
 }
 
-func clearSave() (ok bool) {
+func clearSave(key string) (ok bool) {
 	defer func() { _ = recover() }()
-	js.Global().Get("localStorage").Call("removeItem", saveKey)
+	js.Global().Get("localStorage").Call("removeItem", key)
 	return true
 }
 
 // quarantineSave parks a payload under the debug key and frees the live slot;
 // best-effort on both counts (storage may be the thing that is broken).
-func quarantineSave(raw string) {
+func quarantineSave(key, raw string) {
 	func() {
 		defer func() { _ = recover() }()
 		js.Global().Get("localStorage").Call("setItem", quarantineKey, raw)
 	}()
-	clearSave()
+	clearSave(key)
 }
