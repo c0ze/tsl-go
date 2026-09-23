@@ -387,8 +387,19 @@ func decodeTOML(fsys fs.FS, name string, v any) error {
 	if err != nil {
 		return fmt.Errorf("reading %s: %w", name, err)
 	}
-	if _, err := toml.Decode(string(b), v); err != nil {
+	return strictDecode(name, b, v)
+}
+
+// strictDecode decodes TOML into v and rejects keys v has no field for, so a
+// misspelled key (say "permaswimm") fails the load instead of silently
+// defaulting — the fail-fast rule the validators follow.
+func strictDecode(name string, b []byte, v any) error {
+	md, err := toml.Decode(string(b), v)
+	if err != nil {
 		return fmt.Errorf("parsing %s: %w", name, err)
+	}
+	if keys := md.Undecoded(); len(keys) > 0 {
+		return fmt.Errorf("parsing %s: unknown key %q", name, keys[0].String())
 	}
 	return nil
 }
@@ -402,8 +413,8 @@ func decodeOptionalTOML(fsys fs.FS, name string, v any) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("reading %s: %w", name, err)
 	}
-	if _, err := toml.Decode(string(b), v); err != nil {
-		return false, fmt.Errorf("parsing %s: %w", name, err)
+	if err := strictDecode(name, b, v); err != nil {
+		return false, err
 	}
 	return true, nil
 }
