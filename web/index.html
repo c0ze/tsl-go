@@ -79,7 +79,7 @@
   &middot; <a href="https://github.com/c0ze/tsl-go">source</a>
   &middot; <a href="/original/">original 0.40.1</a>
   &middot; keys: hjklyubn move, g get, i inventory, e eat, r read, z zap,
-  f fire, c cast, t talk, &gt; stairs, S save
+  f fire, c cast, t talk, O close door, &gt; stairs, S save, Q quit, m music
 </footer>
 <script>
 /* Background-music controller: streams each level's tracks (web/audio/manifest.json)
@@ -91,8 +91,12 @@
   const btn = document.getElementById("mute");
   const vol = document.getElementById("vol");
   let manifest = {}, playlist = [], idx = 0, level = null, unlocked = false;
-  let muted = localStorage.getItem("tsl-muted") === "1";
-  let musicVol = parseFloat(localStorage.getItem("tsl-vol"));
+  // Storage can throw (blocked site data, private mode); preferences are a
+  // convenience, so fall back to defaults rather than lose the audio block.
+  function pref(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function setPref(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  let muted = pref("tsl-muted") === "1";
+  let musicVol = parseFloat(pref("tsl-vol"));
   if (!(musicVol >= 0 && musicVol <= 1)) musicVol = 0.5;
   audio.volume = musicVol;
   if (vol) vol.value = String(Math.round(musicVol * 100));
@@ -152,13 +156,13 @@
   }
   function toggle() {
     muted = !muted;
-    localStorage.setItem("tsl-muted", muted ? "1" : "0");
+    setPref("tsl-muted", muted ? "1" : "0");
     if (muted) audio.pause(); else { unlocked = true; audio.volume = musicVol; play(); }
     render();
   }
   if (vol) vol.addEventListener("input", () => {
     musicVol = (parseInt(vol.value, 10) || 0) / 100;
-    localStorage.setItem("tsl-vol", String(musicVol));
+    setPref("tsl-vol", String(musicVol));
     if (!fadeTimer) audio.volume = musicVol;     // don't fight an in-progress fade
   });
   // ---- sound effects (Web Audio synthesis; no asset files) ---------------
@@ -244,7 +248,13 @@
   }, 1100);
 
   btn.addEventListener("click", toggle);
-  document.addEventListener("keydown", e => { if (e.key === "m" || e.key === "M") toggle(); });
+  // m mutes — but not while a menu is open (there m picks the 13th item) or
+  // under a browser shortcut chord.
+  document.addEventListener("keydown", e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (!document.getElementById("overlay").hidden) return;
+    if (e.key === "m" || e.key === "M") toggle();
+  });
   render();
 })();
 </script>
