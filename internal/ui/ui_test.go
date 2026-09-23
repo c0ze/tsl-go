@@ -617,3 +617,23 @@ func TestQuitAsksForConfirmation(t *testing.T) {
 		t.Errorf("confirmed quit should end the run at once: err=%v after %d actions", err, yes.actions)
 	}
 }
+
+// Deathspell has no range or breath, but it is aimed at an adjacent victim:
+// the cast must ask for a target (it used to fall through to "fizzles").
+func TestRunCastDeathspellAsksForTarget(t *testing.T) {
+	g := testGame(t, []string{".....", ".@...", "....."})
+	g.RNG = rng.NewWithSeed(1)
+	g.EP, g.EPMax = 10, 10
+	g.Content.Items = map[string]*content.ItemDef{"book_deathspell": {ID: "book_deathspell", Name: "deathspell", Kind: "spellbook", Cost: 1, Deathspell: true}}
+	g.Known = map[string]bool{"book_deathspell": true}
+	p := &zapPrompter{actions: []Action{{Kind: ActCast}, {Kind: ActQuit}}, target: game.Pos{X: 4, Y: 1}} // nobody there
+	if err := Run(g, p, &nullRenderer{}); err != nil {
+		t.Fatal(err)
+	}
+	if g.EP != 10 {
+		t.Errorf("an empty-tile deathspell is refused free (C), EP = %d", g.EP)
+	}
+	if !strings.Contains(strings.Join(g.Messages, "|"), "No one is there!") {
+		t.Errorf("deathspell should reach its targeted path, messages %v", g.Messages)
+	}
+}
