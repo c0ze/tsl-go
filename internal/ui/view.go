@@ -17,6 +17,12 @@ type Cell struct {
 	Color content.Color
 	Dim   bool    // render dimmed (remembered-but-not-currently-visible)
 	Light float64 // 0..1 brightness of a visible tile; renderers scale Colour by it for the torch-lit falloff
+	// Entity is the content id of what stands on the cell — an item or
+	// monster def id ("item" for one not yet identified), or "player" — and
+	// "" for bare terrain. Graphic
+	// front-ends pick sprites by it where glyph and colour are ambiguous
+	// (boots and body armour share '[', corpses and rations '%').
+	Entity string
 }
 
 // HUD carries the status line's segments individually so a front-end can
@@ -78,7 +84,7 @@ func BuildView(g *game.Game) View {
 	v.Base = append([]Cell(nil), v.Cells...) // snapshot the terrain before entities composite on top
 	for _, it := range l.Items {
 		if l.InBounds(it.Pos) && l.At(it.Pos).Visible {
-			paint(v.At(it.Pos.X, it.Pos.Y), it.Def.Rune(), it.Def.Color)
+			paint(v.At(it.Pos.X, it.Pos.Y), it.Def.Rune(), it.Def.Color, entityID(g, it.Def))
 		}
 	}
 	for _, m := range l.Creatures {
@@ -86,16 +92,16 @@ func BuildView(g *game.Game) View {
 			continue
 		}
 		if m.Disguised && m.DisguiseAs != nil { // a mimic wears its loot glamour
-			paint(v.At(m.Pos.X, m.Pos.Y), m.DisguiseAs.Rune(), m.DisguiseAs.Color)
+			paint(v.At(m.Pos.X, m.Pos.Y), m.DisguiseAs.Rune(), m.DisguiseAs.Color, entityID(g, m.DisguiseAs))
 			continue
 		}
-		paint(v.At(m.Pos.X, m.Pos.Y), m.Def.Rune(), m.Def.Color)
+		paint(v.At(m.Pos.X, m.Pos.Y), m.Def.Rune(), m.Def.Color, m.Def.ID)
 	}
 	if l.InBounds(g.Player) {
 		if g.Shape != nil { // a polymorphed player wears the form's glyph
-			paint(v.At(g.Player.X, g.Player.Y), g.Shape.Rune(), g.Shape.Color)
+			paint(v.At(g.Player.X, g.Player.Y), g.Shape.Rune(), g.Shape.Color, g.Shape.ID)
 		} else {
-			paint(v.At(g.Player.X, g.Player.Y), PlayerGlyph, PlayerColor)
+			paint(v.At(g.Player.X, g.Player.Y), PlayerGlyph, PlayerColor, "player")
 		}
 	}
 	v.HUD = buildHUD(g)
@@ -107,11 +113,21 @@ func BuildView(g *game.Game) View {
 	return v
 }
 
+// entityID is the id a front-end may see for an item on the ground: its def
+// id once the player knows what it is, else the neutral "item" — an
+// unidentified potion must not name its type to the page.
+func entityID(g *game.Game, def *content.ItemDef) string {
+	if !g.IsIdentified(&game.Item{Def: def}) {
+		return "item"
+	}
+	return def.ID
+}
+
 // paint overlays a glyph and colour onto an already-built cell, keeping the
 // light the underlying visible tile carries so items, creatures, and the player
 // dim with the torchlight like the floor they stand on.
-func paint(c *Cell, glyph rune, color content.Color) {
-	c.Glyph, c.Color = glyph, color
+func paint(c *Cell, glyph rune, color content.Color, entity string) {
+	c.Glyph, c.Color, c.Entity = glyph, color, entity
 }
 
 // buildHUD summarises the player's vitals and gear, segment by segment.
