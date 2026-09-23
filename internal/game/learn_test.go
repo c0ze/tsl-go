@@ -124,3 +124,45 @@ func TestCarriedUnreadBookIsNotCastable(t *testing.T) {
 		t.Errorf("carrying an unread book grants nothing (C: knowledge only), got %d spells", n)
 	}
 }
+
+// A difficult read punishes the reader but leaves the book for another try:
+// the C's bad branch returns before del_item (reading.c:112-118).
+func TestDifficultBookSurvives(t *testing.T) {
+	for seed := uint32(1); seed <= 16; seed++ {
+		g, book := bookGame()
+		g.RNG = rng.NewWithSeed(seed)
+		g.PlayerUse(book)
+		if g.Known["book_force"] {
+			continue // learned this seed
+		}
+		if !g.hasInventoryItem(book) {
+			t.Error("a failed read must not destroy the book")
+		}
+		return
+	}
+	t.Fatal("sixteen seeds never failed; the coin looks rigged")
+}
+
+// The manual of pharmacy names every potion on a good read; it teaches no
+// spell and grants no EP (C reading.c treasure_b_pharmacy).
+func TestPharmacyManualIdentifiesPotions(t *testing.T) {
+	for seed := uint32(1); seed <= 16; seed++ {
+		g, _ := bookGame()
+		g.Content.Items = map[string]*content.ItemDef{"healing_potion": {ID: "healing_potion", Name: "potion of healing", Kind: "potion"}}
+		manual := &Item{Def: &content.ItemDef{ID: "manual_pharmacy", Name: "manual of pharmacy", Kind: "spellbook", Use: "pharmacy", Cost: 2}}
+		g.Inventory = append(g.Inventory, manual)
+		g.RNG = rng.NewWithSeed(seed)
+		g.PlayerUse(manual)
+		if g.hasInventoryItem(manual) {
+			continue // difficult this seed
+		}
+		if !g.Identified["healing_potion"] {
+			t.Error("pharmacy should identify the potions")
+		}
+		if g.Known["manual_pharmacy"] || g.EPMax != 9 {
+			t.Errorf("pharmacy is no spell: known=%v EPMax=%d", g.Known["manual_pharmacy"], g.EPMax)
+		}
+		return
+	}
+	t.Fatal("sixteen seeds never read the manual")
+}

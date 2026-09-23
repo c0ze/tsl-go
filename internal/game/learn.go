@@ -1,8 +1,9 @@
 package game
 
 // Spell memorization (#21, C reading.c read_book): a spellbook is read once
-// and consumed — half the time you learn its spell permanently, half the
-// time the book turns on you. Casting draws on Known, not the pack.
+// and consumed on success — half the time you learn its spell permanently,
+// half the time the book turns on you and survives for another try. Casting
+// draws on Known, not the pack.
 
 // hungryBookDamage approximates the C's virtual_hungry_book chain
 // (1/1/1/1/1/2 — avg 1.17, max 2) as the max-preserving 1d2.
@@ -13,7 +14,8 @@ const (
 )
 
 // readBook is the C's read_book: identify, refuse what's known, then the
-// coin flip — learn (and grow) or suffer. The book burns up either way.
+// coin flip — learn (and grow) or suffer. Only a successful read uses the
+// book up; the difficult branch returns before the C's del_item.
 func (g *Game) readBook(book *Item) {
 	g.identify(book)
 	if g.Known[book.Def.ID] {
@@ -23,6 +25,14 @@ func (g *Game) readBook(book *Item) {
 	if g.RNG.Intn(2) == 0 {
 		g.log("This book is difficult to understand!")
 		g.badBook(book)
+		g.advanceWorld()
+		return
+	}
+	if book.Def.Use == "pharmacy" {
+		// The manual teaches no spell: it names every potion on the spot,
+		// with no EP growth (C reading.c treasure_b_pharmacy).
+		g.IdentifyAllPotions()
+		g.log("You learn how to identify all potions.")
 	} else {
 		if g.Known == nil {
 			g.Known = map[string]bool{}
