@@ -545,27 +545,33 @@ func TestCloseKeyBinding(t *testing.T) {
 }
 
 func TestMenuKeyLettersWinOverNavigation(t *testing.T) {
+	items := func(n int) []string { return make([]string, n) }
+	yn := []string{"Yes", "No"}
 	cases := []struct {
 		key     string
-		sel, n  int
+		sel     int
+		items   []string
 		wantSel int
 		wantRes PromptResult
 	}{
-		{"j", 0, 12, 9, PromptPick},    // the 10th item is labelled j)
-		{"k", 0, 12, 10, PromptPick},   // the 11th, k)
-		{"q", 0, 20, 16, PromptPick},   // the 17th, q)
-		{"j", 0, 3, 1, PromptContinue}, // short menus keep vi navigation
-		{"k", 0, 3, 2, PromptContinue},
-		{"q", 1, 3, 1, PromptCancel},
-		{KeyEscape, 1, 3, 1, PromptCancel},
-		{KeyEnter, 2, 3, 2, PromptPick},
-		{"c", 0, 3, 2, PromptPick},
-		{"d", 0, 3, 0, PromptContinue},
+		{"j", 0, items(12), 9, PromptPick},  // the 10th item is labelled j)
+		{"k", 0, items(12), 10, PromptPick}, // the 11th, k)
+		{"q", 0, items(20), 16, PromptPick}, // the 17th, q)
+		{"j", 0, items(3), 1, PromptContinue},
+		{"k", 0, items(3), 2, PromptContinue},
+		{"q", 1, items(3), 1, PromptCancel},
+		{KeyEscape, 1, items(3), 1, PromptCancel},
+		{KeyEnter, 2, items(3), 2, PromptPick},
+		{"c", 0, items(3), 2, PromptPick},
+		{"d", 0, items(3), 0, PromptContinue},
+		{"y", 1, yn, 0, PromptPick}, // prompt_yn: y is yes
+		{"n", 0, yn, 1, PromptPick},
+		{"y", 0, items(2), 0, PromptContinue}, // only a Yes/No prompt reads y/n
 	}
 	for _, c := range cases {
-		sel, res := MenuKey(c.key, c.sel, c.n)
+		sel, res := MenuKey(c.key, c.sel, c.items)
 		if sel != c.wantSel || res != c.wantRes {
-			t.Errorf("MenuKey(%q, %d, %d) = (%d, %v), want (%d, %v)", c.key, c.sel, c.n, sel, res, c.wantSel, c.wantRes)
+			t.Errorf("MenuKey(%q, %d, %v) = (%d, %v), want (%d, %v)", c.key, c.sel, c.items, sel, res, c.wantSel, c.wantRes)
 		}
 	}
 }

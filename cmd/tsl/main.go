@@ -112,7 +112,16 @@ func saveTo(path string, g *game.Game) (err error) {
 		f.Close()
 		return err
 	}
+	// Flush to disk before the rename: the savefile usually doesn't exist
+	// yet (resuming deletes it), so a crash could otherwise leave it empty.
+	if err := f.Sync(); err != nil {
+		f.Close()
+		return err
+	}
 	if err := f.Close(); err != nil {
+		return err
+	}
+	if err := os.Chmod(f.Name(), 0o644); err != nil { // CreateTemp makes it 0600
 		return err
 	}
 	return os.Rename(f.Name(), path)

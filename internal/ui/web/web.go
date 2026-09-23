@@ -37,13 +37,16 @@ func New() *Screen {
 	}
 	doc.Call("addEventListener", "keydown", js.FuncOf(func(this js.Value, args []js.Value) any {
 		ev := args[0]
-		if ev.Get("ctrlKey").Bool() || ev.Get("metaKey").Bool() || ev.Get("altKey").Bool() {
+		altGr := ev.Call("getModifierState", "AltGraph").Bool() // reports as Ctrl+Alt on Windows
+		if !altGr && (ev.Get("ctrlKey").Bool() || ev.Get("metaKey").Bool() || ev.Get("altKey").Bool()) {
 			return nil // leave browser shortcuts (Ctrl/Cmd+R, …) to the browser
 		}
-		if t := ev.Get("target"); t.Truthy() && t.Get("tagName").String() == "INPUT" {
-			return nil // the volume slider keeps its own arrow keys
-		}
 		key := ev.Get("key").String()
+		if _, arrow := arrows[key]; arrow {
+			if t := ev.Get("target"); t.Truthy() && t.Get("tagName").String() == "INPUT" {
+				return nil // the focused volume slider keeps its arrow keys
+			}
+		}
 		if len(key) == 1 || key == "Enter" || key == "Escape" ||
 			key == "ArrowUp" || key == "ArrowDown" || key == "ArrowLeft" || key == "ArrowRight" {
 			ev.Call("preventDefault")
@@ -174,7 +177,7 @@ func (sc *Screen) Menu(m ui.MenuSpec) (int, bool) {
 		sc.over.Set("hidden", false)
 		sc.over.Set("innerHTML", MenuHTML(m, sel))
 		var res ui.PromptResult
-		if sel, res = ui.MenuKey(<-sc.keys, sel, len(m.Items)); res != ui.PromptContinue {
+		if sel, res = ui.MenuKey(<-sc.keys, sel, m.Items); res != ui.PromptContinue {
 			sc.over.Set("hidden", true)
 			return sel, res == ui.PromptPick
 		}

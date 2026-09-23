@@ -23,10 +23,11 @@ import (
 
 const (
 	// The enhanced build keeps its own slot: /original (v0.40.1, same origin)
-	// reads legacySaveKey, and the two lines' save formats may diverge.
+	// owns "tsl-go-save", and the two lines' save formats may diverge. An
+	// enhanced save made before the split can't be told apart from a live
+	// /original run there, so it is left for /original rather than taken.
 	saveKey       = "tsl-go-save-v050"
-	legacySaveKey = "tsl-go-save"         // pre-v0.52 enhanced saves, migrated on resume
-	quarantineKey = "tsl-go-save-corrupt" // a bad payload parks here for inspection
+	quarantineKey = "tsl-go-save-v050-corrupt" // a bad payload parks here for inspection
 )
 
 func main() {
@@ -97,10 +98,7 @@ func resume(c *content.Content) (*game.Game, error) {
 	key := saveKey
 	raw := getSave(key)
 	if raw == "" {
-		key = legacySaveKey
-		if raw = getSave(key); raw == "" {
-			return nil, nil
-		}
+		return nil, nil
 	}
 	var g *game.Game
 	build := func(def *content.LevelDef) (*game.Level, error) {

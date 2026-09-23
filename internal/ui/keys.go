@@ -23,16 +23,26 @@ const (
 	PromptCancel                       // dismissed
 )
 
-// MenuKey applies one key to a menu of n items with selection sel, returning
+// MenuKey applies one key to a menu of items with selection sel, returning
 // the new selection and what happened. A letter that labels an item always
 // picks it — so j, k, and q select the 10th, 11th, and 17th items of a long
 // list — and otherwise j/k and the arrows move, Enter picks, Esc/q cancels.
-func MenuKey(key string, sel, n int) (int, PromptResult) {
+// A Yes/No prompt also takes y and n, as the C's prompt_yn does.
+func MenuKey(key string, sel int, items []string) (int, PromptResult) {
+	n := len(items)
 	if n <= 0 {
 		return 0, PromptCancel
 	}
 	if len(key) == 1 && key[0] >= 'a' && int(key[0]-'a') < n {
 		return int(key[0] - 'a'), PromptPick
+	}
+	if n == 2 && items[0] == "Yes" && items[1] == "No" {
+		switch key {
+		case "y", "Y":
+			return 0, PromptPick
+		case "n", "N":
+			return 1, PromptPick
+		}
 	}
 	switch key {
 	case KeyUp, "k":

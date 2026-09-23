@@ -179,7 +179,7 @@ func (sc *Screen) Menu(m ui.MenuSpec) (int, bool) {
 			continue
 		}
 		var res ui.PromptResult
-		if sel, res = ui.MenuKey(keyName(ev), sel, len(m.Items)); res != ui.PromptContinue {
+		if sel, res = ui.MenuKey(keyName(ev), sel, m.Items); res != ui.PromptContinue {
 			return sel, res == ui.PromptPick
 		}
 	}
