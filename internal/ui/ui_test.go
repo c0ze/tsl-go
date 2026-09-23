@@ -643,3 +643,17 @@ func TestRunCastDeathspellAsksForTarget(t *testing.T) {
 		t.Errorf("deathspell should reach its targeted path, messages %v", g.Messages)
 	}
 }
+
+// A sighted step onto lava asks first; "No" leaves the player where they were.
+func TestLavaPromptDecline(t *testing.T) {
+	g := testGame(t, []string{".@."})
+	g.Content.Tiles["lava"] = &content.TileDef{ID: "lava", Glyph: "~", Transparent: true, Lava: true}
+	g.Level.Set(game.Pos{X: 2, Y: 0}, g.Content.Tiles["lava"])
+	p := &capturePrompter{actions: []Action{{Kind: ActMove, Dir: game.DirE}}}
+	if err := Run(g, p, &nullRenderer{}); err != nil {
+		t.Fatal(err)
+	}
+	if p.lastMenu.Title != "Step into the lava?" || g.Player != (game.Pos{X: 1, Y: 0}) {
+		t.Errorf("expected the lava prompt and no move: menu %q, player %v", p.lastMenu.Title, g.Player)
+	}
+}

@@ -15,11 +15,30 @@ func waterGame() *Game {
 	return g
 }
 
-func TestSightedPlayerCannotWalkIntoWater(t *testing.T) {
+// The player wades into deep water on purpose (C try_to_move enters water
+// unconditionally; only lava asks).
+func TestSightedPlayerWadesIntoWater(t *testing.T) {
 	g := waterGame()
 	g.PlayerStep(DirE)
-	if g.Player != (Pos{1, 1}) {
-		t.Errorf("a sighted walker can't enter water (C move_creature), player at %v", g.Player)
+	if g.Player != (Pos{2, 1}) {
+		t.Errorf("the player should wade into the water, at %v", g.Player)
+	}
+}
+
+// Lava asks a sighted player first (C "Step into the lava?"): the bump
+// moves nobody and costs nothing until the front-end's yes arrives.
+func TestSightedPlayerIsAskedAboutLava(t *testing.T) {
+	g := combatGame()
+	g.Level.Set(Pos{2, 1}, &content.TileDef{ID: "lava", Glyph: "~", Transparent: true, Lava: true})
+	g.PlayerStep(DirE)
+	pos, ok := g.TakeLavaBump()
+	if g.Player != (Pos{1, 1}) || !ok || pos != (Pos{2, 1}) {
+		t.Fatalf("the bump should await a prompt: player %v, bump %v %v", g.Player, pos, ok)
+	}
+	hp := g.PlayerHP
+	g.EnterLava(pos)
+	if g.Player != (Pos{2, 1}) || g.PlayerHP >= hp {
+		t.Errorf("saying yes should step in and burn: player %v hp %d -> %d", g.Player, hp, g.PlayerHP)
 	}
 }
 

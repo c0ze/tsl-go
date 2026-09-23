@@ -116,6 +116,8 @@ var badPhrases = []string{
 	"You drown",
 	"burned", // "You get burned (by lava)!"
 	"You land in lava",
+	"into the lava",
+	"You step into lava",
 	"vile fumes", // poison gas
 	"overcomes you",
 	"bites into your hand",

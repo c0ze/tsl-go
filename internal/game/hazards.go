@@ -85,6 +85,47 @@ func (g *Game) spotTraps() {
 
 // lavaCheck burns a non-floating player standing in lava for 1d6+1 every
 // turn (C elements.c lava_bath, LAVA_DAMAGE) — no fatigue grace, unlike water.
+// stepIntoLava is the player's move onto lava (C try_to_move, player.c:1522):
+// a floater drifts over; the blind, or one already wading in lava, steps in
+// unasked; a sighted player is asked first — the front-end's prompt, flagged
+// here and answered through EnterLava. It reports whether the player moved.
+func (g *Game) stepIntoLava(dst Pos) bool {
+	switch {
+	case g.HasEffect("levitate"):
+	case g.Level.At(g.Player).Def.Lava:
+	case g.playerBlinded():
+		g.log("You step into lava!")
+	default:
+		g.lavaBump = &dst
+		return false
+	}
+	g.Player = dst
+	return true
+}
+
+// TakeLavaBump returns and clears the lava tile a sighted player just tried
+// to step onto, for the front-end's "Step into the lava?" prompt.
+func (g *Game) TakeLavaBump() (Pos, bool) {
+	if g.lavaBump == nil {
+		return Pos{}, false
+	}
+	p := *g.lavaBump
+	g.lavaBump = nil
+	return p, true
+}
+
+// EnterLava steps a player who said yes onto the lava at p, which must be
+// adjacent (it costs the turn, and the lava burns as it passes).
+func (g *Game) EnterLava(p Pos) {
+	if g.Dead || g.Won || chebyshev(p, g.Player) != 1 || !g.Level.At(p).Def.Lava {
+		return
+	}
+	g.log("You step into the lava!")
+	g.Player = p
+	g.playerBleeds()
+	g.advanceWorld()
+}
+
 func (g *Game) lavaCheck() {
 	if g.HasEffect("levitate") || !g.Level.At(g.Player).Def.Lava {
 		return

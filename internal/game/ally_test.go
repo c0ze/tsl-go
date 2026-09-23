@@ -122,3 +122,15 @@ func TestBumpingAllySwapsPlaces(t *testing.T) {
 		t.Errorf("ally still shares the player's tile at %v", imp.Pos)
 	}
 }
+
+// An ally swimming in water swaps with the player too: the player wades in,
+// the ally takes the player's old tile (C try_to_move displace).
+func TestBumpingAllyInWaterSwaps(t *testing.T) {
+	g := combatGame()
+	g.Level.Set(Pos{2, 1}, &content.TileDef{ID: "water", Glyph: "_", Transparent: true, Water: true})
+	imp := allyImp(g, Pos{2, 1})
+	g.PlayerStep(DirE)
+	if g.Player != (Pos{2, 1}) || imp.Pos == g.Player {
+		t.Errorf("player %v, ally %v: they should have swapped", g.Player, imp.Pos)
+	}
+}

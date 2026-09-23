@@ -134,6 +134,11 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			if pos, ok := g.TakeLockedBump(); ok {
 				promptLockedDoor(g, p, pos)
 			}
+			if pos, ok := g.TakeLavaBump(); ok {
+				if idx, ok := p.Menu(MenuSpec{Title: "Step into the lava?", Items: []string{"Yes", "No"}}); ok && idx == 0 {
+					g.EnterLava(pos)
+				}
+			}
 		case ActPickup:
 			g.PlayerPickup()
 		case ActInventory:

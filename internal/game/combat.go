@@ -56,14 +56,14 @@ func (g *Game) PlayerStep(d Direction) {
 	} else if g.openDoor(dst) { // blocked by a closed door: open it (costs the turn)
 		g.log("You open the door.")
 		acted = true
-	} else if g.Level.InBounds(dst) && (g.Level.At(dst).Def.Water || g.Level.At(dst).Def.Lava) &&
-		(g.playerBlinded() || g.HasEffect("levitate") ||
-			(g.Level.At(dst).Def.Water && g.Shape != nil && g.Shape.Swim)) {
-		// Deep water and lava turn away a sighted walker; the blinded blunder
-		// in and floaters drift across (C move_creature).
+	} else if g.Level.InBounds(dst) && g.Level.At(dst).Def.Water {
+		// The player wades straight into deep water; the swim clock takes it
+		// from there (C try_to_move, player.c:1514).
 		g.Player = dst
 		g.Sound("splash")
 		acted = true
+	} else if g.Level.InBounds(dst) && g.Level.At(dst).Def.Lava {
+		acted = g.stepIntoLava(dst)
 	}
 	if m != nil && m.Ally && g.Player == dst {
 		m.Pos = from // walking into an ally swaps places with it (C move_creature displace)
