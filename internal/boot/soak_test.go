@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	"github.com/c0ze/tsl-go/data"
-	"github.com/c0ze/tsl-go/internal/behaviors"
 	"github.com/c0ze/tsl-go/internal/boot"
 	"github.com/c0ze/tsl-go/internal/content"
 	"github.com/c0ze/tsl-go/internal/game"
-	"github.com/c0ze/tsl-go/internal/gen"
 	"github.com/c0ze/tsl-go/internal/rng"
 	"github.com/c0ze/tsl-go/internal/ui"
 )
@@ -133,9 +131,7 @@ func soak(c *content.Content, seed uint32, budget int) (end string, err error) {
 			if err := g.Save(&sb); err != nil {
 				return "", fmt.Errorf("save: %w", err)
 			}
-			var loaded *game.Game
-			build := func(def *content.LevelDef) (*game.Level, error) { return gen.LevelFromDef(loaded.RNG, c, def) }
-			loaded, err = game.LoadGame(strings.NewReader(sb.String()), c, behaviors.Registry(), build)
+			loaded, err := boot.LoadGame(strings.NewReader(sb.String()), c)
 			if err != nil {
 				return "", fmt.Errorf("load after save: %w", err)
 			}

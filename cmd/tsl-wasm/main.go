@@ -12,11 +12,9 @@ import (
 	"time"
 
 	"github.com/c0ze/tsl-go/data"
-	"github.com/c0ze/tsl-go/internal/behaviors"
 	"github.com/c0ze/tsl-go/internal/boot"
 	"github.com/c0ze/tsl-go/internal/content"
 	"github.com/c0ze/tsl-go/internal/game"
-	"github.com/c0ze/tsl-go/internal/gen"
 	"github.com/c0ze/tsl-go/internal/ui"
 	"github.com/c0ze/tsl-go/internal/ui/web"
 )
@@ -121,11 +119,7 @@ func resume(c *content.Content) (*game.Game, error) {
 	if raw == "" {
 		return nil, nil
 	}
-	var g *game.Game
-	build := func(def *content.LevelDef) (*game.Level, error) {
-		return gen.LevelFromDef(g.RNG, c, def)
-	}
-	g, err := game.LoadGame(strings.NewReader(raw), c, behaviors.Registry(), build)
+	g, err := boot.LoadGame(strings.NewReader(raw), c)
 	if err != nil {
 		// Quarantine, don't destroy: the live slot is freed so a reload
 		// starts fresh instead of hitting the same fatal overlay forever,
