@@ -72,7 +72,7 @@ func (g *Game) creatureBleeds(m *Creature) bool {
 	if m.HP > 0 {
 		return false
 	}
-	if g.canSee(m.Pos) {
+	if g.canSee(m.Pos) || chebyshev(m.Pos, g.Player) <= 1 { // C can_see_creature: in view, or right beside you
 		g.log("The %s collapses!", m.Def.Name)
 	}
 	g.dropCorpseAndRemove(m)
