@@ -23,6 +23,7 @@ var effectLabels = map[string]string{
 	"hungry_book": "Hungry book",
 	"polymorph":   "Polymorphed",
 	"web":         "Webbed",
+	"wound":       "Bleeding",
 }
 
 // HasEffect reports whether a timed effect of the given kind is active on the
@@ -104,6 +105,8 @@ func (g *Game) tickCreatureEffects(m *Creature) bool {
 		e.Turns--
 		if e.Turns > 0 {
 			kept = append(kept, e)
+		} else if e.Kind == "wound" && g.Level.InBounds(m.Pos) && g.Level.At(m.Pos).Visible {
+			g.log("The %s is no longer bleeding.", m.Def.Name)
 		}
 	}
 	m.Effects = kept
@@ -136,6 +139,8 @@ func (g *Game) tickEffects() {
 			kept = append(kept, e)
 		} else if e.Kind == "sleep" {
 			g.log("You wake up!") // sleep ran its course (C creature_sleep)
+		} else if e.Kind == "wound" {
+			g.log("You are no longer bleeding.") // C msg_expire
 		} else if e.Kind == "levitate" {
 			landed = true // resolved below, once the effects slice is settled
 		} else if e.Kind == "polymorph" && g.Shape != nil {

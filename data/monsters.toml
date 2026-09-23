@@ -4,6 +4,7 @@
 # melee only until depth-scaled spawn tables (#16); heavy/special monsters TBD.
 
 [monster.ratman]
+wound = 10  # C virtual_claws attr_i_wound
 name = "ratman"
 glyph = "r"
 color = "brown"
@@ -15,6 +16,7 @@ speed = 130
 corpse = "ratman_corpse"
 
 [monster.ghoul]
+wound = 10  # C virtual_claws attr_i_wound
 no_doors = true  # C attr_p_open_doors
 door_noise = "moaning behind"
 name = "ghoul"
@@ -29,6 +31,7 @@ corpse = "ghoul_corpse"
 chat = "The ghoul appears to desire your brain."
 
 [monster.graveling]
+wound = 10  # C virtual_claws attr_i_wound
 no_doors = true  # C attr_p_open_doors
 door_noise = "clawing at"
 name = "graveling"
@@ -54,6 +57,7 @@ corpse = "corpse"
 chat = "The gnoblin snarls at you!"
 
 [monster.crypt_vermin]
+wound = 10  # C virtual_fangs attr_i_wound
 no_doors = true  # C attr_p_open_doors
 name = "crypt vermin"
 glyph = "v"
@@ -66,6 +70,7 @@ speed = 130
 corpse = "carcass"
 
 [monster.merman]
+wound = 10  # C virtual_claws attr_i_wound
 name = "merman"
 glyph = "M"
 color = "cyan"
@@ -90,6 +95,7 @@ speed = 80
 min_depth = 2
 
 [monster.slime]
+wound_immune = true  # C attr_wound_immunity
 no_doors = true  # C attr_p_open_doors
 name = "slime"
 glyph = "x"
@@ -176,6 +182,7 @@ min_depth = 3
 # Ranged caster (#13c) — pelts you with bolts across a lit room (ranged = 5);
 # break line of sight (a wall or closed door) to make it close in.
 [monster.imp]
+wound = 10  # C virtual_claws attr_i_wound
 name = "imp"
 glyph = "i"
 color = "red"
@@ -262,6 +269,7 @@ min_depth = 3
 # common/glyph.c), broadening the mid-to-deep tiers. Corpses reuse the generic
 # carcass where edible; elementals and oozes leave none.
 [monster.hellhound]
+wound = 10  # C virtual_fangs attr_i_wound
 name = "hellhound"
 glyph = "h"
 color = "red"
@@ -366,6 +374,7 @@ corpse = "corpse"
 min_depth = 2
 
 [monster.burning_skull]
+wound = 10  # C virtual_fangs attr_i_wound
 no_doors = true  # C attr_p_open_doors
 name = "burning skull"
 glyph = "q"
@@ -426,6 +435,7 @@ speed = 110
 ranged = 5
 
 [monster.dragon]
+wound = 10  # C virtual_claws attr_i_wound
 name = "dragon"
 glyph = "D"
 color = "red"
@@ -459,6 +469,7 @@ breath = "poison"
 # Roster batch 6 (13g) — canonical 0.40 foes (monster.c / glyph.c / places.c).
 # A slow, weak shock-eel of the early Dungeon (m_shock ability out of scope).
 [monster.electric_snake]
+wound = 10  # C virtual_fangs attr_i_wound
 no_doors = true  # C attr_p_open_doors
 name = "electric snake"
 glyph = "S"
@@ -514,6 +525,7 @@ min_depth = 7
 
 # A burning guardian of the Dragons Lair.
 [monster.flame_spirit]
+wound_immune = true  # C attr_wound_immunity
 name = "flame spirit"
 glyph = "j"
 color = "red"
@@ -580,6 +592,7 @@ min_depth = 99 # boss placement only
 # wound subsystems unported). 'O' is shared with the filler ogre by color —
 # the C reuses glyphs itself.
 [monster.chainsaw_ogre]
+wound = 50  # C virtual_chainsaw attr_i_wound
 name = "chainsaw ogre"
 glyph = "O"
 color = "red"

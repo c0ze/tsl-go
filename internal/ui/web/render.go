@@ -127,6 +127,9 @@ var badPhrases = []string{
 	"You step on", // "...a polymorph trap!", "...an electrified plate!"
 	"You fall asleep",
 	"You stagger",
+	"You have been wounded",
+	"You are bleeding",
+	"lost too much blood",
 	// monsterAttacks' effect-application follow-up, "The X <verb> you." — the
 	// player-caused wand variant phrases "...the <monster>.", never "you.".
 	"poisons you.",
@@ -143,6 +146,7 @@ var goodPhrases = []string{
 	"You pick up",
 	"recover", // "...and recover N HP."
 	"wounds begin",
+	"no longer bleeding",
 	"surge with vitality",
 	"mind sharpens",
 	"fresh charges",

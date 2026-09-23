@@ -114,8 +114,8 @@ func TestRunCastSpell(t *testing.T) {
 	g := testGame(t, []string{".@."})
 	g.EP, g.EPMax = 10, 10
 	cast := false
-	g.Behaviors = map[string]game.Behavior{"first_aid": func(gg *game.Game, it *game.Item) []string { cast = true; return []string{"mend"} }}
-	g.Content.Items = map[string]*content.ItemDef{"book_aid": {ID: "book_aid", Name: "spellbook of first aid", Kind: "spellbook", Use: "first_aid", Cost: 4}}
+	g.Behaviors = map[string]game.Behavior{"mend": func(gg *game.Game, it *game.Item) []string { cast = true; return []string{"mend"} }}
+	g.Content.Items = map[string]*content.ItemDef{"book_aid": {ID: "book_aid", Name: "spellbook of first aid", Kind: "spellbook", Use: "mend", Cost: 4}}
 	g.Known = map[string]bool{"book_aid": true} // learned, not carried (C read_book)
 	p := &menuPrompter{actions: []Action{{Kind: ActCast}, {Kind: ActQuit}}, pick: 0}
 	if err := Run(g, p, &nullRenderer{}); err != nil {

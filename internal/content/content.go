@@ -78,6 +78,8 @@ type MonsterDef struct {
 	Breath      string `toml:"breath"`       // cone attack: "fire", "poison", or "" (#19)
 	Mimic       bool   `toml:"mimic"`        // spawns disguised as loot, rooted in place (#13)
 	NoDoors     bool   `toml:"no_doors"`     // can't open doors (C attr_p_open_doors)
+	Wound       int    `toml:"wound"`        // % chance a landed hit opens a bleeding wound (C attr_i_wound of its unarmed weapon)
+	WoundImmune bool   `toml:"wound_immune"` // never bleeds (C attr_wound_immunity)
 	DoorNoise   string `toml:"door_noise"`   // what a heard no_doors creature does to a door ("" = scratching on)
 	Chat        string `toml:"chat"`         // the line it gives a t)alking player (C actions.c interact)
 }
@@ -115,6 +117,7 @@ type ItemDef struct {
 	GasImmune   bool   `toml:"gas_immune"`   // blocks gases — and eating/drinking (C gas mask)
 	Blindfold   bool   `toml:"blindfold"`    // the wearer is simply blind (C attr_blindness)
 	Stealth     int    `toml:"stealth"`      // shrinks monster notice range (C attr_stealth, approx.)
+	Wound       int    `toml:"wound"`        // weapon: % chance a landed hit opens a bleeding wound (C attr_i_wound)
 }
 
 // kindWeights are the C's per-kind WEIGHT_* defaults (rules.h); an item with

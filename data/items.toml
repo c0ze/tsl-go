@@ -25,6 +25,7 @@ dodge = 2
 
 # Melee weapons (better than the starting dagger; found as floor loot).
 [item.machete]
+wound = 50  # C treasure.c attr_i_wound
 name = "machete"
 glyph = ")"
 color = "normal"
@@ -330,13 +331,12 @@ power = 8
 # Spellbooks (#15i/j) — carry one and press c to cast (costs EP). A book is either
 # a utility spell (use = effect) or a targeted attack (ranged + damage).
 [item.spellbook_first_aid]
-name = "spellbook of first aid"
+name = "manual of first aid"  # C treasure_b_first_aid: stops bleeding, +1d3 HP
 glyph = "+"
 color = "blue"
 kind = "spellbook"
 use = "first_aid"
-cost = 4
-power = 8
+cost = 1  # C attrs.c attr_m_first_aid cost
 
 # Utility spell — flash blinds the creatures around you (power = blind turns).
 [item.spellbook_flash]
@@ -628,6 +628,7 @@ damage = "1d6+1"
 weight = 28
 
 [item.big_ugly_knife]
+wound = 20  # C treasure.c attr_i_wound
 name = "big ugly knife"
 glyph = ")"
 color = "normal"

@@ -217,15 +217,20 @@ func TestBlindnessAddsEffect(t *testing.T) {
 	}
 }
 
-func TestFirstAidGrantsRegen(t *testing.T) {
+// First aid stops the bleeding and restores 1d3 HP (C magic.c first_aid).
+func TestFirstAidStopsBleeding(t *testing.T) {
 	firstAid, ok := Registry()["first_aid"]
 	if !ok {
 		t.Fatal("first_aid not registered")
 	}
-	g := &game.Game{PlayerHP: 10, PlayerMax: 20}
-	firstAid(g, &game.Item{Def: &content.ItemDef{Name: "spellbook of first aid", Power: 6}})
-	if len(g.Effects) != 1 || g.Effects[0].Kind != "regen" || g.Effects[0].Turns != 6 {
-		t.Errorf("first aid should grant regen for Power (6) turns, got %v", g.Effects)
+	g := &game.Game{PlayerHP: 10, PlayerMax: 20, RNG: rng.NewWithSeed(1)}
+	g.AddEffect("wound", 12)
+	firstAid(g, &game.Item{Def: &content.ItemDef{Name: "manual of first aid"}})
+	if g.HasEffect("wound") {
+		t.Error("first aid should close the wound")
+	}
+	if g.PlayerHP < 11 || g.PlayerHP > 13 {
+		t.Errorf("first aid heals 1d3, HP = %d", g.PlayerHP)
 	}
 }
 

@@ -140,6 +140,9 @@ func (g *Game) PlayerStep(d Direction) {
 	if m != nil && m.Ally && g.Player == dst {
 		m.Pos = from // walking into an ally swaps places with it (C move_creature displace)
 	}
+	if g.Player != from && !g.Won {
+		g.playerBleeds() // an open wound bleeds with every step (C wound_damage)
+	}
 	if acted { // a blocked move into a wall doesn't pass the turn
 		g.advanceWorld()
 	}
@@ -231,7 +234,22 @@ func (g *Game) playerAttacks(m *Creature) {
 	g.Sound("hit")
 	if m.HP <= 0 {
 		g.killCreature(m)
+	} else if g.rollWound(g.playerWoundChance()) {
+		g.woundCreature(m)
 	}
+}
+
+// playerWoundChance is the wounding chance of what the player hits with: a
+// shapeshifted form's natural weapon, else the wielded one (bare fists never
+// wound).
+func (g *Game) playerWoundChance() int {
+	if g.Shape != nil {
+		return g.Shape.Wound
+	}
+	if g.Weapon != nil && g.Weapon.Def != nil {
+		return g.Weapon.Def.Wound
+	}
+	return 0
 }
 
 // killCreature resolves a monster's death: announce it, drop its corpse (when
@@ -239,6 +257,12 @@ func (g *Game) playerAttacks(m *Creature) {
 // keeps every kill site (player now, hazards later) dropping corpses consistently.
 func (g *Game) killCreature(m *Creature) {
 	g.log("The %s dies.", m.Def.Name)
+	g.dropCorpseAndRemove(m)
+}
+
+// dropCorpseAndRemove is the silent half of a death: the corpse (when the def
+// names one) and the removal.
+func (g *Game) dropCorpseAndRemove(m *Creature) {
 	g.Sound("death")
 	if m.Def.Corpse != "" && g.Content != nil {
 		if def, ok := g.Content.Items[m.Def.Corpse]; ok {
@@ -295,6 +319,9 @@ func (g *Game) monsterAttacks(m *Creature) {
 	if !g.Dead && m.Def.Effect != "" { // venomous bites etc. (C virtual weapons)
 		g.AddEffect(m.Def.Effect, m.Def.EffectTurns)
 		g.log("The %s %s you.", m.Def.Name, effectVerb(m.Def.Effect))
+	}
+	if !g.Dead && g.rollWound(m.Def.Wound) {
+		g.woundPlayer()
 	}
 }
 
@@ -682,6 +709,8 @@ func (g *Game) monsterFights(a, d *Creature) {
 	g.log("The %s hits the %s for %d.", a.Def.Name, d.Def.Name, dmg)
 	if d.HP <= 0 {
 		g.killCreature(d)
+	} else if g.rollWound(a.Def.Wound) {
+		g.woundCreature(d)
 	}
 }
 
@@ -716,6 +745,7 @@ func (g *Game) stepToward(m *Creature, target Pos) {
 		return
 	}
 	m.Pos = dst
+	g.creatureBleeds(m)
 }
 
 // stepAway moves m one tile directly away from `from` — a frightened creature's
@@ -731,6 +761,7 @@ func (g *Game) stepAway(m *Creature, from Pos) {
 		return
 	}
 	m.Pos = dst
+	g.creatureBleeds(m)
 }
 
 // stepRandom moves m one tile in a random direction — a confused creature's
@@ -746,6 +777,7 @@ func (g *Game) stepRandom(m *Creature) {
 		return
 	}
 	m.Pos = dst
+	g.creatureBleeds(m)
 }
 
 func chebyshev(a, b Pos) int {
