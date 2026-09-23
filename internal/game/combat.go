@@ -96,8 +96,10 @@ func (g *Game) PlayerStep(d Direction) {
 	}
 	dx, dy := d.Delta()
 	dst := Pos{g.Player.X + dx, g.Player.Y + dy}
+	from := g.Player
 	acted := false
-	if m := g.Level.CreatureAt(dst); m != nil {
+	m := g.Level.CreatureAt(dst)
+	if m != nil && !m.Ally {
 		g.playerAttacks(m) // the C checks enemies before the web: you can still fight
 		acted = true
 	} else if g.HasEffect("web") {
@@ -132,6 +134,9 @@ func (g *Game) PlayerStep(d Direction) {
 		g.Player = dst
 		g.Sound("splash")
 		acted = true
+	}
+	if m != nil && m.Ally && g.Player == dst {
+		m.Pos = from // walking into an ally swaps places with it (C move_creature displace)
 	}
 	if acted { // a blocked move into a wall doesn't pass the turn
 		g.advanceWorld()

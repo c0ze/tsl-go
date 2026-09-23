@@ -105,3 +105,20 @@ func TestSummonAllyArrivesBesideThePlayer(t *testing.T) {
 		t.Error("an unknown def must not summon")
 	}
 }
+
+// Walking into an ally swaps places with it instead of attacking it (C
+// move_creature's displace, player.c:1441).
+func TestBumpingAllySwapsPlaces(t *testing.T) {
+	g := combatGame()
+	imp := allyImp(g, Pos{2, 1}) // east of the player at (1,1)
+	g.PlayerStep(DirE)
+	if imp.HP != 6 {
+		t.Errorf("the player attacked their own ally (hp %d)", imp.HP)
+	}
+	if g.Player != (Pos{2, 1}) {
+		t.Errorf("player should step into the ally's tile, at %v", g.Player)
+	}
+	if imp.Pos == g.Player {
+		t.Errorf("ally still shares the player's tile at %v", imp.Pos)
+	}
+}
