@@ -103,8 +103,9 @@ func (sc *Screen) Render(v ui.View) {
 }
 
 // sendGrid hands the raw cell grid (glyphs + colour/light/dim) to the JS tile
-// renderer (window.tslGrid) so it can draw graphic tiles on a canvas. The ASCII
-// <pre> path above is untouched; the front-end shows whichever the user picked.
+// renderer (window.tslGrid) so it can draw graphic tiles on a canvas, themed
+// by the level id. The ASCII <pre> path above is untouched; the front-end
+// shows whichever the user picked.
 // cx,cy is the targeting cursor, or -1,-1 when none.
 func (sc *Screen) sendGrid(v ui.View, cx, cy int) {
 	fn := js.Global().Get("tslGrid")
@@ -138,7 +139,7 @@ func (sc *Screen) sendGrid(v ui.View, cx, cy int) {
 		base.WriteRune(b.Glyph)
 		bcolor[i] = byte(ui.ColorIndex(b.Color))
 	}
-	fn.Invoke(v.W, v.H, top.String(), toU8(color), base.String(), toU8(bcolor), toU8(light), toU8(dim), cx, cy)
+	fn.Invoke(v.W, v.H, top.String(), toU8(color), base.String(), toU8(bcolor), toU8(light), toU8(dim), cx, cy, v.LevelID)
 }
 
 // toU8 copies a Go byte slice into a fresh JS Uint8Array.
