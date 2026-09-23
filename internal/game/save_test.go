@@ -169,3 +169,25 @@ func TestLoadFailsOnUnknownContent(t *testing.T) {
 		t.Error("a save referencing unknown content must fail the load (fail-fast)")
 	}
 }
+
+// A save written before a slot existed lacks that key: the slot loads empty
+// rather than equipping inventory[0] (old web saves wore the dagger as boots).
+func TestLoadMissingSlotKeyIsEmpty(t *testing.T) {
+	g := savedWorld(t)
+	g.Boots = nil // as if the save predates the feet/head/cloak slots
+	var buf bytes.Buffer
+	if err := g.Save(&buf); err != nil {
+		t.Fatal(err)
+	}
+	old := strings.NewReplacer(`"boots":-1,`, ``, `"head":-1,`, ``, `"cloak":-1,`, ``).Replace(buf.String())
+	if strings.Contains(old, `"boots"`) || strings.Contains(old, `"cloak"`) {
+		t.Fatalf("fixture still carries the slot keys: %s", old)
+	}
+	g2, err := LoadGame(strings.NewReader(old), g.Content, g.Behaviors, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g2.Boots != nil || g2.Head != nil || g2.Cloak != nil {
+		t.Errorf("missing slots should load empty: boots=%v head=%v cloak=%v", g2.Boots, g2.Head, g2.Cloak)
+	}
+}

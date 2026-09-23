@@ -201,7 +201,9 @@ func saveLevel(id string, l *Level) savedLevel {
 // ID the content no longer knows fails the load (the fail-fast convention).
 func LoadGame(r io.Reader, c *content.Content, behaviors map[string]Behavior,
 	build func(*content.LevelDef) (*Level, error)) (*Game, error) {
-	var sg savedGame
+	// An equipment slot missing from the file (a save older than the slot)
+	// is empty, not inventory[0] — the zero value would equip the first item.
+	sg := savedGame{Weapon: -1, Armor: -1, Ring: -1, Amulet: -1, Boots: -1, Head: -1, Cloak: -1}
 	if err := json.NewDecoder(r).Decode(&sg); err != nil {
 		return nil, fmt.Errorf("load: %w", err)
 	}
@@ -252,6 +254,9 @@ func LoadGame(r io.Reader, c *content.Content, behaviors map[string]Behavior,
 		return nil, fmt.Errorf("load: current level %q missing from save", sg.Current)
 	}
 	g.Level = cache[sg.Current]
+	if !g.Level.InBounds(g.Player) {
+		return nil, fmt.Errorf("load: player position %v outside level %q", g.Player, sg.Current)
+	}
 	if len(c.Levels) > 0 { // a real dungeon graph (bare test games have none)
 		g.Dungeon = &Dungeon{defs: c.Levels, cache: cache, current: sg.Current, build: build}
 	}
