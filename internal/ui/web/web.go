@@ -44,7 +44,9 @@ func New() *Screen {
 		}
 		key := ev.Get("key").String()
 		if sc.final {
-			if key == "Enter" { // a new descent (or the saved run) without hunting for reload
+			// A fresh press only: the auto-repeat of an Enter still held from
+			// the confirming menu pick must not skip past the death screen.
+			if key == "Enter" && !ev.Get("repeat").Bool() {
 				ev.Call("preventDefault")
 				js.Global().Get("location").Call("reload")
 			}
