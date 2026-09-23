@@ -35,11 +35,11 @@ func main() {
 			// A panic would otherwise kill the runtime and freeze the page on
 			// its last frame; say what happened instead.
 			if r := recover(); r != nil {
-				sc.Overlay(fmt.Sprintf("tsl-go crashed: %v\n\nReload to start again.", r))
+				sc.Overlay(fmt.Sprintf("tsl-go crashed: %v\n\nPress Enter to start again.", r))
 			}
 		}()
 		if err := play(sc); err != nil {
-			sc.Overlay("tsl-go error: " + err.Error())
+			sc.Overlay("tsl-go error: " + err.Error() + "\n\nPress Enter to reload.")
 		}
 	}()
 	select {} // keep the wasm runtime alive for the final overlay
@@ -92,7 +92,7 @@ func play(sc *web.Screen) error {
 				g.Messages = append(g.Messages, "Couldn't save game!")
 				continue // blocked storage (private mode etc.): keep playing
 			}
-			sc.Overlay("Game saved.\n\nReload the page to resume.")
+			sc.Overlay("Game saved.\n\nPress Enter (or reload) to resume.")
 			return nil
 		}
 		if err != nil {
@@ -102,11 +102,11 @@ func play(sc *web.Screen) error {
 	}
 	switch {
 	case g.Won:
-		sc.Overlay("You escaped the dungeon victorious!\n\nReload to descend again.")
+		sc.Overlay("You escaped the dungeon victorious!\n\nPress Enter to descend again.")
 	case g.Dead:
-		sc.Overlay(g.MorgueText() + "\nReload to try again.")
+		sc.Overlay(g.MorgueText() + "\nPress Enter to try again.")
 	default:
-		sc.Overlay("You leave the dungeon. Farewell.\n\nReload to descend again.")
+		sc.Overlay("You leave the dungeon. Farewell.\n\nPress Enter to descend again.")
 	}
 	return nil
 }

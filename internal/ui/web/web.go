@@ -22,6 +22,7 @@ type Screen struct {
 	status    js.Value // <div id="status">
 	msgs      js.Value // <div id="messages">
 	over      js.Value // <pre id="overlay">
+	final     bool     // an end screen is up: Enter reloads the page
 }
 
 // New wires the DOM and the key listener.
@@ -42,6 +43,13 @@ func New() *Screen {
 			return nil // leave browser shortcuts (Ctrl/Cmd+R, …) to the browser
 		}
 		key := ev.Get("key").String()
+		if sc.final {
+			if key == "Enter" { // a new descent (or the saved run) without hunting for reload
+				ev.Call("preventDefault")
+				js.Global().Get("location").Call("reload")
+			}
+			return nil
+		}
 		if _, arrow := arrows[key]; arrow && sc.over.Get("hidden").Bool() {
 			if t := ev.Get("target"); t.Truthy() && t.Get("tagName").String() == "INPUT" {
 				return nil // the focused volume slider keeps its arrows — except in a menu
@@ -224,8 +232,10 @@ func (sc *Screen) OnVisibility(hidden, shown func()) {
 	}))
 }
 
-// Overlay shows a terminal-style full message (save confirmation, the morgue).
+// Overlay shows a terminal-style end screen (save confirmation, the morgue);
+// the game is over, so Enter now reloads the page.
 func (sc *Screen) Overlay(text string) {
+	sc.final = true
 	sc.over.Set("hidden", false)
 	sc.over.Set("textContent", text)
 }
