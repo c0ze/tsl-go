@@ -71,8 +71,10 @@ func (d *Dungeon) Name() string {
 	return ""
 }
 
-// Travel takes the portal under the player to its target level, persisting the
-// level being left and restoring (or first-placing) the player on arrival.
+// Travel takes the portal under the player to its target level (C stairs):
+// the player arrives on that level's staircase leading back, everyone
+// standing beside the stairs follows (C move_everyone, bar disguised
+// mimics), and the climb costs the turn.
 func (g *Game) Travel() {
 	if g.Dead || g.Won {
 		return
@@ -82,6 +84,7 @@ func (g *Game) Travel() {
 		g.log("There are no stairs here.")
 		return
 	}
+	from, fromPos := g.Level, g.Player
 	g.Level.Return = g.Player // remember where we leave from
 	if err := g.Dungeon.enter(p.Target); err != nil {
 		g.log("The way is blocked.")
@@ -94,9 +97,56 @@ func (g *Game) Travel() {
 		g.Player = g.Level.Start
 		g.Level.entered = true
 	}
+	for _, back := range g.Level.Portals { // C traverse_branch: the linked stair
+		if back.Target == from.ID {
+			g.Player = back.Pos
+			break
+		}
+	}
+	g.bringFollowers(from, fromPos)
 	def := g.Dungeon.defs[g.Level.ID]
 	g.log("You enter %s.", def.Name)
 	g.Sound("descend")
+	g.advanceWorld()
+}
+
+// followRadius bounds how far from the arrival stairs a follower may land.
+const followRadius = 3
+
+// bringFollowers moves every creature adjacent to the stairs the player just
+// took on level from onto the current level, at the nearest free spot around
+// the player (C move_everyone + find_nearest_free_spot). A disguised mimic
+// stays put, as does anyone with no room to land.
+func (g *Game) bringFollowers(from *Level, stairs Pos) {
+	for _, m := range append([]*Creature(nil), from.Creatures...) {
+		if m.Disguised || chebyshev(m.Pos, stairs) != 1 {
+			continue
+		}
+		if spot, ok := g.landingSpot(m); ok {
+			from.RemoveCreature(m)
+			m.Pos = spot
+			g.Level.Creatures = append(g.Level.Creatures, m)
+		}
+	}
+}
+
+// landingSpot is the nearest tile around the player m can stand on: water
+// for a water-bound swimmer, open floor for everyone else.
+func (g *Game) landingSpot(m *Creature) (Pos, bool) {
+	for radius := 1; radius <= followRadius; radius++ {
+		for dy := -radius; dy <= radius; dy++ {
+			for dx := -radius; dx <= radius; dx++ {
+				p := Pos{X: g.Player.X + dx, Y: g.Player.Y + dy}
+				if chebyshev(p, g.Player) != radius || !g.Level.InBounds(p) || g.Level.CreatureAt(p) != nil {
+					continue
+				}
+				if m.Def.Permaswim && g.Level.At(p).Def.Water || !m.Def.Permaswim && g.Level.Passable(p) {
+					return p, true
+				}
+			}
+		}
+	}
+	return Pos{}, false
 }
 
 // EnterStart places the player on the current (start) level's entry tile and

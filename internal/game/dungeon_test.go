@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/c0ze/tsl-go/internal/content"
+	"github.com/c0ze/tsl-go/internal/rng"
 )
 
 // fakeDungeon builds a tiny 2-level graph (a↔b) with a fake builder; each level
@@ -25,7 +26,7 @@ func fakeDungeon(t *testing.T) *Game {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := &Game{Content: &content.Content{Levels: defs}, Dungeon: d, Level: d.Current()}
+	g := &Game{Content: &content.Content{Levels: defs}, Dungeon: d, Level: d.Current(), RNG: rng.NewWithSeed(1), PlayerHP: 20, PlayerMax: 20}
 	g.Player = g.Level.Start
 	g.Level.entered = true
 	return g
@@ -38,8 +39,8 @@ func TestTravelMovesToLinkedLevel(t *testing.T) {
 	if g.Dungeon.current != "b" {
 		t.Fatalf("current level = %q, want b", g.Dungeon.current)
 	}
-	if g.Player != g.Level.Start {
-		t.Errorf("first arrival at %v, want B.Start %v", g.Player, g.Level.Start)
+	if g.Player != (Pos{3, 1}) {
+		t.Errorf("arrival at %v, want B's stairs back to A at {3 1} (C traverse_branch)", g.Player)
 	}
 }
 
@@ -48,7 +49,7 @@ func TestTravelPersistsLevelState(t *testing.T) {
 	g.Player = Pos{3, 1}
 	g.Travel() // → B
 	b := g.Level
-	b.Creatures = append(b.Creatures, &Creature{Def: &content.MonsterDef{Name: "ghost"}, Pos: Pos{2, 1}, HP: 1})
+	b.Creatures = append(b.Creatures, &Creature{Def: &content.MonsterDef{Name: "ghost"}, Pos: Pos{0, 0}, HP: 1}) // away from the stairs
 
 	g.Player = Pos{3, 1}
 	g.Travel() // → back to A
@@ -64,8 +65,35 @@ func TestTravelPersistsLevelState(t *testing.T) {
 	if len(b.Creatures) != 1 {
 		t.Errorf("B's creature should persist across visits, got %d", len(b.Creatures))
 	}
-	if g.Player != b.Return {
-		t.Errorf("re-arrival at %v, want B.Return %v", g.Player, b.Return)
+	if g.Player != (Pos{3, 1}) {
+		t.Errorf("re-arrival at %v, want B's stairs {3 1}", g.Player)
+	}
+}
+
+// Creatures beside the stairs follow the player through them (C
+// move_everyone) — an ally and a pursuer alike — but a disguised mimic stays,
+// and taking the stairs costs the turn.
+func TestTravelBringsAdjacentCreatures(t *testing.T) {
+	g := fakeDungeon(t)
+	a := g.Level
+	g.Player = Pos{3, 1}
+	g.EPMax = 5 // below max, so each passing turn ticks EP regeneration
+	imp := &Creature{Def: &content.MonsterDef{ID: "imp", Name: "imp"}, Pos: Pos{2, 1}, HP: 5, Ally: true}
+	mimic := &Creature{Def: &content.MonsterDef{ID: "mimic", Name: "mimic"}, Pos: Pos{4, 1}, HP: 5, Disguised: true}
+	far := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat"}, Pos: Pos{0, 0}, HP: 5}
+	a.Creatures = append(a.Creatures, imp, mimic, far)
+	g.Travel()
+	if len(g.Level.Creatures) != 1 || g.Level.Creatures[0] != imp {
+		t.Fatalf("only the adjacent imp should follow, B has %v", g.Level.Creatures)
+	}
+	if chebyshev(imp.Pos, g.Player) > followRadius || imp.Pos == g.Player {
+		t.Errorf("follower landed at %v, player at %v", imp.Pos, g.Player)
+	}
+	if len(a.Creatures) != 2 {
+		t.Errorf("the mimic and the distant rat stay behind, A has %d", len(a.Creatures))
+	}
+	if g.epTurn == 0 {
+		t.Error("climbing the stairs should cost the turn")
 	}
 }
 
