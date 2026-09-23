@@ -679,17 +679,24 @@ func TestBuildViewEntityIDs(t *testing.T) {
 // An unidentified item reaches graphic front-ends as the neutral "item",
 // never its true type; identified, it names itself.
 func TestBuildViewHidesUnidentifiedItemIDs(t *testing.T) {
-	g := testGame(t, []string{"@."})
+	g := testGame(t, []string{"@.."})
 	g.UpdateFOV()
 	pot := &content.ItemDef{ID: "potion_speed", Name: "potion of speed", Glyph: "!", Color: content.ColorBrown, Kind: "potion"}
 	g.Level.Items = append(g.Level.Items, &game.Item{Def: pot, Pos: game.Pos{X: 1, Y: 0}})
+	// A mimic disguised as that potion hides behind the same neutral id.
+	mimic := &content.MonsterDef{ID: "mimic", Name: "mimic", Glyph: "m", HP: 3, Damage: "1d1", Mimic: true}
+	g.Level.Creatures = append(g.Level.Creatures, &game.Creature{Def: mimic, Pos: game.Pos{X: 2, Y: 0}, HP: 3, Disguised: true, DisguiseAs: pot})
 	v := BuildView(g)
-	if got := v.At(1, 0).Entity; got != "item" {
-		t.Errorf("unidentified potion leaked its id %q", got)
+	for x := 1; x <= 2; x++ {
+		if got := v.At(x, 0).Entity; got != "item" {
+			t.Errorf("cell %d: an unidentified potion leaked %q", x, got)
+		}
 	}
 	g.Identified = map[string]bool{"potion_speed": true}
 	v = BuildView(g)
-	if got := v.At(1, 0).Entity; got != "potion_speed" {
-		t.Errorf("identified potion should name itself, got %q", got)
+	for x := 1; x <= 2; x++ {
+		if got := v.At(x, 0).Entity; got != "potion_speed" {
+			t.Errorf("cell %d: an identified potion should name itself, got %q", x, got)
+		}
 	}
 }
