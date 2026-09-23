@@ -198,7 +198,8 @@ func MenuHTML(m ui.MenuSpec, sel int) string {
 		if i == sel {
 			prefix = "&gt; "
 		}
-		fmt.Fprintf(&b, "%s%c) %s\n", prefix, 'a'+i, html.EscapeString(it))
+		// Each entry carries its letter so a tap can pick it (web/touch.js).
+		fmt.Fprintf(&b, "<span class=\"mi\" data-key=\"%c\">%s%c) %s</span>\n", 'a'+i, prefix, 'a'+i, html.EscapeString(it))
 	}
 	return b.String()
 }

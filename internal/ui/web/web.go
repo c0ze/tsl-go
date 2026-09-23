@@ -201,6 +201,29 @@ func (sc *Screen) Target(origin game.Pos) (game.Pos, bool) {
 	}
 }
 
+// OnVisibility calls hidden when the page goes out of sight or is being
+// unloaded (tab switch, app switch, close, reload), and shown when it comes
+// back — including a restore from the back/forward cache.
+func (sc *Screen) OnVisibility(hidden, shown func()) {
+	doc, win := sc.doc, js.Global()
+	onChange := js.FuncOf(func(js.Value, []js.Value) any {
+		if doc.Get("visibilityState").String() == "hidden" {
+			hidden()
+		} else {
+			shown()
+		}
+		return nil
+	})
+	doc.Call("addEventListener", "visibilitychange", onChange)
+	win.Call("addEventListener", "pagehide", js.FuncOf(func(js.Value, []js.Value) any { hidden(); return nil }))
+	win.Call("addEventListener", "pageshow", js.FuncOf(func(this js.Value, args []js.Value) any {
+		if len(args) > 0 && args[0].Get("persisted").Bool() {
+			shown()
+		}
+		return nil
+	}))
+}
+
 // Overlay shows a terminal-style full message (save confirmation, the morgue).
 func (sc *Screen) Overlay(text string) {
 	sc.over.Set("hidden", false)

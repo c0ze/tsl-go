@@ -64,7 +64,12 @@ The terminal build fits an 80×24 window: the map scrolls to keep you in
 view.
 
 In the browser, **m** mutes the music (a volume slider sits beside it) and the
-**Tiles** button switches between the ASCII and graphic renderers.
+**Tiles** button switches between the ASCII and graphic renderers. On a phone
+or tablet, on-screen controls appear: a direction pad (hold to keep walking),
+the action buttons, and OK/Esc; menu entries are tappable. The browser also
+autosaves whenever the page goes out of sight, so a reload, a closed tab, or a
+phone discarding the tab picks the run back up — and coming back deletes that
+save, so it can't be used to rewind.
 
 ## Develop
 

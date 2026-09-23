@@ -61,6 +61,25 @@ func play(sc *web.Screen) error {
 			return err
 		}
 	}
+	// Autosave while the page is out of sight: a reload, a closed tab, or a
+	// phone discarding the background tab resumes the run instead of losing
+	// it. Coming back into view deletes that save again, so it can't be used
+	// to rewind (the no-scumming rule). The Go side only runs these handlers
+	// while the game is parked waiting for a key, so g is never mid-turn.
+	live := true
+	sc.OnVisibility(func() {
+		if live && !g.Dead && !g.Won {
+			var b strings.Builder
+			if g.Save(&b) == nil {
+				putSave(b.String())
+			}
+		}
+	}, func() {
+		if live {
+			clearSave(saveKey)
+		}
+	})
+	defer func() { live = false }()
 	for {
 		err := ui.Run(g, sc, sc)
 		if errors.Is(err, ui.ErrSaveRequested) {
@@ -69,7 +88,9 @@ func play(sc *web.Screen) error {
 				g.Messages = append(g.Messages, "Couldn't save game!")
 				continue // never crash a live game over a failed save
 			}
+			live = false // an explicit save-and-quit keeps its savefile
 			if !putSave(b.String()) {
+				live = true
 				g.Messages = append(g.Messages, "Couldn't save game!")
 				continue // blocked storage (private mode etc.): keep playing
 			}
