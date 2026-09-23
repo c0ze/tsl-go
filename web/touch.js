@@ -13,10 +13,13 @@
   }
 
   // Hold-to-repeat for the direction pad: one step on press, then a steady
-  // walk after a short pause — released, cancelled, or dragged off, it stops.
-  var timer = null;
-  function stop() {
-    if (timer) { clearTimeout(timer); clearInterval(timer); timer = null; }
+  // walk after a short pause, until that finger lifts, is cancelled, or
+  // slides off. Each pointer keeps its own timer, so tapping an action with
+  // the other thumb doesn't stop the walk.
+  var timers = {};
+  function stop(e) {
+    var t = timers[e.pointerId];
+    if (t) { clearTimeout(t.id); clearInterval(t.id); delete timers[e.pointerId]; }
   }
   pad.addEventListener("pointerdown", function (e) {
     var b = e.target.closest("button[data-key]");
@@ -28,9 +31,11 @@
     // Yes/No prompt).
     if (!overlay.hidden && b.hasAttribute("data-map-only")) return;
     send(key);
-    stop();
+    stop(e);
     if (b.hasAttribute("data-repeat")) {
-      timer = setTimeout(function () { timer = setInterval(function () { send(key); }, 140); }, 350);
+      var t = { id: 0 };
+      t.id = setTimeout(function () { t.id = setInterval(function () { send(key); }, 140); }, 350);
+      timers[e.pointerId] = t;
     }
   });
   ["pointerup", "pointercancel", "pointerout"].forEach(function (ev) {

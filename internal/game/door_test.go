@@ -119,3 +119,26 @@ func TestShapeWithoutDoorsCannotOpen(t *testing.T) {
 		t.Errorf("expected the C refusal, got %v", g.Messages)
 	}
 }
+
+// A doorless form is refused before the locked-door chain and can't close,
+// unlock, or force doors either (C doors.c:54, :219, :412).
+func TestShapeWithoutDoorsRefusesEveryDoorVerb(t *testing.T) {
+	g := doorGame()
+	g.Content.Tiles["door_locked"] = &content.TileDef{ID: "door_locked", Glyph: "+", Locked: true}
+	g.Content.Tiles["door_open"].ClosesTo = "door_closed"
+	g.Level.Set(Pos{2, 1}, g.Content.Tiles["door_locked"])
+	g.Shape = &content.MonsterDef{ID: "slime", Name: "slime", NoDoors: true}
+	g.PlayerStep(DirE)
+	if _, ok := g.TakeLockedBump(); ok {
+		t.Error("a slime shouldn't reach the unlock/force prompts")
+	}
+	g.ForceDoor(Pos{2, 1})
+	if g.Level.At(Pos{2, 1}).Def.ID != "door_locked" {
+		t.Error("a slime forced the door")
+	}
+	g.Level.Set(Pos{1, 0}, g.Content.Tiles["door_open"])
+	g.CloseDoor(Pos{1, 0})
+	if g.Level.At(Pos{1, 0}).Def.ID != "door_open" || !hasMessage(g, "As a slime, you cannot close doors.") {
+		t.Errorf("a slime closed a door, messages %v", g.Messages)
+	}
+}

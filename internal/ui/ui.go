@@ -276,6 +276,9 @@ var closeDirs = []struct {
 // closeDoorPrompt is the close verb (the C's close_door): close the adjacent
 // open door, asking "Close which door?" only when several qualify.
 func closeDoorPrompt(g *game.Game, p Prompter) {
+	if g.RefuseDoors("close") { // asked before any prompt, as the C does
+		return
+	}
 	var names []string
 	var spots []game.Pos
 	alreadyClosed := false

@@ -49,10 +49,12 @@ func (g *Game) PlayerStep(d Direction) {
 		g.Sound("step")
 	} else if g.revealSecretDoor(dst) { // the discovering bump costs the turn
 		acted = true
+	} else if g.Level.InBounds(dst) && (g.Level.At(dst).Def.OpensTo != "" || g.Level.At(dst).Def.Locked) &&
+		g.RefuseDoors("open") {
+		// A doorless form can't open (or unlock, or force) it — refused before
+		// the locked-door chain, as the C's open_door checks first. Free.
 	} else if g.bumpLockedDoor(dst) {
 		// The unlock/force prompts run in the front-end; no turn passes here.
-	} else if g.Shape != nil && g.Shape.NoDoors && g.Level.InBounds(dst) && g.Level.At(dst).Def.OpensTo != "" {
-		g.log("As a %s, you cannot open doors.", g.Shape.Name) // free, as in the C
 	} else if g.openDoor(dst) { // blocked by a closed door: open it (costs the turn)
 		g.log("You open the door.")
 		acted = true

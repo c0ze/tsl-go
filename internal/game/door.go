@@ -105,10 +105,21 @@ func (g *Game) HasCrowbar() bool {
 	return false
 }
 
+// RefuseDoors reports whether the player's current form can't handle doors
+// (a shapeshift into a no_doors creature), telling them so: "As a slime, you
+// cannot open doors." (C doors.c:54, :219, :412 check this before anything).
+func (g *Game) RefuseDoors(verb string) bool {
+	if g.Shape == nil || !g.Shape.NoDoors {
+		return false
+	}
+	g.log("As a %s, you cannot %s doors.", g.Shape.Name, verb)
+	return true
+}
+
 // UnlockDoor spends one key on the locked door at p — the C's unlock_door
 // destroys the key and sets the tile straight to open (doors.c:470).
 func (g *Game) UnlockDoor(p Pos) {
-	if g.Dead || g.Won || !g.Level.InBounds(p) || !g.Level.At(p).Def.Locked {
+	if g.Dead || g.Won || !g.Level.InBounds(p) || !g.Level.At(p).Def.Locked || g.RefuseDoors("unlock") {
 		return
 	}
 	for _, it := range g.Inventory {
@@ -139,7 +150,7 @@ func (g *Game) loudNoise(p Pos) {
 // outright (the tile becomes floor); failure is loud. Either way the attempt
 // costs the turn.
 func (g *Game) ForceDoor(p Pos) {
-	if g.Dead || g.Won || !g.Level.InBounds(p) || !g.Level.At(p).Def.Locked {
+	if g.Dead || g.Won || !g.Level.InBounds(p) || !g.Level.At(p).Def.Locked || g.RefuseDoors("open") {
 		return
 	}
 	switch {
@@ -159,7 +170,7 @@ func (g *Game) ForceDoor(p Pos) {
 // CloseDoor closes the open door at p (the C's close_door): anything standing
 // or lying in the doorway blocks it.
 func (g *Game) CloseDoor(p Pos) {
-	if g.Dead || g.Won || !g.Level.InBounds(p) {
+	if g.Dead || g.Won || !g.Level.InBounds(p) || g.RefuseDoors("close") {
 		return
 	}
 	t := g.Level.At(p)

@@ -130,7 +130,7 @@ func (g *Game) bringFollowers(from *Level, stairs, arrival Pos) {
 		// A swimmer lands in water (C is_swimming: a permaswimmer, or a
 		// free-swimmer that is in the water as it follows).
 		if m.Def.Permaswim || m.Def.Swim && from.At(m.Pos).Def.Water {
-			fits = func(p Pos) bool { return g.Level.At(p).Def.Water && g.Level.CreatureAt(p) == nil }
+			fits = func(p Pos) bool { return g.Level.At(p).Def.Water && g.Level.CreatureAt(p) == nil && p != g.Player }
 		}
 		if spot, ok := g.nearestFreeSpot(arrival, fits); ok {
 			from.RemoveCreature(m)
