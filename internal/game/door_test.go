@@ -65,3 +65,20 @@ func TestBumpWallDoesNotOpen(t *testing.T) {
 		t.Errorf("player should not move into a wall, at %v", g.Player)
 	}
 }
+
+// A creature that can't walk (a revealed mimic, a pool-bound tentacle) can't
+// open a door either: stepping toward the player through one does nothing.
+func TestRootedCreatureLeavesDoorShut(t *testing.T) {
+	for _, def := range []*content.MonsterDef{
+		{ID: "mimic", Name: "mimic", HP: 3, Damage: "1d1", Mimic: true},
+		{ID: "tentacle", Name: "tentacle", HP: 3, Damage: "1d1", Swim: true, Permaswim: true},
+	} {
+		g := doorGame()
+		g.Level.Set(Pos{2, 1}, g.Content.Tiles["door_closed"])
+		g.Level.Creatures = append(g.Level.Creatures, &Creature{Def: def, Pos: Pos{3, 1}, HP: 3})
+		g.worldTick()
+		if g.Level.At(Pos{2, 1}).Def.ID != "door_closed" {
+			t.Errorf("a %s opened the door", def.ID)
+		}
+	}
+}

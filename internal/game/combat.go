@@ -708,7 +708,9 @@ func (g *Game) stepToward(m *Creature, target Pos) {
 		return
 	}
 	if !g.creatureCanEnter(m, dst) {
-		g.openDoor(dst) // open a door in the way (spends this move); a plain wall is a no-op
+		if !m.Def.Mimic && !m.Def.Permaswim { // the rooted and the pool-bound can't walk through anyway
+			g.openDoor(dst) // open a door in the way (spends this move); a plain wall is a no-op
+		}
 		return
 	}
 	m.Pos = dst
