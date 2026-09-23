@@ -208,6 +208,20 @@ func LevelFromDef(r *rng.MT, c *content.Content, def *content.LevelDef) (*game.L
 		}
 		lvl.Set(rooms[len(rooms)-1].center(), altar)
 	}
+	// Pools go in before anyone is placed, as the C's build_dungeon orders
+	// it (add_pools, then add_boss and add_content): monsters and items then
+	// land on dry floor, swimmers in the water.
+	if def.Water > 0 {
+		if err := placePools(r, c, lvl, rooms, def.Water, "water", 20); err != nil {
+			return nil, err
+		}
+	}
+	if def.Lava > 0 {
+		// Lava clouds run smaller than water (C content.c: 5+rnd%9 vs 5+rnd%20).
+		if err := placePools(r, c, lvl, rooms, def.Lava, "lava", 9); err != nil {
+			return nil, err
+		}
+	}
 	if def.Boss != "" {
 		bdef := c.Monsters[def.Boss]
 		if bdef == nil {
@@ -232,17 +246,6 @@ func LevelFromDef(r *rng.MT, c *content.Content, def *content.LevelDef) (*game.L
 	}
 	placeSpawnMonsters(r, c, lvl, rooms, def)
 	placeItems(r, c, lvl, rooms, lvl.Start)
-	if def.Water > 0 {
-		if err := placePools(r, c, lvl, rooms, def.Water, "water", 20); err != nil {
-			return nil, err
-		}
-	}
-	if def.Lava > 0 {
-		// Lava clouds run smaller than water (C content.c: 5+rnd%9 vs 5+rnd%20).
-		if err := placePools(r, c, lvl, rooms, def.Lava, "lava", 9); err != nil {
-			return nil, err
-		}
-	}
 	if def.Traps > 0 {
 		placeTraps(r, c, lvl, rooms, def.Traps)
 	}
@@ -519,22 +522,49 @@ func placeSpawnMonsters(r *rng.MT, c *content.Content, lvl *game.Level, rooms []
 	for k := 0; k < def.Monsters; k++ {
 		room := rooms[r.Intn(len(rooms))]
 		pos := game.Pos{X: room.x + r.Intn(room.w), Y: room.y + r.Intn(room.h)}
-		if pos == lvl.Start || !lvl.Passable(pos) || lvl.CreatureAt(pos) != nil {
+		if pos == lvl.Start || lvl.CreatureAt(pos) != nil {
 			continue
 		}
 		mdef := c.Monsters[pickSpawn(r, def.Spawn, total)]
+		if mdef.Permaswim {
+			// A water-bound spawn takes the nearest free water within two
+			// tiles, else dry floor like anyone (C find_nearest_free_spot).
+			if w, ok := waterNear(lvl, pos, 2); ok {
+				pos = w
+			}
+		}
+		if !lvl.Passable(pos) && !(mdef.Permaswim && lvl.At(pos).Def.Water) {
+			continue
+		}
 		m := &game.Creature{Def: mdef, Pos: pos, HP: mdef.HP}
 		disguiseMimic(r, c, m)
 		lvl.Creatures = append(lvl.Creatures, m)
 	}
 }
 
-// bossSpot finds a passable tile in room free of the altar and other creatures,
-// for placing a guaranteed boss. Returns false if none is found.
+// waterNear returns the nearest creature-free water tile within radius of p.
+func waterNear(lvl *game.Level, p game.Pos, radius int) (game.Pos, bool) {
+	for rad := 0; rad <= radius; rad++ {
+		for dy := -rad; dy <= rad; dy++ {
+			for dx := -rad; dx <= rad; dx++ {
+				q := game.Pos{X: p.X + dx, Y: p.Y + dy}
+				if max(abs(dx), abs(dy)) == rad && lvl.InBounds(q) && lvl.At(q).Def.Water && lvl.CreatureAt(q) == nil {
+					return q, true
+				}
+			}
+		}
+	}
+	return game.Pos{}, false
+}
+
+// bossSpot finds a passable tile in room for a guaranteed boss, free of
+// creatures, the altar, the stairs, and the start (the C reserves a dedicated
+// find_boss tile). Returns false if none is found.
 func bossSpot(r *rng.MT, lvl *game.Level, room rect) (game.Pos, bool) {
 	for try := 0; try < 30; try++ {
 		p := game.Pos{X: room.x + r.Intn(room.w), Y: room.y + r.Intn(room.h)}
-		if lvl.Passable(p) && lvl.At(p).Def.ID != "altar" && lvl.CreatureAt(p) == nil {
+		if lvl.Passable(p) && lvl.CreatureAt(p) == nil && lvl.PortalAt(p) == nil &&
+			p != lvl.Start && lvl.At(p).Def.ID != "altar" {
 			return p, true
 		}
 	}
