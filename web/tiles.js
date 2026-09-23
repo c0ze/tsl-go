@@ -154,7 +154,7 @@
     ["status", "messages"].forEach(function (id) { var e = document.getElementById(id); if (e) hud += e.offsetHeight; });
     var pad = document.getElementById("touchpad");
     var padH = pad && getComputedStyle(pad).display !== "none" ? pad.offsetHeight : 0;
-    var top = canvas.getBoundingClientRect().top + window.scrollY;
+    var top = canvas.getBoundingClientRect().top; // viewport-relative, like innerHeight
     var availW = document.documentElement.clientWidth - 32;
     var availH = window.innerHeight - top - hud - padH - 16;
     var k = Math.max(0.25, Math.min(3, availW / canvas.width, availH / canvas.height));
