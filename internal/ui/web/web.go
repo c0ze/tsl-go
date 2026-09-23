@@ -37,8 +37,14 @@ func New() *Screen {
 	}
 	doc.Call("addEventListener", "keydown", js.FuncOf(func(this js.Value, args []js.Value) any {
 		ev := args[0]
+		if ev.Get("ctrlKey").Bool() || ev.Get("metaKey").Bool() || ev.Get("altKey").Bool() {
+			return nil // leave browser shortcuts (Ctrl/Cmd+R, …) to the browser
+		}
+		if t := ev.Get("target"); t.Truthy() && t.Get("tagName").String() == "INPUT" {
+			return nil // the volume slider keeps its own arrow keys
+		}
 		key := ev.Get("key").String()
-		if key == " " || len(key) == 1 || key == "Enter" || key == "Escape" ||
+		if len(key) == 1 || key == "Enter" || key == "Escape" ||
 			key == "ArrowUp" || key == "ArrowDown" || key == "ArrowLeft" || key == "ArrowRight" {
 			ev.Call("preventDefault")
 			select {
@@ -157,7 +163,8 @@ func (sc *Screen) announceLevel(id string) {
 	}
 }
 
-// Menu mirrors the terminal: j/k/arrows move, Enter/letter picks, Esc/q cancels.
+// Menu mirrors the terminal (ui.MenuKey: letters pick, j/k/arrows move,
+// Enter picks, Esc/q cancels).
 func (sc *Screen) Menu(m ui.MenuSpec) (int, bool) {
 	if len(m.Items) == 0 {
 		return 0, false
@@ -166,65 +173,27 @@ func (sc *Screen) Menu(m ui.MenuSpec) (int, bool) {
 	for {
 		sc.over.Set("hidden", false)
 		sc.over.Set("innerHTML", MenuHTML(m, sel))
-		key := <-sc.keys
-		switch {
-		case key == "ArrowUp" || key == "k":
-			sel = (sel - 1 + len(m.Items)) % len(m.Items)
-		case key == "ArrowDown" || key == "j":
-			sel = (sel + 1) % len(m.Items)
-		case key == "Enter":
+		var res ui.PromptResult
+		if sel, res = ui.MenuKey(<-sc.keys, sel, len(m.Items)); res != ui.PromptContinue {
 			sc.over.Set("hidden", true)
-			return sel, true
-		case key == "Escape" || key == "q":
-			sc.over.Set("hidden", true)
-			return 0, false
-		case len(key) == 1 && key[0] >= 'a' && int(key[0]-'a') < len(m.Items):
-			sc.over.Set("hidden", true)
-			return int(key[0] - 'a'), true
+			return sel, res == ui.PromptPick
 		}
 	}
 }
 
-// Target moves a crosshair over the last-rendered map: hjkl/arrows steer,
-// Enter confirms, Esc/q cancels — the terminal's exact UX.
+// Target moves a crosshair over the last-rendered map — the terminal's exact
+// UX (ui.TargetKey: hjklyubn/arrows steer, Enter confirms, Esc/q cancels).
 func (sc *Screen) Target(origin game.Pos) (game.Pos, bool) {
 	v := sc.last
-	cur := origin
-	clamp := func(p game.Pos) game.Pos {
-		if p.X < 0 {
-			p.X = 0
-		}
-		if p.Y < 0 {
-			p.Y = 0
-		}
-		if v.W > 0 && p.X >= v.W {
-			p.X = v.W - 1
-		}
-		if v.H > 0 && p.Y >= v.H {
-			p.Y = v.H - 1
-		}
-		return p
-	}
-	dirs := map[string][2]int{
-		"h": {-1, 0}, "l": {1, 0}, "k": {0, -1}, "j": {0, 1},
-		"y": {-1, -1}, "u": {1, -1}, "b": {-1, 1}, "n": {1, 1},
-		"ArrowLeft": {-1, 0}, "ArrowRight": {1, 0}, "ArrowUp": {0, -1}, "ArrowDown": {0, 1},
-	}
+	cur := ui.ClampPos(origin, v.W, v.H)
 	for {
 		sc.screen.Set("innerHTML", RenderHTML(v, &cur))
 		sc.sendGrid(v, cur.X, cur.Y)
-		key := <-sc.keys
-		if d, ok := dirs[key]; ok {
-			cur = clamp(game.Pos{X: cur.X + d[0], Y: cur.Y + d[1]})
-			continue
-		}
-		switch key {
-		case "Enter":
+		var res ui.PromptResult
+		if cur, res = ui.TargetKey(<-sc.keys, cur, v.W, v.H); res != ui.PromptContinue {
 			sc.screen.Set("innerHTML", RenderHTML(v, nil))
-			return cur, true
-		case "Escape", "q":
-			sc.screen.Set("innerHTML", RenderHTML(v, nil))
-			return game.Pos{}, false
+			sc.sendGrid(v, -1, -1)
+			return cur, res == ui.PromptPick
 		}
 	}
 }

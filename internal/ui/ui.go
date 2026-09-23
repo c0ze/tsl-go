@@ -43,6 +43,7 @@ type View struct {
 	LevelID  string   // current level id; front-ends that key off it (web music) use this
 	Sounds   []string // per-turn sound-effect cues; front-ends that support it (web SFX) play them
 	Base     []Cell   // terrain-only layer (entities are composited into Cells); web tiles draw terrain under entities
+	Player   game.Pos // the player's map position; the terminal scrolls a short screen around it
 }
 
 // At returns a pointer to the cell at (x, y), which must be in bounds
@@ -94,7 +95,7 @@ type Renderer interface {
 }
 
 // ActionForRune decodes a key rune into a player action — the single binding
-// table shared by every front-end (the terminal adds arrows/Enter on top).
+// table shared by every front-end (front-ends map their arrow keys onto hjkl first).
 func ActionForRune(r rune) (Action, bool) {
 	switch r {
 	case 'h':
@@ -113,7 +114,7 @@ func ActionForRune(r rune) (Action, bool) {
 		return Action{Kind: ActMove, Dir: game.DirSW}, true
 	case 'n':
 		return Action{Kind: ActMove, Dir: game.DirSE}, true
-	case 'q':
+	case 'Q': // the C binds quit to capital Q (keymap.c:170) and asks first
 		return Action{Kind: ActQuit}, true
 	case 'g':
 		return Action{Kind: ActPickup}, true
@@ -141,12 +142,15 @@ func ActionForRune(r rune) (Action, bool) {
 	return Action{}, false
 }
 
+// QuitPrompt is the confirmation Q asks before ending the run.
+const QuitPrompt = "Really quit?"
+
 // ErrSaveRequested is returned by Run when the player asks to save: the ui
 // layer never touches files, so the front-end's owner (cmd) saves and quits
 // — the C's save-is-quitting (saveload.c try_to_save_game).
 var ErrSaveRequested = errors.New("save requested")
 
-// Player avatar rendering (Plan 1; later the player becomes a creature def).
+// PlayerGlyph is the unpolymorphed player's glyph.
 const PlayerGlyph = '@'
 
 // PlayerColor is the player's glyph color.
@@ -200,6 +204,7 @@ func BuildView(g *game.Game) View {
 	v.Messages = lastN(g.Messages, 4)
 	v.LevelID = l.ID
 	v.Sounds = g.Sounds
+	v.Player = g.Player
 	return v
 }
 
@@ -284,7 +289,10 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 		}
 		switch a.Kind {
 		case ActQuit:
-			return nil
+			// The C's "Really quit?" (player.c:501): a quit ends the run for good.
+			if idx, ok := p.Menu(MenuSpec{Title: QuitPrompt, Items: []string{"Yes", "No"}}); ok && idx == 0 {
+				return nil
+			}
 		case ActMove:
 			g.PlayerStep(a.Dir)
 			if pos, ok := g.TakeLockedBump(); ok {
@@ -293,14 +301,8 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 		case ActPickup:
 			g.PlayerPickup()
 		case ActInventory:
-			if len(g.Inventory) > 0 {
-				names := make([]string, len(g.Inventory))
-				for i, it := range g.Inventory {
-					names[i] = g.DisplayName(it)
-				}
-				if idx, ok := p.Menu(MenuSpec{Title: "Inventory", Items: names}); ok && idx >= 0 && idx < len(g.Inventory) {
-					g.PlayerUse(g.Inventory[idx])
-				}
+			if it := chooseItem(g, p, "Inventory", g.Inventory); it != nil {
+				g.PlayerUse(it)
 			}
 		case ActTravel:
 			g.Travel()
@@ -316,12 +318,8 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 				g.Messages = append(g.Messages, "You have nothing to eat.")
 				break
 			}
-			names := make([]string, len(food))
-			for i, it := range food {
-				names[i] = g.DisplayName(it)
-			}
-			if idx, ok := p.Menu(MenuSpec{Title: "Eat what?", Items: names}); ok && idx >= 0 && idx < len(food) {
-				g.PlayerUse(food[idx])
+			if it := chooseItem(g, p, "Eat what?", food); it != nil {
+				g.PlayerUse(it)
 			}
 		case ActRead:
 			scrolls := g.ReadableInventory()
@@ -329,12 +327,8 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 				g.Messages = append(g.Messages, "You have nothing to read.")
 				break
 			}
-			names := make([]string, len(scrolls))
-			for i, it := range scrolls {
-				names[i] = g.DisplayName(it)
-			}
-			if idx, ok := p.Menu(MenuSpec{Title: "Read what?", Items: names}); ok && idx >= 0 && idx < len(scrolls) {
-				g.PlayerUse(scrolls[idx])
+			if it := chooseItem(g, p, "Read what?", scrolls); it != nil {
+				g.PlayerUse(it)
 			}
 		case ActZap:
 			wands := g.WandInventory()
@@ -385,6 +379,22 @@ func Run(g *game.Game, p Prompter, r Renderer) error {
 			}
 		}
 	}
+}
+
+// chooseItem offers items by display name and returns the one picked, or nil
+// when the list is empty or the menu was cancelled.
+func chooseItem(g *game.Game, p Prompter, title string, items []*game.Item) *game.Item {
+	if len(items) == 0 {
+		return nil
+	}
+	names := make([]string, len(items))
+	for i, it := range items {
+		names[i] = g.DisplayName(it)
+	}
+	if idx, ok := p.Menu(MenuSpec{Title: title, Items: names}); ok && idx >= 0 && idx < len(items) {
+		return items[idx]
+	}
+	return nil
 }
 
 // promptLockedDoor drives the C's locked-door bump chain (doors.c:275): offer

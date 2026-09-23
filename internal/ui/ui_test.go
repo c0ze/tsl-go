@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -37,7 +38,7 @@ func (s *scriptPrompter) NextAction() (Action, error) {
 	return a, nil
 }
 
-func (s *scriptPrompter) Menu(MenuSpec) (int, bool) { return 0, false }
+func (s *scriptPrompter) Menu(m MenuSpec) (int, bool) { return 0, m.Title == QuitPrompt }
 
 func (s *scriptPrompter) Target(game.Pos) (game.Pos, bool) { return game.Pos{}, false }
 
@@ -265,7 +266,13 @@ func (c *capturePrompter) NextAction() (Action, error) {
 	c.i++
 	return a, nil
 }
-func (c *capturePrompter) Menu(m MenuSpec) (int, bool)      { c.lastMenu = m; return 0, false }
+func (c *capturePrompter) Menu(m MenuSpec) (int, bool) {
+	if m.Title == QuitPrompt {
+		return 0, true
+	}
+	c.lastMenu = m
+	return 0, false
+}
 func (c *capturePrompter) Target(game.Pos) (game.Pos, bool) { return game.Pos{}, false }
 
 func TestInventoryMenuShowsAppearance(t *testing.T) {
@@ -534,5 +541,79 @@ func TestCloseKeyBinding(t *testing.T) {
 	a, ok := ActionForRune('O')
 	if !ok || a.Kind != ActClose {
 		t.Errorf("ActionForRune('O') = %+v, %v; want ActClose", a, ok)
+	}
+}
+
+func TestMenuKeyLettersWinOverNavigation(t *testing.T) {
+	cases := []struct {
+		key     string
+		sel, n  int
+		wantSel int
+		wantRes PromptResult
+	}{
+		{"j", 0, 12, 9, PromptPick},    // the 10th item is labelled j)
+		{"k", 0, 12, 10, PromptPick},   // the 11th, k)
+		{"q", 0, 20, 16, PromptPick},   // the 17th, q)
+		{"j", 0, 3, 1, PromptContinue}, // short menus keep vi navigation
+		{"k", 0, 3, 2, PromptContinue},
+		{"q", 1, 3, 1, PromptCancel},
+		{KeyEscape, 1, 3, 1, PromptCancel},
+		{KeyEnter, 2, 3, 2, PromptPick},
+		{"c", 0, 3, 2, PromptPick},
+		{"d", 0, 3, 0, PromptContinue},
+	}
+	for _, c := range cases {
+		sel, res := MenuKey(c.key, c.sel, c.n)
+		if sel != c.wantSel || res != c.wantRes {
+			t.Errorf("MenuKey(%q, %d, %d) = (%d, %v), want (%d, %v)", c.key, c.sel, c.n, sel, res, c.wantSel, c.wantRes)
+		}
+	}
+}
+
+func TestTargetKeyMovesDiagonallyAndClamps(t *testing.T) {
+	cur, res := TargetKey("y", game.Pos{X: 3, Y: 3}, 10, 10)
+	if cur != (game.Pos{X: 2, Y: 2}) || res != PromptContinue {
+		t.Errorf("y from (3,3) = %v %v", cur, res)
+	}
+	if cur, _ = TargetKey("b", game.Pos{X: 0, Y: 9}, 10, 10); cur != (game.Pos{X: 0, Y: 9}) {
+		t.Errorf("b at the corner should clamp, got %v", cur)
+	}
+	if _, res = TargetKey("q", cur, 10, 10); res != PromptCancel {
+		t.Errorf("q should cancel aiming, got %v", res)
+	}
+}
+
+// quitPrompter presses Q forever and answers every menu with `answer`.
+type quitPrompter struct {
+	answer, menus, actions int
+}
+
+func (q *quitPrompter) NextAction() (Action, error) {
+	q.actions++
+	if q.actions > 3 {
+		return Action{}, errStop
+	}
+	return Action{Kind: ActQuit}, nil
+}
+func (q *quitPrompter) Menu(m MenuSpec) (int, bool) {
+	q.menus++
+	return q.answer, true
+}
+func (q *quitPrompter) Target(game.Pos) (game.Pos, bool) { return game.Pos{}, false }
+
+var errStop = errors.New("stop")
+
+// Quit asks first, as the C does: "No" keeps the run going, "Yes" ends it.
+func TestQuitAsksForConfirmation(t *testing.T) {
+	no := &quitPrompter{answer: 1}
+	if err := Run(testGame(t, []string{".@."}), no, &nullRenderer{}); err != errStop {
+		t.Fatalf("declined quit should keep playing, Run returned %v", err)
+	}
+	if no.menus != 3 {
+		t.Errorf("each Q should ask once, asked %d times", no.menus)
+	}
+	yes := &quitPrompter{answer: 0}
+	if err := Run(testGame(t, []string{".@."}), yes, &nullRenderer{}); err != nil || yes.actions != 1 {
+		t.Errorf("confirmed quit should end the run at once: err=%v after %d actions", err, yes.actions)
 	}
 }
