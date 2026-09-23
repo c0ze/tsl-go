@@ -123,6 +123,8 @@ func (g *Game) PlayerStep(d Direction) {
 		acted = true
 	} else if g.bumpLockedDoor(dst) {
 		// The unlock/force prompts run in the front-end; no turn passes here.
+	} else if g.Shape != nil && g.Shape.NoDoors && g.Level.InBounds(dst) && g.Level.At(dst).Def.OpensTo != "" {
+		g.log("As a %s, you cannot open doors.", g.Shape.Name) // free, as in the C
 	} else if g.openDoor(dst) { // blocked by a closed door: open it (costs the turn)
 		g.log("You open the door.")
 		acted = true
@@ -709,7 +711,7 @@ func (g *Game) stepToward(m *Creature, target Pos) {
 	}
 	if !g.creatureCanEnter(m, dst) {
 		if !m.Def.Mimic && !m.Def.Permaswim { // the rooted and the pool-bound can't walk through anyway
-			g.openDoor(dst) // open a door in the way (spends this move); a plain wall is a no-op
+			g.monsterOpenDoor(m, dst) // try a door in the way (spends this move)
 		}
 		return
 	}

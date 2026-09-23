@@ -15,6 +15,8 @@ speed = 130
 corpse = "ratman_corpse"
 
 [monster.ghoul]
+no_doors = true  # C attr_p_open_doors
+door_noise = "moaning behind"
 name = "ghoul"
 glyph = "Z"
 color = "green"
@@ -27,6 +29,8 @@ corpse = "ghoul_corpse"
 chat = "The ghoul appears to desire your brain."
 
 [monster.graveling]
+no_doors = true  # C attr_p_open_doors
+door_noise = "clawing at"
 name = "graveling"
 glyph = "g"
 color = "brown"
@@ -50,6 +54,7 @@ corpse = "corpse"
 chat = "The gnoblin snarls at you!"
 
 [monster.crypt_vermin]
+no_doors = true  # C attr_p_open_doors
 name = "crypt vermin"
 glyph = "v"
 color = "normal"
@@ -85,6 +90,7 @@ speed = 80
 min_depth = 2
 
 [monster.slime]
+no_doors = true  # C attr_p_open_doors
 name = "slime"
 glyph = "x"
 color = "green"
@@ -319,6 +325,7 @@ ranged = 5
 min_depth = 3
 
 [monster.giant_slimy_toad]
+no_doors = true  # C attr_p_open_doors
 name = "giant slimy toad"
 glyph = "Y"
 color = "green"
@@ -359,6 +366,7 @@ corpse = "corpse"
 min_depth = 2
 
 [monster.burning_skull]
+no_doors = true  # C attr_p_open_doors
 name = "burning skull"
 glyph = "q"
 color = "red"
@@ -451,6 +459,7 @@ breath = "poison"
 # Roster batch 6 (13g) — canonical 0.40 foes (monster.c / glyph.c / places.c).
 # A slow, weak shock-eel of the early Dungeon (m_shock ability out of scope).
 [monster.electric_snake]
+no_doors = true  # C attr_p_open_doors
 name = "electric snake"
 glyph = "S"
 color = "cyan"
@@ -490,6 +499,8 @@ min_depth = 2
 
 # A force-bolt caster drifting the Frozen Vault (blink out of scope).
 [monster.floating_brain]
+no_doors = true  # C attr_p_open_doors
+door_noise = "kicking"
 name = "floating brain"
 glyph = "b"
 color = "magenta"

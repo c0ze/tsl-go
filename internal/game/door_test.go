@@ -82,3 +82,39 @@ func TestRootedCreatureLeavesDoorShut(t *testing.T) {
 		}
 	}
 }
+
+// A creature without the knack for doors (C attr_p_open_doors) rattles a
+// closed one instead of opening it, and is sometimes heard doing so.
+func TestNoDoorsCreatureCannotOpen(t *testing.T) {
+	heard := false
+	for seed := uint32(1); seed <= 12; seed++ {
+		g := doorGame()
+		g.RNG = rng.NewWithSeed(seed)
+		g.Level.Set(Pos{2, 1}, g.Content.Tiles["door_closed"])
+		g.Level.At(Pos{2, 1}).Visible = true
+		ghoul := &content.MonsterDef{ID: "ghoul", Name: "ghoul", HP: 3, Damage: "1d1", NoDoors: true, DoorNoise: "moaning behind"}
+		g.Level.Creatures = append(g.Level.Creatures, &Creature{Def: ghoul, Pos: Pos{3, 1}, HP: 3})
+		g.worldTick()
+		if g.Level.At(Pos{2, 1}).Def.ID != "door_closed" {
+			t.Fatalf("seed %d: a ghoul opened the door", seed)
+		}
+		heard = heard || hasMessage(g, "You hear something moaning behind the door.")
+	}
+	if !heard {
+		t.Error("in twelve tries nobody heard the ghoul at the door")
+	}
+}
+
+// A player shapeshifted into such a form is told so, and loses no turn.
+func TestShapeWithoutDoorsCannotOpen(t *testing.T) {
+	g := doorGame()
+	g.Level.Set(Pos{2, 1}, g.Content.Tiles["door_closed"])
+	g.Shape = &content.MonsterDef{ID: "slime", Name: "slime", NoDoors: true}
+	g.PlayerStep(DirE)
+	if g.Level.At(Pos{2, 1}).Def.ID != "door_closed" {
+		t.Error("a slime-shaped player opened the door")
+	}
+	if !hasMessage(g, "As a slime, you cannot open doors.") {
+		t.Errorf("expected the C refusal, got %v", g.Messages)
+	}
+}

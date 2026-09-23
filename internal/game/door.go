@@ -21,6 +21,26 @@ func (g *Game) openDoor(p Pos) bool {
 	return true
 }
 
+// monsterOpenDoor is a creature's try at the closed door on p (C open_door
+// from pursue). One that can't open doors spends its move rattling it, and
+// half the time the player hears it if they can see the door (doors.c:219).
+func (g *Game) monsterOpenDoor(m *Creature, p Pos) {
+	if !g.Level.InBounds(p) || g.Level.At(p).Def.OpensTo == "" {
+		return // a plain wall: nothing to try
+	}
+	if !m.Def.NoDoors {
+		g.openDoor(p)
+		return
+	}
+	if g.RNG.Intn(2) == 0 && g.Level.At(p).Visible {
+		noise := m.Def.DoorNoise
+		if noise == "" {
+			noise = "scratching on"
+		}
+		g.log("You hear something %s the door.", noise)
+	}
+}
+
 // revealSecretDoor handles a bump into a secret door: the C reveals it with
 // "You find a secret door!" (player.c:1620) and maybe_locked_door rolls 50/50
 // locked vs closed (doors.c). Reports whether one was revealed — the

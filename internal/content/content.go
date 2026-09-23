@@ -77,6 +77,8 @@ type MonsterDef struct {
 	EffectTurns int    `toml:"effect_turns"` // duration of Effect
 	Breath      string `toml:"breath"`       // cone attack: "fire", "poison", or "" (#19)
 	Mimic       bool   `toml:"mimic"`        // spawns disguised as loot, rooted in place (#13)
+	NoDoors     bool   `toml:"no_doors"`     // can't open doors (C attr_p_open_doors)
+	DoorNoise   string `toml:"door_noise"`   // what a heard no_doors creature does to a door ("" = scratching on)
 	Chat        string `toml:"chat"`         // the line it gives a t)alking player (C actions.c interact)
 }
 
