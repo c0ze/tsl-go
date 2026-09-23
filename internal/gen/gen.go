@@ -227,7 +227,7 @@ func LevelFromDef(r *rng.MT, c *content.Content, def *content.LevelDef) (*game.L
 		if bdef == nil {
 			return nil, fmt.Errorf("gen: level %q boss %q is not a defined monster", def.ID, def.Boss)
 		}
-		if pos, ok := bossSpot(r, lvl, rooms[len(rooms)-1]); ok {
+		if pos, ok := bossSpot(r, lvl, rooms, bdef.Permaswim); ok {
 			if bdef.Permaswim {
 				// "Reset the lurkers pool" (C encounter_lurker): a water-bound
 				// boss gets water forced under it, wherever it lands.
@@ -522,14 +522,14 @@ func placeSpawnMonsters(r *rng.MT, c *content.Content, lvl *game.Level, rooms []
 	for k := 0; k < def.Monsters; k++ {
 		room := rooms[r.Intn(len(rooms))]
 		pos := game.Pos{X: room.x + r.Intn(room.w), Y: room.y + r.Intn(room.h)}
-		if pos == lvl.Start || lvl.CreatureAt(pos) != nil {
+		if pos == lvl.Start || lvl.CreatureAt(pos) != nil || lvl.PortalAt(pos) != nil {
 			continue
 		}
 		mdef := c.Monsters[pickSpawn(r, def.Spawn, total)]
 		if mdef.Permaswim {
 			// A water-bound spawn takes the nearest free water within two
 			// tiles, else dry floor like anyone (C find_nearest_free_spot).
-			if w, ok := waterNear(lvl, pos, 2); ok {
+			if w, ok := waterNear(lvl, pos, 2); ok && w != lvl.Start {
 				pos = w
 			}
 		}
@@ -557,15 +557,32 @@ func waterNear(lvl *game.Level, p game.Pos, radius int) (game.Pos, bool) {
 	return game.Pos{}, false
 }
 
-// bossSpot finds a passable tile in room for a guaranteed boss, free of
-// creatures, the altar, the stairs, and the start (the C reserves a dedicated
-// find_boss tile). Returns false if none is found.
-func bossSpot(r *rng.MT, lvl *game.Level, room rect) (game.Pos, bool) {
+// bossSpot finds a tile for a guaranteed boss, free of creatures, the altar,
+// the stairs, and the start: open floor, or water for a water-bound boss. It
+// tries random spots in the last room, then scans that room, then the rest —
+// the C's find_boss always has a reserved tile, so a flooded room must not
+// cost the level its boss. Returns false only if no tile qualifies anywhere.
+func bossSpot(r *rng.MT, lvl *game.Level, rooms []rect, swim bool) (game.Pos, bool) {
+	fits := func(p game.Pos) bool {
+		tile := lvl.At(p).Def
+		return (lvl.Passable(p) || swim && tile.Water) && lvl.CreatureAt(p) == nil &&
+			lvl.PortalAt(p) == nil && p != lvl.Start && tile.ID != "altar"
+	}
+	room := rooms[len(rooms)-1]
 	for try := 0; try < 30; try++ {
 		p := game.Pos{X: room.x + r.Intn(room.w), Y: room.y + r.Intn(room.h)}
-		if lvl.Passable(p) && lvl.CreatureAt(p) == nil && lvl.PortalAt(p) == nil &&
-			p != lvl.Start && lvl.At(p).Def.ID != "altar" {
+		if fits(p) {
 			return p, true
+		}
+	}
+	for i := len(rooms) - 1; i >= 0; i-- {
+		rm := rooms[i]
+		for y := rm.y; y < rm.y+rm.h; y++ {
+			for x := rm.x; x < rm.x+rm.w; x++ {
+				if p := (game.Pos{X: x, Y: y}); fits(p) {
+					return p, true
+				}
+			}
 		}
 	}
 	return game.Pos{}, false

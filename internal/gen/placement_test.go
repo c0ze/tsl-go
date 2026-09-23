@@ -5,6 +5,7 @@ import (
 
 	"github.com/c0ze/tsl-go/data"
 	"github.com/c0ze/tsl-go/internal/content"
+	"github.com/c0ze/tsl-go/internal/game"
 	"github.com/c0ze/tsl-go/internal/rng"
 )
 
@@ -18,7 +19,7 @@ func TestPlacementRespectsPools(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	seeds := 150
+	seeds := 400
 	if testing.Short() {
 		seeds = 30
 	}
@@ -40,9 +41,12 @@ func TestPlacementRespectsPools(t *testing.T) {
 				switch {
 				case !m.Def.Swim && (tile.Water || tile.Lava):
 					t.Fatalf("%s seed %d: %s starts in %s at %v", id, seed, m.Def.ID, tile.ID, m.Pos)
-				case lvl.PortalAt(m.Pos) != nil && def.Boss == m.Def.ID:
-					t.Fatalf("%s seed %d: boss %s on the stairs at %v", id, seed, m.Def.ID, m.Pos)
+				case lvl.PortalAt(m.Pos) != nil:
+					t.Fatalf("%s seed %d: %s generated on the stairs at %v", id, seed, m.Def.ID, m.Pos)
 				}
+			}
+			if def.Boss != "" && !hasCreature(lvl.Creatures, def.Boss) {
+				t.Fatalf("%s seed %d: guaranteed boss %s missing", id, seed, def.Boss)
 			}
 			for _, it := range lvl.Items {
 				if !lvl.Passable(it.Pos) {
@@ -57,4 +61,13 @@ func TestPlacementRespectsPools(t *testing.T) {
 		}
 	}
 	t.Logf("water-bound creatures starting in water: %d/%d", wet, swimmers)
+}
+
+func hasCreature(cs []*game.Creature, id string) bool {
+	for _, m := range cs {
+		if m.Def.ID == id {
+			return true
+		}
+	}
+	return false
 }

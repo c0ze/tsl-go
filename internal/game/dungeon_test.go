@@ -103,3 +103,24 @@ func TestNewDungeonUnknownStart(t *testing.T) {
 		t.Fatal("expected error for unknown start level")
 	}
 }
+
+// Arriving on stairs a creature already occupies puts the player beside it,
+// never on its tile.
+func TestTravelArrivalAvoidsOccupiedStairs(t *testing.T) {
+	g := fakeDungeon(t)
+	g.Player = Pos{3, 1}
+	g.Travel() // generate B
+	b := g.Level
+	g.Player = Pos{3, 1}
+	g.Travel() // back to A
+	squatter := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat"}, Pos: Pos{3, 1}, HP: 5}
+	b.Creatures = append(b.Creatures, squatter)
+	g.Player = Pos{3, 1}
+	g.Travel() // onto B's occupied stairs
+	if g.Player == squatter.Pos {
+		t.Fatalf("player shares the squatter's tile at %v", g.Player)
+	}
+	if chebyshev(g.Player, Pos{3, 1}) != 1 {
+		t.Errorf("player should land beside the stairs, at %v", g.Player)
+	}
+}

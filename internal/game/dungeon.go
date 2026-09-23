@@ -103,6 +103,13 @@ func (g *Game) Travel() {
 			break
 		}
 	}
+	if g.Level.CreatureAt(g.Player) != nil {
+		// Someone is standing on the stairs: step off beside them rather
+		// than share their tile.
+		if spot, ok := g.freeTileNear(g.Player); ok {
+			g.Player = spot
+		}
+	}
 	g.bringFollowers(from, fromPos)
 	def := g.Dungeon.defs[g.Level.ID]
 	g.log("You enter %s.", def.Name)
@@ -133,14 +140,32 @@ func (g *Game) bringFollowers(from *Level, stairs Pos) {
 // landingSpot is the nearest tile around the player m can stand on: water
 // for a water-bound swimmer, open floor for everyone else.
 func (g *Game) landingSpot(m *Creature) (Pos, bool) {
+	return g.nearestTile(g.Player, func(p Pos) bool {
+		if p == g.Player || g.Level.CreatureAt(p) != nil {
+			return false
+		}
+		if m.Def.Permaswim {
+			return g.Level.At(p).Def.Water
+		}
+		return g.Level.Passable(p)
+	})
+}
+
+// freeTileNear is the nearest open, unoccupied floor around p (excluding p).
+func (g *Game) freeTileNear(p Pos) (Pos, bool) {
+	return g.nearestTile(p, func(q Pos) bool {
+		return q != p && g.Level.Passable(q) && g.Level.CreatureAt(q) == nil
+	})
+}
+
+// nearestTile scans rings of radius 1..followRadius around c, nearest first,
+// for an in-bounds tile that ok accepts.
+func (g *Game) nearestTile(c Pos, ok func(Pos) bool) (Pos, bool) {
 	for radius := 1; radius <= followRadius; radius++ {
 		for dy := -radius; dy <= radius; dy++ {
 			for dx := -radius; dx <= radius; dx++ {
-				p := Pos{X: g.Player.X + dx, Y: g.Player.Y + dy}
-				if chebyshev(p, g.Player) != radius || !g.Level.InBounds(p) || g.Level.CreatureAt(p) != nil {
-					continue
-				}
-				if m.Def.Permaswim && g.Level.At(p).Def.Water || !m.Def.Permaswim && g.Level.Passable(p) {
+				p := Pos{X: c.X + dx, Y: c.Y + dy}
+				if chebyshev(p, c) == radius && g.Level.InBounds(p) && ok(p) {
 					return p, true
 				}
 			}
