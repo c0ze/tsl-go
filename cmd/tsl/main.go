@@ -37,6 +37,13 @@ func main() {
 }
 
 func run() (string, error) {
+	// The terminal comes up first: resuming consumes the savefile, so a
+	// terminal that then failed to start would lose the run.
+	screen, err := tcellui.New()
+	if err != nil {
+		return "", err
+	}
+	defer screen.Close()
 	c, err := content.Load(data.Files)
 	if err != nil {
 		return "", err
@@ -50,11 +57,6 @@ func run() (string, error) {
 			return "", err
 		}
 	}
-	screen, err := tcellui.New()
-	if err != nil {
-		return "", err
-	}
-	defer screen.Close()
 	for {
 		err := ui.Run(g, screen, screen)
 		if errors.Is(err, ui.ErrSaveRequested) {
@@ -93,17 +95,27 @@ func savePath() string {
 	return filepath.Join(home, ".tsl-save.json")
 }
 
-// saveTo writes the game to path (save-and-quit's file half).
-func saveTo(path string, g *game.Game) error {
-	f, err := os.Create(path)
+// saveTo writes the game to path (save-and-quit's file half). It writes a
+// temporary file and renames it into place, so a failed or interrupted save
+// never leaves a truncated savefile that would block every later launch.
+func saveTo(path string, g *game.Game) (err error) {
+	f, err := os.CreateTemp(filepath.Dir(path), ".tsl-save-*.tmp")
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err != nil {
+			os.Remove(f.Name())
+		}
+	}()
 	if err := g.Save(f); err != nil {
 		f.Close()
 		return err
 	}
-	return f.Close()
+	if err := f.Close(); err != nil {
+		return err
+	}
+	return os.Rename(f.Name(), path)
 }
 
 // loadFrom resumes a saved game if path exists, deleting the savefile on a

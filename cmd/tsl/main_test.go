@@ -187,3 +187,26 @@ func TestCorruptSaveErrorsWithoutDeleting(t *testing.T) {
 		t.Error("a failed load must not delete the savefile (C saveload_abort)")
 	}
 }
+
+// A save that can't complete leaves no stray file behind (the write goes to a
+// temp file that is renamed into place only on success).
+func TestFailedSaveLeavesNoFile(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "save.json")
+	// A non-empty directory where the savefile belongs makes the final
+	// rename fail after the game has been written.
+	if err := os.MkdirAll(filepath.Join(path, "x"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	g, err := newGame(testTiles(), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := saveTo(path, g); err == nil {
+		t.Fatal("saving onto a directory should fail")
+	}
+	entries, _ := os.ReadDir(dir)
+	if len(entries) != 1 {
+		t.Errorf("failed save left stray files: %v", entries)
+	}
+}
