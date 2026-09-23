@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 from normalize import normalize, normalize_tile  # noqa: E402
-from sources import GEN, GEN_ITEMS, GEN_TILES  # noqa: E402
+from sources import GEN, GEN_ITEMS, GEN_TILE_CROP, GEN_TILES  # noqa: E402
 
 OUT = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "tiles", "gen")
 
@@ -25,7 +25,7 @@ def main():
             missing.append(name)
             continue
         if name in GEN_TILES:
-            im = normalize_tile(p)
+            im = normalize_tile(p, box=GEN_TILE_CROP.get(name))
         elif name in GEN_ITEMS:
             im = normalize(p, fill=22, centre=True)
         else:

@@ -50,6 +50,9 @@ def main():
         im.save(os.path.join(OUT, name + ".png"))
     if missing:
         sys.exit("missing in the pack:\n  " + "\n  ".join(missing))
+    for f in os.listdir(OUT):  # drop tiles no longer named in sources.DCSS
+        if f.endswith(".png") and f[:-4] not in DCSS:
+            os.remove(os.path.join(OUT, f))
     print(f"imported {len(DCSS)} tiles into {os.path.normpath(OUT)}")
 
 

@@ -27,3 +27,6 @@ tsl_conf
 # Local tooling and OS cruft
 .DS_Store
 /.claude/
+
+# Python bytecode (scripts/tiles)
+__pycache__/

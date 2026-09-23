@@ -12,7 +12,7 @@ stairs, trap plates).
 """
 import argparse
 
-from PIL import Image, ImageEnhance, ImageFilter
+from PIL import Image, ImageEnhance, ImageFilter, ImageStat
 
 
 def knock_out_background(im, tol=48):
@@ -45,8 +45,31 @@ def knock_out_background(im, tol=48):
     return im
 
 
+def strip_frame(im, max_inset=0.04):
+    """Drop a thin decorative frame some generations draw around the picture:
+    step inward until the border ring matches the ring 16px further in (a
+    frame differs from what it encloses), or give up."""
+    w, h = im.size
+
+    def ring(k):
+        px = im.load()
+        return [px[x, k] for x in range(k, w - k, 8)] + [px[x, h - 1 - k] for x in range(k, w - k, 8)] + \
+               [px[k, y] for y in range(k, h - k, 8)] + [px[w - 1 - k, y] for y in range(k, h - k, 8)]
+
+    def same(a, b):
+        return abs(a[3] - b[3]) < 32 and max(abs(a[i] - b[i]) for i in range(3)) <= 24
+
+    for k in range(0, int(min(w, h) * max_inset) + 1, 2):
+        outer, inner = ring(k), ring(k + 16)
+        ref = sorted(outer, key=sum)[len(outer) // 2]
+        if sum(same(p, ref) for p in outer) >= 0.9 * len(outer) and \
+                sum(same(p, ref) for p in inner) >= 0.9 * len(inner):
+            return im.crop((k, k, w - k, h - k))
+    return im
+
+
 def normalize(src, size=32, fill=30, centre=False):
-    im = knock_out_background(Image.open(src).convert("RGBA"))
+    im = knock_out_background(strip_frame(Image.open(src).convert("RGBA")))
     alpha = im.getchannel("A").point(lambda v: 255 if v > 40 else 0)
     im = im.crop(alpha.getbbox())
     w, h = im.size
@@ -73,6 +96,11 @@ def normalize(src, size=32, fill=30, centre=False):
     rgb = out.convert("RGB")
     rgb = ImageEnhance.Contrast(rgb).enhance(1.15)
     rgb = ImageEnhance.Color(rgb).enhance(1.1)
+    # Generated figures come out darker than DCSS's (mean luminance ~62) and
+    # vanish on dark floors under the torch-light falloff: lift dim ones.
+    mean = ImageStat.Stat(rgb.convert("L"), mask=out.getchannel("A")).mean[0]
+    if mean < 52:
+        rgb = ImageEnhance.Brightness(rgb).enhance(min(1.6, 55 / max(mean, 1)))
     out = Image.merge("RGBA", (*rgb.split(), out.getchannel("A")))
 
     tile = Image.new("RGBA", (size, size))
@@ -93,10 +121,14 @@ def normalize(src, size=32, fill=30, centre=False):
     return tile
 
 
-def normalize_tile(src, size=32):
-    """A full-bleed terrain tile: square centre crop, area-resized, opaque."""
+def normalize_tile(src, size=32, box=None):
+    """A full-bleed terrain tile: square crop (centre, or `box` as fractions
+    l, t, r, b of the source), area-resized, opaque."""
     im = Image.open(src).convert("RGB")
     w, h = im.size
+    if box:
+        im = im.crop((int(box[0] * w), int(box[1] * h), int(box[2] * w), int(box[3] * h)))
+        w, h = im.size
     s = min(w, h)
     im = im.crop(((w - s) // 2, (h - s) // 2, (w - s) // 2 + s, (h - s) // 2 + s))
     im = im.resize((size, size), Image.Resampling.BOX)

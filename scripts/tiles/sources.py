@@ -23,7 +23,7 @@ DCSS = {
     **{f"floor_tomb_{i}": (f"dungeon/floor/tomb_{i}.png", None) for i in range(4)},
     **{f"wall_cave_{i}": (f"dungeon/wall/orc_{i}.png", None) for i in (1, 2)},
     **{f"floor_moss_{i}": (f"dungeon/floor/lair_{i}.png", None) for i in range(4)},
-    **{f"wall_lab_{i}": (f"dungeon/wall/lab-metal_{i}.png", None) for i in range(4)},
+    **{f"wall_lab_{i}": (f"dungeon/wall/lab-metal_{i}.png", None) for i in (0, 5, 6)},  # 1-4 carry glyphs
     **{f"floor_lab_{i}": (f"dungeon/floor/rect_gray_{i}.png", None) for i in range(4)},
     **{f"wall_hub_{i}": (f"dungeon/wall/metal_wall_white_{i}.png", None) for i in range(3)},
     **{f"floor_mesh_{i}": (f"dungeon/floor/mesh_{i}.png", None) for i in range(4)},
@@ -104,6 +104,9 @@ GEN = ["ratman", "ghoul", "graveling", "crypt_vermin", "scarecrow", "imp", "dire
 # tile, items are small centred icons, everything else a standing figure.
 GEN_TILES = ["door_closed", "door_open", "stairs_down", "web_trap", "flash_trap"]
 GEN_ITEMS = ["corpse", "mushroom", "torch", "key", "arrows", "cloak", "boots"]
+# Crop boxes (fractions l, t, r, b) for tiles whose source shows more than the
+# tile: the stairs came back as a whole stairwell room.
+GEN_TILE_CROP = {"stairs_down": (0.27, 0.54, 0.73, 1.0)}
 
 # Level id -> (wall family, floor family): every dcss/<family>_*.png is a
 # variant the renderer spreads across that level's cells.
