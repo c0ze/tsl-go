@@ -86,7 +86,7 @@ func TestFirstAidRefusedWhenUnwounded(t *testing.T) {
 	}
 }
 
-// Off-screen wounds and collapses stay unnarrated (C: only if can_see).
+// Off-screen wounds and collapses stay unnarrated (C can_see / can_see_creature).
 func TestUnseenWoundsAreSilent(t *testing.T) {
 	g := combatGame()
 	rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 1}, Pos: Pos{8, 1}, HP: 1}
@@ -117,5 +117,23 @@ func TestBleedDeathIsFinal(t *testing.T) {
 	g.PlayerStep(DirE)
 	if !g.Dead || g.DeathCause != "bled to death" || hasMessage(g, "You drown...") {
 		t.Errorf("dead=%v cause=%q messages %v", g.Dead, g.DeathCause, g.Messages)
+	}
+}
+
+// A collapse right beside the player is heard even out of view — unless the
+// player is blind (C can_see_creature, fov.c:374-418).
+func TestAdjacentCollapseNarratedUnlessBlind(t *testing.T) {
+	for _, blind := range []bool{false, true} {
+		g := combatGame()
+		if blind {
+			g.AddEffect("blind", 10)
+		}
+		rat := &Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", HP: 1}, Pos: Pos{3, 1}, HP: 1}
+		g.Level.Creatures = append(g.Level.Creatures, rat)
+		rat.Effects = prolongEffect(rat.Effects, "wound", meleeWoundTime) // no FOV: the tile isn't Visible
+		g.stepToward(rat, g.Player)                                       // bleeds out beside the player at (2,1)
+		if heard := hasMessage(g, "The rat collapses!"); heard == blind {
+			t.Errorf("blind=%v: heard=%v, messages %v", blind, heard, g.Messages)
+		}
 	}
 }
