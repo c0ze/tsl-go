@@ -71,6 +71,8 @@ def strip_frame(im, max_inset=0.04):
 def normalize(src, size=32, fill=30, centre=False):
     im = knock_out_background(strip_frame(Image.open(src).convert("RGBA")))
     alpha = im.getchannel("A").point(lambda v: 255 if v > 40 else 0)
+    if alpha.getbbox() is None:
+        raise ValueError(f"{src}: nothing opaque left after background removal")
     im = im.crop(alpha.getbbox())
     w, h = im.size
     scale = (fill - 2) / max(w, h)  # leave room for the outline

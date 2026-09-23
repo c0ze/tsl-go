@@ -657,3 +657,21 @@ func TestLavaPromptDecline(t *testing.T) {
 		t.Errorf("expected the lava prompt and no move: menu %q, player %v", p.lastMenu.Title, g.Player)
 	}
 }
+
+// BuildView names what stands on each cell so graphic front-ends can pick a
+// sprite; a disguised mimic reports its disguise, never itself.
+func TestBuildViewEntityIDs(t *testing.T) {
+	g := testGame(t, []string{"@..."})
+	g.UpdateFOV()
+	boots := &content.ItemDef{ID: "padded_boots", Name: "padded boots", Glyph: "[", Color: content.ColorBrown}
+	g.Level.Items = append(g.Level.Items, &game.Item{Def: boots, Pos: game.Pos{X: 1, Y: 0}})
+	ration := &content.ItemDef{ID: "ration", Name: "ration", Glyph: "%", Color: content.ColorBrown}
+	mimic := &content.MonsterDef{ID: "mimic", Name: "mimic", Glyph: "m", HP: 3, Damage: "1d1", Mimic: true}
+	g.Level.Creatures = append(g.Level.Creatures, &game.Creature{Def: mimic, Pos: game.Pos{X: 2, Y: 0}, HP: 3, Disguised: true, DisguiseAs: ration})
+	v := BuildView(g)
+	for x, want := range []string{"player", "padded_boots", "ration", ""} {
+		if got := v.At(x, 0).Entity; got != want {
+			t.Errorf("cell %d entity = %q, want %q", x, got, want)
+		}
+	}
+}

@@ -25,6 +25,9 @@
   var atlas = new Image();
   var ready = false;
   atlas.onload = function () { ready = true; draw(); };
+  // No atlas (a failed or blocked download): draw anyway — every sprite
+  // then falls back to its coloured letter instead of a blank canvas.
+  atlas.onerror = function () { SP = { cell: TILE, sprites: {}, themes: {} }; ready = true; draw(); };
   atlas.src = "sprites.png";
 
   var G = null; // latest grid: {w,h,g,color,bg,bcolor,light,dim,cx,cy,level}
@@ -94,6 +97,23 @@
     "N": "m_necromancer", "E": "m_mummylich", "A": "m_chrome_angel", "K": "m_gloom_lord",
     "e": "m_sentinel", "t": "technician", "G": "gaoler", "H": "m_horror", "L": "lurker"
   };
+  // Content ids whose glyph+colour collide with something else: boots share
+  // '[' with body armour, corpses share brown '%' with rations.
+  var BYID = {
+    padded_boots: "boots", lead_boots: "boots", fur_boots: "boots", boots_of_speed: "boots", flippers: "boots",
+    corpse: "corpse", carcass: "corpse", ratman_corpse: "corpse", ghoul_corpse: "corpse"
+  };
+  // spriteFor names the sprite for the entity on a cell: by its content id
+  // when the atlas has one (generated monsters and items are named after
+  // their ids, DCSS monsters as m_<id>), else by glyph and colour.
+  function spriteFor(id, glyph, c) {
+    if (id) {
+      if (SP.sprites[id]) return id;
+      if (SP.sprites["m_" + id]) return "m_" + id;
+      if (BYID[id]) return BYID[id];
+    }
+    return entityFor(glyph, c);
+  }
   function entityFor(glyph, c) {
     switch (glyph) { // one glyph, two creatures (data/monsters.toml)
       case "S": return c === 5 ? "m_electric_snake" : "m_cave_snake";
@@ -123,15 +143,23 @@
     if (open.indexOf("N") >= 0) { ctx.fillStyle = "rgba(230,215,180,0.18)"; ctx.fillRect(px, py, TILE, 2); }
   }
 
-  // fit scales the canvas up to fill the room left above the HUD (pixelated
-  // CSS scaling keeps the pixel art crisp; capped at 3x), or lets it shrink to
-  // the screen width on a phone.
+  // fit scales the canvas to the room it has: the viewport below the
+  // canvas's top, less the HUD beneath it and the on-screen controls on a
+  // touch screen — up to 3x on a big screen (pixelated CSS scaling keeps the
+  // pixel art crisp), down to whatever fits on a short one (a landscape
+  // phone, a small window).
   function fit() {
     if (!canvas.width) return;
+    var hud = 0;
+    ["status", "messages"].forEach(function (id) { var e = document.getElementById(id); if (e) hud += e.offsetHeight; });
+    var pad = document.getElementById("touchpad");
+    var padH = pad && getComputedStyle(pad).display !== "none" ? pad.offsetHeight : 0;
+    var top = canvas.getBoundingClientRect().top + window.scrollY;
     var availW = document.documentElement.clientWidth - 32;
-    var availH = window.innerHeight - 190;
-    var k = Math.min(3, availW / canvas.width, availH / canvas.height);
-    canvas.style.width = k > 1 ? Math.floor(canvas.width * k) + "px" : "";
+    var availH = window.innerHeight - top - hud - padH - 16;
+    var k = Math.max(0.25, Math.min(3, availW / canvas.width, availH / canvas.height));
+    var css = Math.floor(canvas.width * k) + "px";
+    if (canvas.style.width !== css) canvas.style.width = css;
   }
   window.addEventListener("resize", fit);
 
@@ -177,8 +205,9 @@
           drawWallEdges(px, py, bgl);
         }
         if (tn && SP.sprites[tn] && SP.sprites[tn].ms && !dim[i]) animated = true;
-        if (tg !== bgl) {                                   // an entity sits on the terrain
-          var en = entityFor(tg, color[i]);
+        var eid = G.ent ? G.ent[i] : "";
+        if (G.ent ? eid !== "" : tg !== bgl) {             // an entity sits on the terrain
+          var en = spriteFor(eid, tg, color[i]);
           if (en && blit(en, px, py, t)) {
             if (SP.sprites[en].ms) animated = true;
           } else {
@@ -202,14 +231,16 @@
     if (animated && !document.hidden) animTimer = setTimeout(draw, 80);
   }
 
-  window.tslGrid = function (w, h, top, color, base, bcolor, light, dim, cx, cy, level) {
-    G = { w: w, h: h, g: Array.from(top), color: color, bg: Array.from(base), bcolor: bcolor, light: light, dim: dim, cx: cx, cy: cy, level: level };
+  window.tslGrid = function (w, h, top, color, base, bcolor, light, dim, cx, cy, level, ents) {
+    G = { w: w, h: h, g: Array.from(top), color: color, bg: Array.from(base), bcolor: bcolor, light: light, dim: dim, cx: cx, cy: cy, level: level,
+          ent: typeof ents === "string" ? ents.split("|") : null };
     draw();
+    if (tiles) fit(); // the HUD below may have grown or shrunk this turn
   };
   document.addEventListener("visibilitychange", function () { if (!document.hidden) draw(); });
 
   function apply() {
-    if (tiles) { pre.hidden = true; canvas.hidden = false; draw(); }
+    if (tiles) { pre.hidden = true; canvas.hidden = false; draw(); fit(); }
     else { canvas.hidden = true; pre.hidden = false; draw(); }
     if (btn) btn.textContent = tiles ? "ASCII" : "Tiles";
   }

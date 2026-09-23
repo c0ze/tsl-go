@@ -4,9 +4,10 @@
   import_dcss.py "/path/to/Dungeon Crawl Stone Soup Supplemental"
 
 Only the tiles the game uses are committed (CC0; credits in
-assets/tiles/CREDITS.md). An entry with a hue shift is recoloured on the way
+assets/tiles/README.md). An entry with a hue shift is recoloured on the way
 in — the gold dragon turned red, the azure jelly green — so the committed
-PNG is exactly what the atlas packs.
+PNG is exactly what the atlas packs. PNGs in dcss/ that sources.DCSS no
+longer names are deleted (and listed), so the atlas can't keep stale tiles.
 """
 import colorsys
 import os
@@ -50,9 +51,10 @@ def main():
         im.save(os.path.join(OUT, name + ".png"))
     if missing:
         sys.exit("missing in the pack:\n  " + "\n  ".join(missing))
-    for f in os.listdir(OUT):  # drop tiles no longer named in sources.DCSS
+    for f in sorted(os.listdir(OUT)):  # drop tiles no longer named in sources.DCSS
         if f.endswith(".png") and f[:-4] not in DCSS:
             os.remove(os.path.join(OUT, f))
+            print("removed", f)
     print(f"imported {len(DCSS)} tiles into {os.path.normpath(OUT)}")
 
 

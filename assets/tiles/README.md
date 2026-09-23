@@ -8,7 +8,7 @@ comes from and which walls and floors each level uses.
 | Directory | What | Licence |
 |---|---|---|
 | `dcss/` | Tiles from the **Dungeon Crawl Stone Soup** tileset (supplemental release), a handful hue-shifted (the red dragon, the green slime, the cave snake, the crystal sword). Copied in by `scripts/tiles/import_dcss.py`. | CC0 |
-| `gen/` | Sprites made for this project where DCSS has no match — most generated with Google Antigravity (`agy`) against DCSS style references, then cut down to 32x32 by `scripts/tiles/normalize.py`. | Project art |
+| `gen/` | Sprites made for this project where DCSS has no match — generated with Google Antigravity (`agy`, given DCSS tiles as style references) and the local Qwen-Image model, then cut down to 32x32 by `scripts/tiles/normalize.py`. | Project art |
 | `anim/` | Aseprite sources for the animated tiles: palette-cycled water and lava (`scripts/tiles/liquid_frames.py` + `assemble.lua`) and the player's torch. | Project art |
 
 ## Credits

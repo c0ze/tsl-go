@@ -1,10 +1,10 @@
 """Where every web tile sprite comes from.
 
-Values are paths under assets/tiles/ (a single image, or a list of variants
-the renderer picks between per cell), or "anim:<name>" for an Aseprite
-animation in assets/tiles/anim/<name>.aseprite.
+Every sprite is named after its file: assets/tiles/{dcss,gen}/<name>.png is a
+still, assets/tiles/anim/<name>.aseprite an animation (build.py packs all
+three; an animation replaces a still of the same name).
 
-  dcss/  CC0 tiles from Dungeon Crawl Stone Soup (see assets/tiles/CREDITS.md),
+  dcss/  CC0 tiles from Dungeon Crawl Stone Soup (see assets/tiles/README.md),
          copied in by import_dcss.py (DCSS below maps them to the pack).
   gen/   sprites generated for this project, normalised by normalize.py.
   anim/  Aseprite sources for the animated tiles.
