@@ -18,7 +18,7 @@ bite back, and take the ascension altar — or be remembered by `morgue.txt`.
 The 0.40 parity roadmap is **complete**: the turn-energy scheduler and every
 speed modifier, the full potion (13/13), scroll (10/10), and spellbook tables,
 spell memorization, ~45 monsters including all five uniques the original can
-actually spawn, hidden traps, water/swimming/levitation, lava, breath
+actually spawn, hidden traps, bleeding wounds and first aid, water/swimming/levitation, lava, breath
 weapons, ammunition, allies, polymorph, and save/resume. Content the original
 defines but can never reach (three unspawnable uniques, the commented-out
 manual of camouflage) is deliberately absent, catalogued for a possible 0.41.
