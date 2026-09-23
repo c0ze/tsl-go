@@ -9,8 +9,13 @@
   body { display: flex; flex-direction: column; align-items: center;
          font-family: "DejaVu Sans Mono", Menlo, Consolas, monospace; }
   main { position: relative; margin-top: 1rem; }
-  pre { margin: 0; font-size: 16px; line-height: 1.15; }
-  #status { margin-top: .4rem; color: #c8bea5; white-space: pre; font-size: 13px; }
+  /* 60 map columns at ~0.602em per monospace cell: shrink the glyphs on a
+     narrow screen so the whole map fits instead of clipping both edges. */
+  pre { margin: 0; font-size: min(16px, calc((100vw - 32px) / 36.4)); line-height: 1.15; }
+  main { max-width: 100vw; padding: 0 16px; box-sizing: border-box; }
+  /* Narrow screens: clear the fixed Tiles/music buttons above the map. */
+  @media (max-width: 640px) { main { margin-top: 3rem; } }
+  #status { margin-top: .4rem; color: #c8bea5; white-space: pre-wrap; font-size: 13px; }
   /* HUD segments (internal/ui/web StatusHTML) — HP by ratio, EP cyan,
      location amber, gear labels muted, active effects highlighted. */
   #status .s-hp-good { color: #6fae4a; }
@@ -20,7 +25,7 @@
   #status .s-loc     { color: #d9a23a; }
   #status .s-label   { color: #77705e; }
   #status .s-eff     { color: #c060c0; }
-  #messages { margin-top: .2rem; color: #bbb; white-space: pre; min-height: 4.6em; font-size: 13px; }
+  #messages { margin-top: .2rem; color: #bbb; white-space: pre-wrap; min-height: 4.6em; font-size: 13px; }
   /* Message-log severity (internal/ui/web MessagesHTML). */
   #messages .m-bad  { color: #d6504a; }
   #messages .m-good { color: #6fae4a; }
