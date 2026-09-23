@@ -675,3 +675,21 @@ func TestBuildViewEntityIDs(t *testing.T) {
 		}
 	}
 }
+
+// An unidentified item reaches graphic front-ends as the neutral "item",
+// never its true type; identified, it names itself.
+func TestBuildViewHidesUnidentifiedItemIDs(t *testing.T) {
+	g := testGame(t, []string{"@."})
+	g.UpdateFOV()
+	pot := &content.ItemDef{ID: "potion_speed", Name: "potion of speed", Glyph: "!", Color: content.ColorBrown, Kind: "potion"}
+	g.Level.Items = append(g.Level.Items, &game.Item{Def: pot, Pos: game.Pos{X: 1, Y: 0}})
+	v := BuildView(g)
+	if got := v.At(1, 0).Entity; got != "item" {
+		t.Errorf("unidentified potion leaked its id %q", got)
+	}
+	g.Identified = map[string]bool{"potion_speed": true}
+	v = BuildView(g)
+	if got := v.At(1, 0).Entity; got != "potion_speed" {
+		t.Errorf("identified potion should name itself, got %q", got)
+	}
+}

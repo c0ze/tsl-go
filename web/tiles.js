@@ -105,7 +105,9 @@
   };
   // spriteFor names the sprite for the entity on a cell: by its content id
   // when the atlas has one (generated monsters and items are named after
-  // their ids, DCSS monsters as m_<id>), else by glyph and colour.
+  // their ids, DCSS monsters as m_<id>), else by glyph and colour. An
+  // unidentified item arrives as the neutral id "item" and so always takes
+  // the glyph+colour path.
   function spriteFor(id, glyph, c) {
     if (id) {
       if (SP.sprites[id]) return id;
@@ -150,16 +152,22 @@
   // phone, a small window).
   function fit() {
     if (!canvas.width) return;
-    var hud = 0;
-    ["status", "messages"].forEach(function (id) { var e = document.getElementById(id); if (e) hud += e.offsetHeight; });
-    var pad = document.getElementById("touchpad");
-    var padH = pad && getComputedStyle(pad).display !== "none" ? pad.offsetHeight : 0;
-    var top = canvas.getBoundingClientRect().top; // viewport-relative, like innerHeight
-    var availW = document.documentElement.clientWidth - 32;
-    var availH = window.innerHeight - top - hud - padH - 16;
-    var k = Math.max(0.25, Math.min(3, availW / canvas.width, availH / canvas.height));
-    var css = Math.floor(canvas.width * k) + "px";
-    if (canvas.style.width !== css) canvas.style.width = css;
+    // A new width reflows the wrapped HUD below it, which changes the room
+    // left for the canvas: settle over a few passes instead of trusting the
+    // first measurement.
+    for (var pass = 0; pass < 3; pass++) {
+      var hud = 0;
+      ["status", "messages"].forEach(function (id) { var e = document.getElementById(id); if (e) hud += e.offsetHeight; });
+      var pad = document.getElementById("touchpad");
+      var padH = pad && getComputedStyle(pad).display !== "none" ? pad.offsetHeight : 0;
+      var top = canvas.getBoundingClientRect().top; // viewport-relative, like innerHeight
+      var availW = document.documentElement.clientWidth - 32;
+      var availH = window.innerHeight - top - hud - padH - 16;
+      var k = Math.max(0.15, Math.min(3, availW / canvas.width, availH / canvas.height));
+      var css = Math.floor(canvas.width * k) + "px";
+      if (canvas.style.width === css) break;
+      canvas.style.width = css;
+    }
   }
   window.addEventListener("resize", fit);
 

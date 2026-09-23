@@ -18,7 +18,8 @@ type Cell struct {
 	Dim   bool    // render dimmed (remembered-but-not-currently-visible)
 	Light float64 // 0..1 brightness of a visible tile; renderers scale Colour by it for the torch-lit falloff
 	// Entity is the content id of what stands on the cell — an item or
-	// monster def id, or "player" — and "" for bare terrain. Graphic
+	// monster def id ("item" for one not yet identified), or "player" — and
+	// "" for bare terrain. Graphic
 	// front-ends pick sprites by it where glyph and colour are ambiguous
 	// (boots and body armour share '[', corpses and rations '%').
 	Entity string
@@ -83,7 +84,7 @@ func BuildView(g *game.Game) View {
 	v.Base = append([]Cell(nil), v.Cells...) // snapshot the terrain before entities composite on top
 	for _, it := range l.Items {
 		if l.InBounds(it.Pos) && l.At(it.Pos).Visible {
-			paint(v.At(it.Pos.X, it.Pos.Y), it.Def.Rune(), it.Def.Color, it.Def.ID)
+			paint(v.At(it.Pos.X, it.Pos.Y), it.Def.Rune(), it.Def.Color, entityID(g, it.Def))
 		}
 	}
 	for _, m := range l.Creatures {
@@ -91,7 +92,7 @@ func BuildView(g *game.Game) View {
 			continue
 		}
 		if m.Disguised && m.DisguiseAs != nil { // a mimic wears its loot glamour
-			paint(v.At(m.Pos.X, m.Pos.Y), m.DisguiseAs.Rune(), m.DisguiseAs.Color, m.DisguiseAs.ID)
+			paint(v.At(m.Pos.X, m.Pos.Y), m.DisguiseAs.Rune(), m.DisguiseAs.Color, entityID(g, m.DisguiseAs))
 			continue
 		}
 		paint(v.At(m.Pos.X, m.Pos.Y), m.Def.Rune(), m.Def.Color, m.Def.ID)
@@ -110,6 +111,16 @@ func BuildView(g *game.Game) View {
 	v.Sounds = g.Sounds
 	v.Player = g.Player
 	return v
+}
+
+// entityID is the id a front-end may see for an item on the ground: its def
+// id once the player knows what it is, else the neutral "item" — an
+// unidentified potion must not name its type to the page.
+func entityID(g *game.Game, def *content.ItemDef) string {
+	if !g.IsIdentified(&game.Item{Def: def}) {
+		return "item"
+	}
+	return def.ID
 }
 
 // paint overlays a glyph and colour onto an already-built cell, keeping the
