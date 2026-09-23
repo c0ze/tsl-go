@@ -540,29 +540,30 @@ func (g *Game) worldTick() {
 		if g.Level.CreatureAt(m.Pos) != m {
 			continue // already removed this turn
 		}
-		if m.Lifetime > 0 {
-			m.Lifetime--
-			if m.Lifetime == 0 {
-				// A summon's time is up: it vanishes without corpse or drops
-				// (C game.c lifetime handling).
-				g.log("The %s disappears.", m.Def.Name)
-				g.Level.RemoveCreature(m)
-				continue
-			}
-		}
-		// Capture slow before ticking, so a 1-turn slow still applies this turn
-		// (symmetric with poison dealing its final tick before expiring).
-		slowed := m.HasEffect("slow")
-		if g.tickCreatureEffects(m) {
-			continue // succumbed to its afflictions before acting
-		}
 		gain := speedOf(m)
-		if slowed {
+		if m.HasEffect("slow") {
 			gain /= 2 // slowed creatures bank energy at half rate
 		}
 		m.Energy += gain
 		for m.Energy >= turnCost {
+			// A creature's clocks run on its own turns, not the world's
+			// ticks (C game.c: lifetime and pass_time_on_effects only once
+			// move_counter reaches TURN_TIME) — a slow zombie stays asleep
+			// as many of its turns as a quick rat.
 			m.Energy -= turnCost
+			if m.Lifetime > 0 {
+				m.Lifetime--
+				if m.Lifetime == 0 {
+					// A summon's time is up: it vanishes without corpse or
+					// drops (C game.c lifetime handling).
+					g.log("The %s disappears.", m.Def.Name)
+					g.Level.RemoveCreature(m)
+					break
+				}
+			}
+			if g.tickCreatureEffects(m) {
+				break // succumbed to its afflictions before acting
+			}
 			g.monsterAct(m)
 			if g.Dead {
 				return

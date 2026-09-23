@@ -83,3 +83,18 @@ func TestMissedSwingDoesNotWakeMonster(t *testing.T) {
 		t.Error("a missed swing must not wake a sleeping monster (C combat.c)")
 	}
 }
+
+// A creature's effects count down on its own turns (C game.c), so a slow
+// sleeper outlasts a quick one in world time.
+func TestSlowCreatureEffectsTickOnItsOwnTurns(t *testing.T) {
+	g := combatGame()
+	sloth := &Creature{Def: &content.MonsterDef{ID: "sloth", Name: "sloth", Glyph: "s", HP: 5, Speed: 10}, Pos: Pos{8, 1}, HP: 5}
+	sloth.AddEffect("sleep", 3)
+	g.Level.Creatures = append(g.Level.Creatures, sloth)
+	for i := 0; i < 5; i++ { // half of one sloth turn
+		g.worldTick()
+	}
+	if len(sloth.Effects) != 1 || sloth.Effects[0].Turns != 3 {
+		t.Errorf("no sloth turn has passed, sleep should be untouched: %+v", sloth.Effects)
+	}
+}
