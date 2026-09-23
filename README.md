@@ -46,15 +46,22 @@ and Windows are attached to every
 
 | Key | Action | Key | Action |
 |---|---|---|---|
-| h j k l y u b n | move (vi keys) | `g` | pick up |
+| h j k l y u b n, arrows | move (vi keys) | `g` | pick up |
 | `i` | inventory / use | `e` | eat |
 | `r` | read scroll or study a book | `z` | zap wand |
 | `f` | fire bow | `c` | cast a learned spell |
 | `t` | talk | `>` | take stairs |
-| `S` | save and quit | `q` | quit |
+| `O` | close a door | `S` | save and quit |
+| `Q` | quit (asks first) | | |
+
+In menus, a letter picks its item; `j`/`k` or the arrows move and Enter
+picks; Esc or `q` cancels. When aiming, the move keys steer the cursor,
+Enter fires, Esc cancels.
 
 Saving writes `~/.tsl-save.json` and exits; the next launch resumes and
 deletes the savefile — saving is a free action, and there is no save-scumming.
+The terminal build fits an 80×24 window: the map scrolls to keep you in
+view.
 
 In the browser, **m** mutes the music (a volume slider sits beside it) and the
 **Tiles** button switches between the ASCII and graphic renderers.
@@ -76,6 +83,8 @@ go vet ./...
 - `internal/{content,gen,fov,rng,ui}/` — TOML content loading (fail-fast
   validation), level generation, field of view, the original's Mersenne
   Twister, and the rendering/input boundary.
+- `internal/boot/` — the shared new-game constructor, plus the random-play
+  soak test (`TSL_SOAK_SEEDS=2000 go test ./internal/boot` for a deep sweep).
 - `data/` — all game content as TOML: tiles, monsters, items, the dungeon
   graph.
 - `docs/superpowers/plans/` — one dated plan per shipped increment, each
