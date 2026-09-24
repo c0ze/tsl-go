@@ -27,7 +27,9 @@ manual of camouflage) is deliberately absent, catalogued for a possible 0.41.
 
 **In the browser: <https://tsl.coze.org>** — the same engine compiled to
 WebAssembly, saves in localStorage. The web build adds what a terminal can't:
-per-level background music, synthesized sound effects, and a **Tiles** button
+adaptive chiptune music (a tracker module per level that shifts between
+explore, combat and low-HP peril moods through composed bridges),
+synthesized sound effects, and a **Tiles** button
 that swaps the ASCII map for a graphic tileset (torch-lit, with a camera that
 follows you). The plain 0.40.1 build — before the visuals and audio — is kept
 at **<https://tsl.coze.org/original>**. Or play natively:
@@ -80,7 +82,10 @@ go vet ./...
 
 - `cmd/tsl/` — terminal front-end (tcell); `cmd/tsl-wasm/` + `web/` — the
   browser build (WebAssembly), with the music/SFX controllers and the canvas
-  tile renderer in `web/`.
+  tile renderer in `web/`. The level scores in `web/music/` are composed in
+  cozy-tracker (`songs/tsl_*.gen.js`) and copied in by `scripts/sync-music.sh`;
+  the Go side reports each frame's mood (`ui.View.Mood`) and the page's
+  CozyAdaptive player moves between sections on the next bar line.
 - `internal/game/` — the I/O-free engine: scheduler, combat, effects,
   hazards, save/load.
 - `internal/behaviors/` — named item/spell effects, injected by `cmd` so the

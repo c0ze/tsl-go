@@ -17,6 +17,7 @@ type Screen struct {
 	keys      chan string
 	last      ui.View
 	lastLevel string // level id last announced to the JS music controller
+	lastMood  string // music mood last announced (explore, combat, peril)
 	doc       js.Value
 	screen    js.Value // <pre id="screen">
 	status    js.Value // <div id="status">
@@ -98,6 +99,7 @@ func (sc *Screen) Render(v ui.View) {
 	sc.status.Set("innerHTML", StatusHTML(v))
 	sc.msgs.Set("innerHTML", MessagesHTML(v.Messages))
 	sc.announceLevel(v.LevelID)
+	sc.announceMood(v.Mood)
 	sc.playSounds(v.Sounds)
 	sc.sendGrid(v, -1, -1)
 }
@@ -176,6 +178,18 @@ func (sc *Screen) announceLevel(id string) {
 	sc.lastLevel = id
 	if fn := js.Global().Get("tslSetLevel"); fn.Type() == js.TypeFunction {
 		fn.Invoke(id)
+	}
+}
+
+// announceMood tells the JS music controller (window.tslSetMood) the musical
+// mood — explore, combat or peril — only when it changes.
+func (sc *Screen) announceMood(mood string) {
+	if mood == sc.lastMood {
+		return
+	}
+	sc.lastMood = mood
+	if fn := js.Global().Get("tslSetMood"); fn.Type() == js.TypeFunction {
+		fn.Invoke(mood)
 	}
 }
 

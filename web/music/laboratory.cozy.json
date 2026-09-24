@@ -1,0 +1,33 @@
+{
+ "layers": [],
+ "sections": {
+  "explore": [
+   0,
+   5
+  ],
+  "to_combat": [
+   6,
+   6
+  ],
+  "combat": [
+   7,
+   8
+  ],
+  "to_explore": [
+   9,
+   9
+  ],
+  "peril": [
+   10,
+   10
+  ]
+ },
+ "bars": {
+  "explore": 20,
+  "to_combat": 20,
+  "combat": 14,
+  "to_explore": 20,
+  "peril": 20
+ },
+ "loop": "explore"
+}

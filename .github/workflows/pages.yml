@@ -34,7 +34,7 @@ jobs:
         run: |
           mkdir -p _site
           cp web/index.html web/CNAME web/tiles.js web/touch.js web/sprites.js web/sprites.png _site/
-          cp -r web/audio _site/
+          cp -r web/music _site/
           cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" _site/ 2>/dev/null \
             || cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" _site/ # Go < 1.24
           GOOS=js GOARCH=wasm go build -trimpath -ldflags "-s -w" \
