@@ -65,7 +65,9 @@ deletes the savefile — saving is a free action, and there is no save-scumming.
 The terminal build fits an 80×24 window: the map scrolls to keep you in
 view.
 
-In the browser, **m** mutes the music (a volume slider sits beside it) and the
+In the browser, **m** mutes the music (a volume slider sits beside it), the
+**MOD/MP3** button switches between the adaptive tracker scores and the
+recorded tracks, and the
 **Tiles** button switches between the ASCII and graphic renderers. On a phone
 or tablet, on-screen controls appear: a direction pad (hold to keep walking),
 the action buttons, and OK/Esc; menu entries are tappable. The browser also
