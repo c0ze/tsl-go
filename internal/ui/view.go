@@ -49,6 +49,32 @@ type View struct {
 	Sounds   []string // per-turn sound-effect cues; front-ends that support it (web SFX) play them
 	Base     []Cell   // terrain-only layer (entities are composited into Cells); web tiles draw terrain under entities
 	Player   game.Pos // the player's map position; the terminal scrolls a short screen around it
+	Mood     string   // MoodExplore, MoodCombat or MoodPeril; front-ends with adaptive music (web) follow it
+}
+
+// Music moods a front-end may score (see Mood).
+const (
+	MoodExplore = "explore"
+	MoodCombat  = "combat"
+	MoodPeril   = "peril"
+)
+
+// PerilDivisor: the player is in peril at or below 1/PerilDivisor of max HP.
+const PerilDivisor = 3
+
+// mood reads the moment's musical mood from what the player can know: peril
+// when badly hurt, combat while a hostile creature is in sight (a disguised
+// mimic doesn't count — the music must not give it away), else explore.
+func mood(g *game.Game) string {
+	if g.PlayerHP > 0 && g.PlayerHP*PerilDivisor <= g.PlayerMax {
+		return MoodPeril
+	}
+	for _, m := range g.Level.Creatures {
+		if !m.Ally && !m.Disguised && g.Level.InBounds(m.Pos) && g.Level.At(m.Pos).Visible {
+			return MoodCombat
+		}
+	}
+	return MoodExplore
 }
 
 // At returns a pointer to the cell at (x, y), which must be in bounds
@@ -110,6 +136,7 @@ func BuildView(g *game.Game) View {
 	v.LevelID = l.ID
 	v.Sounds = g.Sounds
 	v.Player = g.Player
+	v.Mood = mood(g)
 	return v
 }
 

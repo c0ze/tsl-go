@@ -528,6 +528,39 @@ func TestBuildViewShowsMimicGlamour(t *testing.T) {
 	}
 }
 
+func TestBuildViewMood(t *testing.T) {
+	g := testGame(t, []string{".@..."})
+	g.PlayerHP, g.PlayerMax = 12, 12
+	if got := BuildView(g).Mood; got != MoodExplore {
+		t.Errorf("an empty level is %q, want explore", got)
+	}
+	rat := &game.Creature{Def: &content.MonsterDef{ID: "rat", Name: "rat", Glyph: "r", HP: 3}, Pos: game.Pos{X: 3, Y: 0}, HP: 3}
+	g.Level.Creatures = append(g.Level.Creatures, rat)
+	if got := BuildView(g).Mood; got != MoodExplore {
+		t.Errorf("an unseen hostile must not change the music, got %q", got)
+	}
+	g.Level.At(rat.Pos).Visible = true
+	if got := BuildView(g).Mood; got != MoodCombat {
+		t.Errorf("a visible hostile is %q, want combat", got)
+	}
+	rat.Disguised = true
+	if got := BuildView(g).Mood; got != MoodExplore {
+		t.Errorf("a disguised mimic must not give itself away, got %q", got)
+	}
+	rat.Disguised, rat.Ally = false, true
+	if got := BuildView(g).Mood; got != MoodExplore {
+		t.Errorf("an ally is not a fight, got %q", got)
+	}
+	g.PlayerHP = 4
+	if got := BuildView(g).Mood; got != MoodPeril {
+		t.Errorf("HP 4/12 is %q, want peril", got)
+	}
+	g.PlayerHP = 0
+	if got := BuildView(g).Mood; got != MoodExplore {
+		t.Errorf("a dead player's view is %q, want explore", got)
+	}
+}
+
 func TestRunSurfacesSaveRequest(t *testing.T) {
 	g := testGame(t, []string{".@."})
 	p := &zapPrompter{actions: []Action{{Kind: ActSave}}}
